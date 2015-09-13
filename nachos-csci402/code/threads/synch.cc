@@ -132,25 +132,83 @@ void Lock::Acquire() {
 void Lock::Release() {
     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
     if(currentThread != owner){
-        std::cout << " >> Error!  You are not the lock owner!" << std::endl;
+        std::cout << " >> Error!  Trying to release a lock.\n >> You are not the lock owner!" << std::endl;
         (void) interrupt->setLevel(old)
         return;
     }//end of if not owner
     if(!lockWaitQueue.empty()){         //check if there is a thread waiting on the lock
-        owner = lockWaitQueue.front();
-        lockWaitQueue.pop();
-        scheduler->ReadyToRun(owner);
+        owner = lockWaitQueue.front();  //get next thread in the wait queue
+        lockWaitQueue.pop();            //removing thread from wait queue
+        scheduler->ReadyToRun(owner);   //setting the next thread to be the owner
     }//end of if
     else{
-        BUSY = false;
+        BUSY = false;                   //no threads in the wait queue so set BUSY to false (lock is available)
         owner = NULL;
     }
-    (void) interrupt->setLevel(old)
+    (void) interrupt->setLevel(old)     //retore interrupts
     return;
 }//end of release
 
 Condition::Condition(char* debugName) { }
 Condition::~Condition() { }
-void Condition::Wait(Lock* conditionLock) { ASSERT(FALSE); }
-void Condition::Signal(Lock* conditionLock) { }
-void Condition::Broadcast(Lock* conditionLock) { }
+void Condition::Wait(Lock* conditionLock) { 
+    //ASSERT(FALSE);
+    IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
+    if(conditionLock == NULL){
+        std::cout << " >> Error!  Recieved a NULL lock in Condition::Wait(...)" << std::endl;
+        (void) interrupt->setLevel(old)
+        return;
+    }//end of if null lock
+    if(waitingLock == NULL){
+        waitingLock = conditionLock;
+    }
+    if(waitingLock != conditionLock){
+        std::cout << " >> Error!  Lock does not match current waiting Lock in Condition::Wait(...)" << std::endl;
+        (void) interrupt->setLevel(old)
+        return;
+    }//end of if
+    cvWaitQueue.push(currentThread);
+    conditionLock->Release();
+    currentThread->Sleep();
+    conditionLock->Acquire();
+    (void) interrupt->setLevel(old)
+    return;
+}//end of Condition::Wait()
+
+void Condition::Signal(Lock* conditionLock) { 
+    IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
+    if(waitingLock == NULL){        
+        (void) interrupt->setLevel(old)
+        return;
+    }
+    if(waitingLock != conditionLock){
+         std::cout << " >> Error!  Lock does not match current waiting Lock in Condition::Signal(...)" << std::endl;
+        (void) interrupt->setLevel(old)
+        return;
+    }
+    Thread *t = cvWaitQueue.front();
+    cvWaitQueue.pop();
+    scheduler->ReadyToRun(t);
+    if(cvWaitQueue.empty()){
+        waitingLock = NULL;
+    }
+    (void) interrupt->setLevel(old)
+    return;
+}//end of Condition::Signal
+
+void Condition::Broadcast(Lock* conditionLock) { 
+     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
+     if(conditionLock == NULL){
+        (void) interrupt->setLevel(old)
+        return;
+     }
+     if(waitingLock != conditionLock){
+         std::cout << " >> Error!  Lock does not match current waiting Lock in Condition::Broadcast(...)" << std::endl;
+        (void) interrupt->setLevel(old)
+        return;
+    }
+    (void) interrupt->setLevel(old)
+    while(!cvWaitQueue.empty()){
+        Signal(conditionLock);
+    }
+}//end of Condition::Broadcast
