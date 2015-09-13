@@ -24,6 +24,7 @@
 #include "copyright.h"
 #include "synch.h"
 #include "system.h"
+#include <iostream>
 
 //----------------------------------------------------------------------
 // Semaphore::Semaphore
@@ -100,10 +101,53 @@ Semaphore::V()
 // Dummy functions -- so we can compile our later assignments 
 // Note -- without a correct implementation of Condition::Wait(), 
 // the test case in the network assignment won't work!
-Lock::Lock(char* debugName) {}
-Lock::~Lock() {}
-void Lock::Acquire() {}
-void Lock::Release() {}
+Lock::Lock(char* debugName) {
+    name = debugName;
+    owner = NULL;
+    BUSY = false;
+}
+Lock::~Lock() {
+    delete name;
+    delete owner;
+}
+
+void Lock::Acquire() {
+    IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
+    if(owner != NULL && owner == currentThread){
+       (void) interrupt->setLevel(old)
+       return;
+    }//end of if current thread is already lock owner
+    if(!BUSY){                                  //if not busy then available
+        BUSY = true;
+        owner = currentThread;
+    }
+    else{                                     //lock is acquired by someone else so put currentthread to sleep
+        lockWaitQueue.push(currentThread);
+        currentThread->Sleep();
+    }
+    (void) interrupt->setLevel(old)
+    return;
+}//end of acquire
+
+void Lock::Release() {
+    IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
+    if(currentThread != owner){
+        std::cout << " >> Error!  You are not the lock owner!" << std::endl;
+        (void) interrupt->setLevel(old)
+        return;
+    }//end of if not owner
+    if(!lockWaitQueue.empty()){         //check if there is a thread waiting on the lock
+        owner = lockWaitQueue.front();
+        lockWaitQueue.pop();
+        scheduler->ReadyToRun(owner);
+    }//end of if
+    else{
+        BUSY = false;
+        owner = NULL;
+    }
+    (void) interrupt->setLevel(old)
+    return;
+}//end of release
 
 Condition::Condition(char* debugName) { }
 Condition::~Condition() { }
