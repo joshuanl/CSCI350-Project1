@@ -149,7 +149,9 @@ void Lock::Release() {
     return;
 }//end of release
 
-Condition::Condition(char* debugName) { }
+Condition::Condition(char* debugName) { 
+    waitingLock = NULL;
+}
 Condition::~Condition() { }
 void Condition::Wait(Lock* conditionLock) { 
     //ASSERT(FALSE);

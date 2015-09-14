@@ -83,8 +83,8 @@ class Lock {
     // plus some other stuff you'll need to define
     Thread *owner;
     bool BUSY;
-    Lock *waitingLock;
-    //std::queue<Thread*> cvWaitQueue;
+    
+    std::queue<Thread*> lockWaitQueue;
 };
 
 // The following class defines a "condition variable".  A condition
@@ -137,6 +137,7 @@ class Condition {
   private:
     char* name;
     // plus some other stuff you'll need to define
-    //std::queue<Thread*> cvWaitQueue;
+    std::queue<Thread*> cvWaitQueue;
+    Lock *waitingLock;
 };
 #endif // SYNCH_H
