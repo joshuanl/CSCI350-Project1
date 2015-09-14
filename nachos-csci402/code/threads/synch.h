@@ -20,7 +20,6 @@
 #include "copyright.h"
 #include "thread.h"
 #include "list.h"
-#include <queue>
 
 // The following class defines a "semaphore" whose value is a non-negative
 // integer.  The semaphore has only two operations P() and V():
@@ -81,10 +80,6 @@ class Lock {
   private:
     char* name;				// for debugging
     // plus some other stuff you'll need to define
-    Thread *owner;
-    bool BUSY;
-    Lock *waitingLock;
-    //std::queue<Thread*> cvWaitQueue;
 };
 
 // The following class defines a "condition variable".  A condition
@@ -137,6 +132,5 @@ class Condition {
   private:
     char* name;
     // plus some other stuff you'll need to define
-    //std::queue<Thread*> cvWaitQueue;
 };
 #endif // SYNCH_H
