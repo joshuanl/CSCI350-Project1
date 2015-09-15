@@ -11,6 +11,8 @@
 
 #include "copyright.h"
 #include "system.h"
+#include <cmath>
+#include <time.h>
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -415,3 +417,219 @@ void TestSuite() {
 
 }
 #endif
+
+
+class Client : Thread{
+
+private:
+	int money;
+	int ssn;
+	bool applicationAccepted;
+	bool pictureTaken;
+	bool bribed; 	//reset after each line
+public:
+	Client(int num, int startMoney){
+		ssn = num;
+		money = startMoney;
+
+		applicationAccepted = false;
+		pictureTaken = false;
+		bribed = false;
+	}//end of client constructor
+
+	~Client(){
+
+	}//end of client deconstructor
+
+	void moveUpInLine(){
+		if(money >= 700){
+			money -= 600;
+			bribed = true;
+		}
+	}//end of move up in line
+
+	bool setAppAccepted(bool b){
+		applicationAccepted = b;
+	}
+
+	bool setPictureTaken(bool b){
+		pictureTaken = b;
+	}
+
+	bool isAppAccepted(){
+		return applicationAccepted;
+	}//end of isappaccepted
+
+	bool isPictureTaken(){
+		return pictureTaken;
+	}//end of of is picture taken
+
+	bool alreadyBribed(){
+		return bribed;
+	}//end of br
+
+	void run(){
+
+
+	}
+};  //end of client class
+
+
+class ApplicationClerk : Thread{
+private:
+	int clerkState; // 0: available     1: busy       2: on break
+	int lineCount;   
+	int bribeLineCount;
+
+public:
+	ApplicationClerk(){
+
+	}//end of constructor
+
+	~ApplicationClerk(){
+		clerkState = 0;
+		lineCount = 0;
+		bribeLineCount = 0;
+
+	}//endo of deconstructor
+
+	int getClerkState(){
+		return clerkState;
+	}//end of getclerkstate
+
+	void setClerkState(int n){
+		clerkState = n;
+	}//end of setting clerkstate
+
+	void addToLine(){
+		lineCount++;
+	}//end of adding to line
+
+	void addToBribeLine(){
+		bribeLineCount++;
+	}//end of adding to bribe line
+
+	void run(){
+
+
+	}
+}; //end of class
+
+
+class PictureClerk : Thread{
+private:
+	int clerkState; // 0: available     1: busy       2: on break
+	int lineCount;   
+	int bribeLineCount;
+public:
+
+	PictureClerk(){
+		clerkstate = 0;
+		lineCount = 0;
+		bribeLineCount = 0;
+	}//end of constructor
+
+	~PictureClerk(){
+
+	}//end of deconstructor
+
+	int getClerkState(){
+		return clerkState;
+	}//end of getclerkstate
+
+	void setClerkState(int n){
+		clerkState = n;
+	}//end of setting clerkstate
+
+	void addToLine(){
+		lineCount++;
+	}//end of adding to line
+
+	void addToBribeLine(){
+		bribeLineCount++;
+	}//end of adding to bribe line
+
+	void run(){
+
+
+	}
+}; //end of picture clerk
+
+class PassPortClerk : Thread{
+private:
+	int clerkState; // 0: available     1: busy       2: on break
+	int lineCount;   
+	int bribeLineCount;
+public:
+
+	PassPortClerk(){
+		clerkstate = 0;
+		lineCount = 0;
+		bribeLineCount = 0;
+	}//end of constructor
+
+	~PassPortClerk(){
+
+	}//end of deconstructor
+
+	int getClerkState(){
+		return clerkState;
+	}//end of getclerkstate
+
+	void setClerkState(int n){
+		clerkState = n;
+	}//end of setting clerkstate
+
+	void addToLine(){
+		lineCount++;
+	}//end of adding to line
+
+	void addToBribeLine(){
+		bribeLineCount++;
+	}//end of adding to bribe line
+
+	void run(){
+
+
+	}
+}; // end of passport clerk	
+
+
+class Cashier : Thread{
+private:
+	int clerkState; // 0: available     1: busy       2: on break
+	int lineCount;   
+	int bribeLineCount;
+public:
+
+	Cashier(){
+		clerkstate = 0;
+		lineCount = 0;
+		bribeLineCount = 0;
+	}//end of constructor
+
+	~Cashier(){
+
+	}//end of deconstructor
+
+	int getClerkState(){
+		return clerkState;
+	}//end of getclerkstate
+
+	void setClerkState(int n){
+		clerkState = n;
+	}//end of setting clerkstate
+
+	void addToLine(){
+		lineCount++;
+	}//end of adding to line
+
+	void addToBribeLine(){
+		bribeLineCount++;
+	}//end of adding to bribe line
+
+	void run(){
+
+
+	}
+}; // end of cashier clerk	

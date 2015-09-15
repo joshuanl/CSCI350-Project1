@@ -53,6 +53,8 @@
 #include "utility.h"
 #include "system.h"
 
+#include <iostream>
+
 
 
 // External functions used by this file
@@ -90,6 +92,8 @@ main(int argc, char **argv)
     DEBUG('t', "Entering main");
     (void) Initialize(argc, argv);
     
+
+
 // #ifdef THREADS
 //     //ThreadTest();
 // #endif
