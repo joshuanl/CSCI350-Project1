@@ -83,7 +83,6 @@ class Lock {
     // plus some other stuff you'll need to define
     Thread *owner;
     bool BUSY;
-    
     std::queue<Thread*> lockWaitQueue;
 };
 

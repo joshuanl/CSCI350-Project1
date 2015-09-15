@@ -24,6 +24,7 @@
 #include "copyright.h"
 #include "synch.h"
 #include "system.h"
+#include <queue>
 #include <iostream>
 
 //----------------------------------------------------------------------
@@ -105,12 +106,12 @@ Lock::Lock(char* debugName) {
     name = debugName;
     owner = NULL;
     BUSY = false;
+
 }
 Lock::~Lock() {
     delete name;
     delete owner;
 }
-
 void Lock::Acquire() {
     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
     if(owner != NULL && owner == currentThread){
@@ -127,8 +128,8 @@ void Lock::Acquire() {
     }
     (void) interrupt->SetLevel(old);
     return;
-}//end of acquire
 
+}
 void Lock::Release() {
     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
     if(currentThread != owner){
@@ -147,14 +148,16 @@ void Lock::Release() {
     }
     (void) interrupt->SetLevel(old);     //retore interrupts
     return;
-}//end of release
+}
 
 Condition::Condition(char* debugName) { 
     waitingLock = NULL;
 }
-Condition::~Condition() { }
+Condition::~Condition() { 
+
+}
 void Condition::Wait(Lock* conditionLock) { 
-    //ASSERT(FALSE);
+    ASSERT(FALSE); 
     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
     if(conditionLock == NULL){
         std::cout << " >> Error!  Recieved a NULL lock in Condition::Wait(...)" << std::endl;
@@ -175,8 +178,7 @@ void Condition::Wait(Lock* conditionLock) {
     conditionLock->Acquire();
     (void) interrupt->SetLevel(old);
     return;
-}//end of Condition::Wait()
-
+}
 void Condition::Signal(Lock* conditionLock) { 
     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
     if(waitingLock == NULL){        
@@ -196,10 +198,9 @@ void Condition::Signal(Lock* conditionLock) {
     }
     (void) interrupt->SetLevel(old);
     return;
-}//end of Condition::Signal
-
+}
 void Condition::Broadcast(Lock* conditionLock) { 
-     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
+    IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
      if(conditionLock == NULL){
         (void) interrupt->SetLevel(old);
         return;
@@ -213,4 +214,4 @@ void Condition::Broadcast(Lock* conditionLock) {
     while(!cvWaitQueue.empty()){
         Signal(conditionLock);
     }
-}//end of Condition::Broadcast
+}

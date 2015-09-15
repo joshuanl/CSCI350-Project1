@@ -1,4 +1,5 @@
 // threadtest.cc 
+//	Simple test case for the threads assignment.
 //
 //	Create two threads, and have them context switch
 //	back and forth between themselves by calling Thread::Yield, 
@@ -48,11 +49,14 @@ ThreadTest()
     SimpleThread(0);
 }
 
-//	Simple test cases for the threads assignment.
-//
+void Problem2(){
 
-#include "copyright.h"
-#include "system.h"
+
+}
+
+
+// #include "copyright.h"
+// #include "system.h"
 #ifdef CHANGED
 #include "synch.h"
 #endif
