@@ -13,6 +13,7 @@
 #include "system.h"
 #include <cmath>
 #include <time.h>
+#include <map>
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -600,6 +601,10 @@ private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
 	int bribeLineCount;
+
+	//place map in monitor
+	//map<*Client, bool> clientRecords;   //records client and bool  if a passport got handed back
+									  //only one passport per client
 public:
 
 	Cashier(){
@@ -632,4 +637,21 @@ public:
 
 
 	}
+
+	// place below in monitor
+	// void recordCustomer(Client *c){	//should only be called after payment
+	// 	clientRecords(std::pair<*Client, bool>(c, true));
+	// }//end of recording customer in books 
+
 }; // end of cashier clerk	
+
+
+class Manager : Thread {
+
+
+}; //end of manager class
+
+
+class Senator : Thread{
+
+}//end of senator class
