@@ -420,7 +420,7 @@ void TestSuite() {
 #endif
 
 
-class Client : Thread{
+class Client : public Thread{
 
 private:
 	int money;
@@ -429,7 +429,8 @@ private:
 	bool pictureTaken;
 	bool bribed; 	//reset after each line
 public:
-	Client(int num, int startMoney){
+	Client(int num, int startMoney) : Thread("client"){
+
 		ssn = num;
 		money = startMoney;
 
@@ -449,11 +450,11 @@ public:
 		}
 	}//end of move up in line
 
-	bool setAppAccepted(bool b){
+	void setAppAccepted(bool b){
 		applicationAccepted = b;
 	}
 
-	bool setPictureTaken(bool b){
+	void setPictureTaken(bool b){
 		pictureTaken = b;
 	}
 
@@ -472,35 +473,34 @@ public:
 	void run(){
 
 
-	}
+	}//end of run
 };  //end of client class
 
 
-class ApplicationClerk : Thread{
+class ApplicationClerk : public Thread{
 private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
 	int bribeLineCount;
 
 public:
-	ApplicationClerk(){
-
-	}//end of constructor
-
-	~ApplicationClerk(){
+	ApplicationClerk() : Thread("ac"){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
+	}//end of constructor
+
+	~ApplicationClerk(){
 
 	}//endo of deconstructor
 
-	int getClerkState(){
+	int getclerkState(){
 		return clerkState;
-	}//end of getclerkstate
+	}//end of getclerkState
 
-	void setClerkState(int n){
+	void setclerkState(int n){
 		clerkState = n;
-	}//end of setting clerkstate
+	}//end of setting clerkState
 
 	void addToLine(){
 		lineCount++;
@@ -510,22 +510,34 @@ public:
 		bribeLineCount++;
 	}//end of adding to bribe line
 
+	void goOnBreak(){
+		clerkState = 2;
+		//send to sleep
+
+	}//end of sending clerk to break;
+
+	void goBackToWork(){
+		clerkState = 1;
+		//wake up from sleep
+
+	}//end of going back to work
+
 	void run(){
 
 
-	}
+	}//end of run
 }; //end of class
 
 
-class PictureClerk : Thread{
+class PictureClerk : public Thread{
 private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
 	int bribeLineCount;
 public:
 
-	PictureClerk(){
-		clerkstate = 0;
+	PictureClerk() : Thread("pc"){
+		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 	}//end of constructor
@@ -534,13 +546,13 @@ public:
 
 	}//end of deconstructor
 
-	int getClerkState(){
+	int getclerkState(){
 		return clerkState;
-	}//end of getclerkstate
+	}//end of getclerkState
 
-	void setClerkState(int n){
+	void setclerkState(int n){
 		clerkState = n;
-	}//end of setting clerkstate
+	}//end of setting clerkState
 
 	void addToLine(){
 		lineCount++;
@@ -550,21 +562,33 @@ public:
 		bribeLineCount++;
 	}//end of adding to bribe line
 
+	void goOnBreak(){
+		clerkState = 2;
+		//send to sleep
+
+	}//end of sending clerk to break;
+
+	void goBackToWork(){
+		clerkState = 1;
+		//wake up from sleep
+
+	}//end of going back to work
+
 	void run(){
 
 
-	}
+	}//end of run
 }; //end of picture clerk
 
-class PassPortClerk : Thread{
+class PassPortClerk : public Thread{
 private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
 	int bribeLineCount;
 public:
 
-	PassPortClerk(){
-		clerkstate = 0;
+	PassPortClerk() : Thread("ppc"){
+		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 	}//end of constructor
@@ -573,13 +597,13 @@ public:
 
 	}//end of deconstructor
 
-	int getClerkState(){
+	int getclerkState(){
 		return clerkState;
-	}//end of getclerkstate
+	}//end of getclerkState
 
-	void setClerkState(int n){
+	void setclerkState(int n){
 		clerkState = n;
-	}//end of setting clerkstate
+	}//end of setting clerkState
 
 	void addToLine(){
 		lineCount++;
@@ -589,14 +613,26 @@ public:
 		bribeLineCount++;
 	}//end of adding to bribe line
 
+	void goOnBreak(){
+		clerkState = 2;
+		//send to sleep
+
+	}//end of sending clerk to break;
+
+	void goBackToWork(){
+		clerkState = 1;
+		//wake up from sleep
+
+	}//end of going back to work
+
 	void run(){
 
 
-	}
+	}//end of run
 }; // end of passport clerk	
 
 
-class Cashier : Thread{
+class Cashier : public Thread{
 private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
@@ -607,8 +643,8 @@ private:
 									  //only one passport per client
 public:
 
-	Cashier(){
-		clerkstate = 0;
+	Cashier() : Thread("cc"){
+		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 	}//end of constructor
@@ -617,13 +653,13 @@ public:
 
 	}//end of deconstructor
 
-	int getClerkState(){
+	int getclerkState(){
 		return clerkState;
-	}//end of getclerkstate
+	}//end of getclerkState
 
-	void setClerkState(int n){
+	void setclerkState(int n){
 		clerkState = n;
-	}//end of setting clerkstate
+	}//end of setting clerkState
 
 	void addToLine(){
 		lineCount++;
@@ -633,10 +669,22 @@ public:
 		bribeLineCount++;
 	}//end of adding to bribe line
 
+	void goOnBreak(){
+		clerkState = 2;
+		//send to sleep
+
+	}//end of sending clerk to break;
+
+	void goBackToWork(){
+		clerkState = 1;
+		//wake up from sleep
+
+	}//end of going back to work
+
 	void run(){
 
 
-	}
+	}//end of run
 
 	// place below in monitor
 	// void recordCustomer(Client *c){	//should only be called after payment
@@ -647,11 +695,80 @@ public:
 
 
 class Manager : Thread {
+private:
+	std::vector<ApplicationClerk *> aClerks;
+	std::vector<PictureClerk *> pClerks;
+	std::vector<PassPortClerk *> ppClerks;
+	std::vector<Cashier *> cClerk;
+public:
+	Manager(std::vector<ApplicationClerk *> ac, std::vector<PictureClerk *> pc, std::vector<PassPortClerk *> ppc, std::vector<Cashier *> cc) : Thread("manager"){
+		aClerks = ac;
+		pClerks = pc;
+		ppClerks = ppc;
+		cClerk = cc;
+	}//end of constructor
 
+	~Manager(){
+
+	}//end of deconstructor
+
+	void wakeupClerks(){
+
+	}//end of waking up clerks
+
+	void run(){		//run as -rs 
+
+	}//end of run
 
 }; //end of manager class
 
 
-class Senator : Thread{
+class Senator : public Thread{
+private:
+	int money;
+	int ssn;
+	bool applicationAccepted;
+	bool pictureTaken;
+	bool bribed;
+public:
 
-}//end of senator class
+	Senator() : Thread("senator"){
+
+	}//end of constructor
+
+	~Senator(){
+
+
+	}//end of deconstructor
+	void moveUpInLine(){
+		if(money >= 700){
+			money -= 600;
+			bribed = true;
+		}
+	}//end of move up in line
+
+	void setAppAccepted(bool b){
+		applicationAccepted = b;
+	}
+
+	void setPictureTaken(bool b){
+		pictureTaken = b;
+	}
+
+	bool isAppAccepted(){
+		return applicationAccepted;
+	}//end of isappaccepted
+
+	bool isPictureTaken(){
+		return pictureTaken;
+	}//end of of is picture taken
+
+	bool alreadyBribed(){
+		return bribed;
+	}//end of br
+
+	void run(){
+
+
+	}//end of run
+};//end of senator class
