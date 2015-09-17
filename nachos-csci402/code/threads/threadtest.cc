@@ -647,6 +647,58 @@ public:
 
 
 class Manager : Thread {
+private: 
+	int passportClerkState; //1 if clerk is on break and 0 if clerk is not on break
+	int pictureClerkState; //1 if clerk is on break and 0 if clerk is not on break
+	int applicationClerkState; //1 if clerk is on break and 0 if clerk is not on break
+	int totalClerkMoney; //How much money from all the clerks combined
+	int passPortClerkTotal; //How much money from the Passport Clerk
+	int pictureClerkTotal; //How much money from the Picture Clerk
+	int applicationClerkTotal; //How much money from the Application Clerk
+
+public: 
+	Manager() {
+		passportClerkState = 0; //1 if clerk is on break and 0 if clerk is not on break
+		pictureClerkState = 0; //1 if clerk is on break and 0 if clerk is not on break
+		applicationClerkState = 0; //1 if clerk is on break and 0 if clerk is not on break
+		totalClerkMoney = 0;
+		passPortClerkTotal = 0;
+		pictureClerkTotal = 0;
+		applicationClerkTotal = 0;
+	} //end of constructor
+
+	~Manager() {
+	} //end of destructor
+
+	void setPassportClerkState (int n) {
+		passportClerkState = n;
+	} //end of setting passport clerk state
+
+	void setPictureClerkState (int n) {
+		pictureClerkState = n;
+	} //end of setting picture clerk state
+
+	void setApplicationClerkState (int n) {
+		applicationClerkState = n;
+	} //end of setting application clerk state
+
+
+	int getPassportClerkState () {
+		return passportClerkState;
+	} //end of getting passport clerk state
+
+	int getPictureClerkState () {
+		return pictureClerkState;
+	} //end of getting picture clerk state
+
+	int getApplicationClerkState () {
+		return applicationClerkState;
+	} //end of getting application clerk state
+
+
+	//void wakeClerk (Clerk k) {
+		// If there are 3 people in clerk line AND there is a clerk on break then we need to change the state of the clerk
+	//}
 
 
 }; //end of manager class
