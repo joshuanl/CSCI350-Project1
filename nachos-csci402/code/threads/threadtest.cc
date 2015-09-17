@@ -9,8 +9,32 @@
 // All rights reserved.  See copyright.h for copyright notice and limitation 
 // of liability and disclaimer of warranty provisions.
 
+
+/*
+	
+	need to figure out which member variables need to be global
+		- ex: lock in monitors need to be global // didnt fix yet
+
+	need to make functions to be able to fork 
+	ex:
+	void passPortClerk(){
+		PassPortClerk *ppc = new PassportClerk(...)
+			//maybe dont need to make a ptr?
+	}
+
+	
+	How to share/communicate data between customer/clerk? 
+	
+
+*/
+
+
+
+
+
 #include "copyright.h"
 #include "system.h"
+#include "synch.h"
 #include <cmath>
 #include <time.h>
 #include <map>
@@ -695,7 +719,6 @@ public:
 
 
 class Manager : Thread {
-<<<<<<< HEAD
 private:
 	std::vector<ApplicationClerk *> aClerks;
 	std::vector<PictureClerk *> pClerks;
@@ -773,3 +796,99 @@ public:
 
 	}//end of run
 };//end of senator class
+
+class ApplicationMonitor : public Thread{
+private:
+	Lock *clerkLineLock;					// move to be global variable
+	Condition clerkLineCV[5]
+	Condition clerkBribeLineCV[5];
+
+	int clerkLineCount[5];
+	int clerkBribeLineCount[5];
+	int clerkState[5];	//0: available     1: busy    2: on break
+
+public:
+	ApplicationMonitor() : Thread("client monitor"){
+
+	}//end of constructor
+
+	~ApplicationMonitor(){
+
+	}//end of deconstructor
+
+	Lock* getLock(){
+		return clerkLineLock;
+	}//end of getting lock
+};
+
+class PictureMonitor : public Thread{
+private:
+	Lock *clerkLineLock;
+	Condition clerkLineCV[5]
+	Condition clerkBribeLineCV[5];
+
+	int clerkLineCount[5];
+	int clerkBribeLineCount[5];
+	int clerkState[5];	//0: available     1: busy    2: on break
+
+public:
+	PictureMonitor() : Thread("client monitor"){
+
+	}//end of constructor
+
+	~PictureMonitor(){
+
+	}//end of deconstructor
+
+	Lock* getLock(){
+		return clerkLineLock;
+	}//end of getting lock
+};
+
+class PassPortMonitor : public Thread{
+private:
+	Lock *clerkLineLock;
+	Condition clerkLineCV[5]
+	Condition clerkBribeLineCV[5];
+
+	int clerkLineCount[5];
+	int clerkBribeLineCount[5];
+	int clerkState[5];	//0: available     1: busy    2: on break
+
+public:
+	PassPortMonitor() : Thread("client monitor"){
+
+	}//end of constructor
+
+	~PassPortMonitor(){
+
+	}//end of deconstructor
+
+	Lock* getLock(){
+		return clerkLineLock;
+	}//end of getting lock
+};
+
+class CashierMonitor : public Thread{
+private:
+	Lock *clerkLineLock;
+	Condition clerkLineCV[5]
+	Condition clerkBribeLineCV[5];
+
+	int clerkLineCount[5];
+	int clerkBribeLineCount[5];
+	int clerkState[5];	//0: available     1: busy    2: on break
+
+public:
+	CashierMonitor() : Thread("client monitor"){
+
+	}//end of constructor
+
+	~CashierMonitor(){
+
+	}//end of deconstructor
+
+	Lock* getLock(){
+		return clerkLineLock;
+	}//end of getting lock
+};
