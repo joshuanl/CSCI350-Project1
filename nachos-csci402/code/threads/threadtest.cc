@@ -695,6 +695,7 @@ public:
 
 
 class Manager : Thread {
+<<<<<<< HEAD
 private:
 	std::vector<ApplicationClerk *> aClerks;
 	std::vector<PictureClerk *> pClerks;
