@@ -12,7 +12,7 @@
 
 /*
 	
-	classes do not inheirit from Thread // need to fix
+	classes do not inheirit from Thread // fixed
 
 	need to figure out which member variables need to be global
 		- ex: lock in monitors need to be global // didnt fix yet
@@ -55,6 +55,54 @@
 //	purposes.
 //----------------------------------------------------------------------
 
+
+
+void Problem2(){
+	srand(time(NULL));
+	int customer_thread_num;
+	int applicationClerk_thread_num;
+	int passPortClerk_thread_num;
+	int pictureClerk_thread_num;
+	int manager_thread_num;
+	int senator_thread_num;
+	//create menu here to figure out how many threads of each
+
+	//create for loop for each and fork
+	for(int i = 0; i < customer_thread_num; i++){
+		Thread *t = new Thread("customer thread");
+		t->Fork(runCustomer(), rand()%17171);
+	}//end of for
+
+}//end of problem 2
+
+void runCustomer(){
+
+}//end of making customer
+
+void applicationClerk(){
+
+}//end of making application clerk
+
+void passPortClerk(){
+
+}//end of making passportClerk
+
+
+void pictureClerk(){
+
+
+}//end of making picture clerk
+
+void makeManager(){
+
+}//end of making manager
+
+void makeSenator(){
+
+}//end of making senator
+
+
+
 void
 SimpleThread(int which)
 {
@@ -83,10 +131,6 @@ ThreadTest()
     SimpleThread(0);
 }
 
-void Problem2(){
-
-
-}
 
 
 // #include "copyright.h"
@@ -451,7 +495,7 @@ void TestSuite() {
 #endif
 
 
-class Client : public Thread{
+class Client {
 
 private:
 	int money;
@@ -501,14 +545,10 @@ public:
 		return bribed;
 	}//end of br
 
-	void run(){
-
-
-	}//end of run
 };  //end of client class
 
 
-class ApplicationClerk : public Thread{
+class ApplicationClerk {
 private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
@@ -552,15 +592,10 @@ public:
 		//wake up from sleep
 
 	}//end of going back to work
-
-	void run(){
-
-
-	}//end of run
 }; //end of class
 
 
-class PictureClerk : public Thread{
+class PictureClerk {
 private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
@@ -605,13 +640,9 @@ public:
 
 	}//end of going back to work
 
-	void run(){
-
-
-	}//end of run
 }; //end of picture clerk
 
-class PassPortClerk : public Thread{
+class PassPortClerk {
 private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
@@ -656,14 +687,10 @@ public:
 
 	}//end of going back to work
 
-	void run(){
-
-
-	}//end of run
 }; // end of passport clerk	
 
 
-class Cashier : public Thread{
+class Cashier {
 private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
@@ -712,11 +739,6 @@ public:
 
 	}//end of going back to work
 
-	void run(){
-
-
-	}//end of run
-
 	// place below in monitor
 	// void recordCustomer(Client *c){	//should only be called after payment
 	// 	clientRecords(std::pair<*Client, bool>(c, true));
@@ -725,7 +747,7 @@ public:
 }; // end of cashier clerk	
 
 
-class Manager : Thread {
+class Manager {
 private:
 	std::vector<ApplicationClerk *> aClerks;
 	std::vector<PictureClerk *> pClerks;
@@ -747,14 +769,10 @@ public:
 
 	}//end of waking up clerks
 
-	void run(){		//run as -rs 
-
-	}//end of run
-
 }; //end of manager class
 
 
-class Senator : public Thread{
+class Senator {
 private:
 	int money;
 	int ssn;
@@ -798,13 +816,9 @@ public:
 		return bribed;
 	}//end of br
 
-	void run(){
-
-
-	}//end of run
 };//end of senator class
 
-class ApplicationMonitor : public Thread{
+class ApplicationMonitor {
 private:
 	Lock *clerkLineLock;					// move to be global variable
 	Condition clerkLineCV[5]
@@ -828,7 +842,7 @@ public:
 	}//end of getting lock
 };
 
-class PictureMonitor : public Thread{
+class PictureMonitor {
 private:
 	Lock *clerkLineLock;
 	Condition clerkLineCV[5]
@@ -852,7 +866,7 @@ public:
 	}//end of getting lock
 };
 
-class PassPortMonitor : public Thread{
+class PassPortMonitor {
 private:
 	Lock *clerkLineLock;
 	Condition clerkLineCV[5]
@@ -876,7 +890,7 @@ public:
 	}//end of getting lock
 };
 
-class CashierMonitor : public Thread{
+class CashierMonitor {
 private:
 	Lock *clerkLineLock;
 	Condition clerkLineCV[5]
