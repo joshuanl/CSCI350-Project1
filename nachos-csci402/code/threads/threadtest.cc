@@ -57,52 +57,6 @@
 
 
 
-void Problem2(){
-	srand(time(NULL));
-	int customer_thread_num;
-	int applicationClerk_thread_num;
-	int passPortClerk_thread_num;
-	int pictureClerk_thread_num;
-	int manager_thread_num;
-	int senator_thread_num;
-	//create menu here to figure out how many threads of each
-
-	//create for loop for each and fork
-	for(int i = 0; i < customer_thread_num; i++){
-		Thread *t = new Thread("customer thread");
-		t->Fork(runCustomer(), rand()%17171);
-	}//end of for
-
-}//end of problem 2
-
-void runCustomer(){
-
-}//end of making customer
-
-void applicationClerk(){
-
-}//end of making application clerk
-
-void passPortClerk(){
-
-}//end of making passportClerk
-
-
-void pictureClerk(){
-
-
-}//end of making picture clerk
-
-void makeManager(){
-
-}//end of making manager
-
-void makeSenator(){
-
-}//end of making senator
-
-
-
 void
 SimpleThread(int which)
 {
@@ -504,7 +458,7 @@ private:
 	bool pictureTaken;
 	bool bribed; 	//reset after each line
 public:
-	Client(int num, int startMoney) : Thread("client"){
+	Client(int num, int startMoney){
 
 		ssn = num;
 		money = startMoney;
@@ -555,7 +509,7 @@ private:
 	int bribeLineCount;
 
 public:
-	ApplicationClerk() : Thread("ac"){
+	ApplicationClerk(){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
@@ -602,7 +556,7 @@ private:
 	int bribeLineCount;
 public:
 
-	PictureClerk() : Thread("pc"){
+	PictureClerk(){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
@@ -649,7 +603,7 @@ private:
 	int bribeLineCount;
 public:
 
-	PassPortClerk() : Thread("ppc"){
+	PassPortClerk(){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
@@ -701,7 +655,7 @@ private:
 									  //only one passport per client
 public:
 
-	Cashier() : Thread("cc"){
+	Cashier(){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
@@ -754,7 +708,7 @@ private:
 	std::vector<PassPortClerk *> ppClerks;
 	std::vector<Cashier *> cClerk;
 public:
-	Manager(std::vector<ApplicationClerk *> ac, std::vector<PictureClerk *> pc, std::vector<PassPortClerk *> ppc, std::vector<Cashier *> cc) : Thread("manager"){
+	Manager(std::vector<ApplicationClerk *> ac, std::vector<PictureClerk *> pc, std::vector<PassPortClerk *> ppc, std::vector<Cashier *> cc) {
 		aClerks = ac;
 		pClerks = pc;
 		ppClerks = ppc;
@@ -781,7 +735,7 @@ private:
 	bool bribed;
 public:
 
-	Senator() : Thread("senator"){
+	Senator(){
 
 	}//end of constructor
 
@@ -821,15 +775,15 @@ public:
 class ApplicationMonitor {
 private:
 	Lock *clerkLineLock;					// move to be global variable
-	Condition clerkLineCV[5]
-	Condition clerkBribeLineCV[5];
+	//Condition clerkLineCV[5];
+	//Condition clerkBribeLineCV[5];
 
 	int clerkLineCount[5];
 	int clerkBribeLineCount[5];
 	int clerkState[5];	//0: available     1: busy    2: on break
 
 public:
-	ApplicationMonitor() : Thread("client monitor"){
+	ApplicationMonitor(){
 
 	}//end of constructor
 
@@ -845,15 +799,15 @@ public:
 class PictureMonitor {
 private:
 	Lock *clerkLineLock;
-	Condition clerkLineCV[5]
-	Condition clerkBribeLineCV[5];
+	//Condition clerkLineCV[5];
+	//Condition clerkBribeLineCV[5];
 
 	int clerkLineCount[5];
 	int clerkBribeLineCount[5];
 	int clerkState[5];	//0: available     1: busy    2: on break
 
 public:
-	PictureMonitor() : Thread("client monitor"){
+	PictureMonitor(){
 
 	}//end of constructor
 
@@ -869,15 +823,15 @@ public:
 class PassPortMonitor {
 private:
 	Lock *clerkLineLock;
-	Condition clerkLineCV[5]
-	Condition clerkBribeLineCV[5];
+	//Condition clerkLineCV[5];
+	//Condition clerkBribeLineCV[5];
 
 	int clerkLineCount[5];
 	int clerkBribeLineCount[5];
 	int clerkState[5];	//0: available     1: busy    2: on break
 
 public:
-	PassPortMonitor() : Thread("client monitor"){
+	PassPortMonitor(){
 
 	}//end of constructor
 
@@ -893,15 +847,15 @@ public:
 class CashierMonitor {
 private:
 	Lock *clerkLineLock;
-	Condition clerkLineCV[5]
-	Condition clerkBribeLineCV[5];
+	//Condition clerkLineCV[5];
+	//Condition clerkBribeLineCV[5];
 
 	int clerkLineCount[5];
 	int clerkBribeLineCount[5];
 	int clerkState[5];	//0: available     1: busy    2: on break
 
 public:
-	CashierMonitor() : Thread("client monitor"){
+	CashierMonitor(){
 
 	}//end of constructor
 
@@ -913,3 +867,51 @@ public:
 		return clerkLineLock;
 	}//end of getting lock
 };
+
+
+
+
+void runCustomer(){
+
+}//end of making customer
+
+void applicationClerk(){
+
+}//end of making application clerk
+
+void passPortClerk(){
+
+}//end of making passportClerk
+
+
+void pictureClerk(){
+
+
+}//end of making picture clerk
+
+void makeManager(){
+
+}//end of making manager
+
+void makeSenator(){
+
+}//end of making senator
+
+
+void Problem2(){
+	/*srand(time(NULL));
+	int customer_thread_num;
+	int applicationClerk_thread_num;
+	int passPortClerk_thread_num;
+	int pictureClerk_thread_num;
+	int manager_thread_num;
+	int senator_thread_num;
+	//create menu here to figure out how many threads of each
+
+	//create for loop for each and fork
+	for(int i = 0; i < customer_thread_num; i++){
+		Thread *t = new Thread("customer thread");
+		t->Fork( (VoidFunctionPtr)runCustomer(), rand()%17171);
+	}//end of for
+*/
+}//end of problem 2
