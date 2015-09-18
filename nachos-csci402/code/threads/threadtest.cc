@@ -871,7 +871,7 @@ public:
 
 
 
-void runCustomer(){
+void* runCustomer(){
 
 }//end of making customer
 
@@ -899,7 +899,7 @@ void makeSenator(){
 
 
 void Problem2(){
-	/*srand(time(NULL));
+	srand(time(NULL));
 	int customer_thread_num;
 	int applicationClerk_thread_num;
 	int passPortClerk_thread_num;
@@ -911,7 +911,7 @@ void Problem2(){
 	//create for loop for each and fork
 	for(int i = 0; i < customer_thread_num; i++){
 		Thread *t = new Thread("customer thread");
-		t->Fork( (VoidFunctionPtr)runCustomer(), rand()%17171);
+		t->Fork(((VoidFunctionPtr)runCustomer()), rand()%17171);
 	}//end of for
-*/
+
 }//end of problem 2
