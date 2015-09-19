@@ -24,7 +24,7 @@
 #include "copyright.h"
 #include "synch.h"
 #include "system.h"
-#include <queue>
+#include <vector>
 #include <iostream>
 
 //----------------------------------------------------------------------
@@ -123,7 +123,7 @@ void Lock::Acquire() {
         owner = currentThread;
     }
     else{                                     //lock is acquired by someone else so put currentthread to sleep
-        lockWaitQueue.push(currentThread);
+        lockWaitQueue.push_back(currentThread);
         currentThread->Sleep();
     }
     (void) interrupt->SetLevel(old);
@@ -140,7 +140,7 @@ void Lock::Release() {
     }//end of if not owner
     if(!lockWaitQueue.empty()){         //check if there is a thread waiting on the lock
         owner = lockWaitQueue.front();  //get next thread in the wait queue
-        lockWaitQueue.pop();            //removing thread from wait queue
+        lockWaitQueue.erase(lockWaitQueue.begin());           //removing thread from wait queue
         scheduler->ReadyToRun(owner);   //setting the next thread to be the owner
     }//end of if
     else{
@@ -156,7 +156,10 @@ Condition::Condition(char* debugName) {
     name = debugName;
 }
 Condition::~Condition() { 
-
+    delete waitingLock;
+    for(unsigned int i=0; i<cvWaitQueue.size(); i++){
+        //delete[] cvWaitQueue;
+    }
 }
 void Condition::Wait(Lock* conditionLock) { 
     //ASSERT(FALSE); 
@@ -174,7 +177,7 @@ void Condition::Wait(Lock* conditionLock) {
         (void) interrupt->SetLevel(old);
         return;
     }//end of if
-    cvWaitQueue.push(currentThread);
+    cvWaitQueue.push_back(currentThread);
     conditionLock->Release();
     currentThread->Sleep();
     conditionLock->Acquire();
@@ -193,7 +196,7 @@ void Condition::Signal(Lock* conditionLock) {
         return;
     }
     Thread *t = cvWaitQueue.front();
-    cvWaitQueue.pop();
+    cvWaitQueue.erase(cvWaitQueue.begin());
     scheduler->ReadyToRun(t);
     if(cvWaitQueue.empty()){
         waitingLock = NULL;

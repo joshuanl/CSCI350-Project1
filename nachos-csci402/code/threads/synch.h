@@ -20,7 +20,7 @@
 #include "copyright.h"
 #include "thread.h"
 #include "list.h"
-#include <queue>
+#include <vector>
 
 // The following class defines a "semaphore" whose value is a non-negative
 // integer.  The semaphore has only two operations P() and V():
@@ -83,11 +83,11 @@ class Lock {
     // plus some other stuff you'll need to define
     Thread *owner;
     bool BUSY;
-    std::queue<Thread*> lockWaitQueue;
+    std::vector<Thread*> lockWaitQueue;
 };
 
 // The following class defines a "condition variable".  A condition
-// variable does not have a value, but threads may be queued, waiting
+// variable does not have a value, but threads may be vectord, waiting
 // on the variable.  These are only operations on a condition variable: 
 //
 //	Wait() -- release the lock, relinquish the CPU until signaled, 
@@ -136,7 +136,7 @@ class Condition {
   private:
     char* name;
     // plus some other stuff you'll need to define
-    std::queue<Thread*> cvWaitQueue;
+    std::vector<Thread*> cvWaitQueue;
     Lock *waitingLock;
 };
 #endif // SYNCH_H
