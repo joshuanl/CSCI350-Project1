@@ -43,3 +43,11 @@ Part 2:
 * Make a form of user input to be able to set the number of clerks prior to running the simulation.
 
 ## III. Design
+Part 2: A description of Classes added and Methods.
+* Class Client (aka Customer in Simulation) contains:
+  * The following variables: the int money representing how much money the customer has and int ssn to represent the social security number and customer identifier. The class contains two booleans to represent the stages of going through the passport office: pictureTaken to indicate whether the customer has successfully interacted with the Picture Clerk and received a photo, and applicationAccepted to denote whether or not the customer's application has been accepted after interacting with the Application clerk. There is an additional Boolean, bribed, that keeps track of whether the customer has currently bribed during this line, or not. The bribe boolean is reset with each line that the customer is in. 
+  * The following methods: moveUpInLine(), which will allow a customer with greater than or equal to 700 dollars to change their bribed variable to true for the following line that they are in, and result in a net loss of 600 dollars for the customer, setAppAccepted()- a method allowing the bool applicationAccepted to be set, setPictureTaken()- a method allowing the bool pictureTaken to be set, and the bool methods isAppAccepted(), isPictureTaken(), and alreadyBribed() which returns the booleans set in the Client class.
+
+* Class Application Clerk
+  * The following variables: the int clerkState which indicates the clerks state as follows: 0 available, 1 busy, 2 on break, the int lineCount representing the total number of customers in the clerk's line, and the int bribeCount, indicating the number of customers who have bribed the clerk waiting in line.
+  * The following methods: a getter and setter method for clerkState, denoted as getclerkState() and setclerkState(), the method addToLine() which increases lineCount by 1, the method addToBribeLine() which increases the bribeCount by 1, the method goToWork() which changes the clerk's state to 1 (busy), and the method goOneBreak() which changes the clerk's state to 2(busy).
