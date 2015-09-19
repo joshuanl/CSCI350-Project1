@@ -29,6 +29,6 @@ The simulation is to support the following numbers of each type of person:
 * Manager: only 1
 * Senators: up to 10
 
-## Assumptions
+## II. Assumptions
 
-## Design
+## III. Design
