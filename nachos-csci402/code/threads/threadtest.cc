@@ -546,6 +546,10 @@ public:
 		//wake up from sleep
 
 	}//end of going back to work
+
+	void makeAvailable(){
+		clerkState = 0;
+	} //set clerk state to available
 }; //end of class
 
 
@@ -594,6 +598,10 @@ public:
 
 	}//end of going back to work
 
+	void makeAvailable(){
+		clerkState = 0;
+	} //set clerk state to available
+
 }; //end of picture clerk
 
 class PassPortClerk {
@@ -640,6 +648,10 @@ public:
 		//wake up from sleep
 
 	}//end of going back to work
+
+	void makeAvailable(){
+		clerkState = 0;
+	} //set clerk state to available
 
 }; // end of passport clerk	
 
@@ -692,6 +704,10 @@ public:
 		//wake up from sleep
 
 	}//end of going back to work
+
+	void makeAvailable(){
+		clerkState = 0;
+	} //set clerk state to available
 
 	// place below in monitor
 	// void recordCustomer(Client *c){	//should only be called after payment
