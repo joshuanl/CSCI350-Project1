@@ -391,7 +391,7 @@ void TestSuite() {
     printf("Starting Test 2.  Note that it is an error if thread t2_t2\n");
     printf("completes\n");
 
-    t = new Thread("t2_t1");
+    t = new Thread("t2_t1");	
     t->Fork((VoidFunctionPtr)t2_t1,0);
 
     t = new Thread("t2_t2");
@@ -911,7 +911,9 @@ void Problem2(){
 	//create for loop for each and fork
 	for(int i = 0; i < customer_thread_num; i++){
 		Thread *t = new Thread("customer thread");
-		t->Fork(((VoidFunctionPtr)runCustomer()), rand()%17171);
+		// t->Fork(runCustomer(), 1);
+		// runCustomer();
+		t->Fork(((VoidFunctionPtr)runCustomer()), i+1);
 	}//end of for
 
 }//end of problem 2

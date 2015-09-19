@@ -109,7 +109,7 @@ Lock::Lock(char* debugName) {
 
 }
 Lock::~Lock() {
-    delete name;
+    //delete name;
     delete owner;
 }
 void Lock::Acquire() {
@@ -134,6 +134,7 @@ void Lock::Release() {
     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
     if(currentThread != owner){
         std::cout << " >> Error!  Trying to release a lock.\n >> You are not the lock owner!" << std::endl;
+        std::cout << " >> Name of Thread: " << (currentThread->getName()) << std::endl;
         (void) interrupt->SetLevel(old);
         return;
     }//end of if not owner
@@ -152,12 +153,13 @@ void Lock::Release() {
 
 Condition::Condition(char* debugName) { 
     waitingLock = NULL;
+    name = debugName;
 }
 Condition::~Condition() { 
 
 }
 void Condition::Wait(Lock* conditionLock) { 
-    ASSERT(FALSE); 
+    //ASSERT(FALSE); 
     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
     if(conditionLock == NULL){
         std::cout << " >> Error!  Recieved a NULL lock in Condition::Wait(...)" << std::endl;
