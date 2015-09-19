@@ -790,7 +790,7 @@ public:
 		aClerkMoney = 0;
 		ppClerkMoney = 0;
 		cClerkMoney = 0;
-		totalMoney = pClerkMoney + aClerkMoney + ppClerkMoney + cClerkMoney;
+		totalMoney = 0;
 
 	}//end of constructor
 
@@ -801,7 +801,7 @@ public:
 	void wakeupClerks(){
 
 	}//end of waking up clerks
-
+    
 	void updateTotalMoney(){
 		pClerkMoney = 0;
 		aClerkMoney = 0;
@@ -821,6 +821,26 @@ public:
 		}//end of for
 		totalMoney = pClerkMoney + aClerkMoney + ppClerkMoney + cClerkMoney;
 	}//end of updating total money 
+
+    int getaClerkMoney() {
+        return aClerkMoney;
+    }
+    
+    int getpClerkMoney() {
+        return pClerkMoney;
+    }
+    
+    int getppClerkMoney() {
+        return ppClerkMoney;
+    }
+    
+    int getcClerkMoney() {
+        return cClerkMoney;
+    }
+    
+    int gettotalMoney() {
+        return totalMoney;
+    } //End of getters for different clerk money
 
 }; //end of manager class
 
