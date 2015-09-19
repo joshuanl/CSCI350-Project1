@@ -30,5 +30,16 @@ The simulation is to support the following numbers of each type of person:
 * Senators: up to 10
 
 ## II. Assumptions
+Part 2:
+* We assume that if multiple clerks are on break, and multiple lines reach more than 3 customers waiting in line, the manager is to wake up one clerk at a time at an order chosen by us (can be random).
+* We assume that 5% of the time, the Passport Clerk will make a mistake with a customer and will not be able to process their application and the customer is to return to the back of the line.
+* Instead of using a data structure such as a list or an array, we use a Boolean to denote if a customer's application has been accepted, denoted by the Boolean 'isAppAccepted'.
+* We are not to use hash tables, because in the next project, Project 2, we will be converting this project to a Nachos user program written with only C, and further limitations. We can use ints and chars, and int arrays and char arrays- as well as structs of ints and chars. 
+* In the scenario with a limited number of customers, the clerk going on break scenario may result in breakage. For instance, if there is only one customer and a clerk goes on break- the customer will be standing in line eternally as more than three customers are required to be in line for the manager to bring the clerk back from the break. We do not have to address this particular item of breakage, it is allowed by this assignment.
+* Each interaction between two threads should have a different lock, we should not be holding onto a lock for a long time. It is assumed that we use different values of the 'rs' parameter to get context switches in different places.
+* The Manager class is a thread like the rest of the personelle in the simulation. In order to create timer capacity, we should use the Thread->Yield().
+* 20-50 customer threads allowed in the Big System test. For personal testing, we can use any number of customer threads.
+* All clerks can be bribed, but the cashier cannot be bribed.
+* Make a form of user input to be able to set the number of clerks prior to running the simulation.
 
 ## III. Design
