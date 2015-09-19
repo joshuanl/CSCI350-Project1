@@ -45,6 +45,7 @@
 #include <cmath>
 #include <time.h>
 #include <map>
+#include <sstream>
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -789,50 +790,46 @@ public:
 	void wakeupClerks(){
 
 	}//end of waking up clerks
+    
+	void updateTotalMoney(){
+		pClerkMoney = 0;
+		aClerkMoney = 0;
+		ppClerkMoney = 0;
+		cClerkMoney = 0;
+		for(int i=0; i < aClerks.size(); i++){		
+			aClerkMoney += aClerks[i]->getclerkMoney();
+		}//end of for
+		for(int i=0; i < pClerks.size(); i++){
+			pClerkMoney += aClerks[i]->getclerkMoney();
+		}//end of for
+		for(int i=0; i < ppClerks.size(); i++){
+			ppClerkMoney += aClerks[i]->getclerkMoney();
+		}//end of for
+		for(int i=0; i < cClerk.size(); i++){
+			cClerkMoney += aClerks[i]->getclerkMoney();
+		}//end of for
+		totalMoney = pClerkMoney + aClerkMoney + ppClerkMoney + cClerkMoney;
+	}//end of updating total money 
 
-	void setMoney(std::vector<ApplicationClerk *> ac, std::vector<PictureClerk *> pc, std::vector<PassPortClerk *> ppc, std::vector<Cashier *> cc) {
-		for (int i=0; i<ac.size(); i++)
-		{
-			aClerkMoney = aClerkMoney + ac[i].getclerkMoney();
-		}
-
-		for (int i=0; i<pc.size(); i++)
-		{
-			pClerkMoney = pClerkMoney + pc[i].getclerkMoney();
-		}
-
-		for (int i=0; i<ppc.size(); i++)
-		{
-			ppClerkMoney = ppClerkMoney + ppc[i].getclerkMoney();
-		}
-
-		for (int i=0; i<cc.size(); i++)
-		{
-			cClerkMoney = cClerkMoney + cc[i].getclerkMoney();
-		}
-
-		totalMoney = aClerkMoney + pClerkMoney + ppClerkMoney + cClerkMoney;
-	}
-
-	int getaClerkMoney() {
-		return aClerkMoney;
-	}
-
-	int getpClerkMoney() {
-		return pClerkMoney;
-	}
-
-	int getppClerkMoney() {
-		return ppClerkMoney;
-	}
-
-	int getcClerkMoney() {
-		return cClerkMoney;
-	}
-
-	int gettotalMoney() {
-		return totalMoney;
-	}
+    int getaClerkMoney() {
+        return aClerkMoney;
+    }
+    
+    int getpClerkMoney() {
+        return pClerkMoney;
+    }
+    
+    int getppClerkMoney() {
+        return ppClerkMoney;
+    }
+    
+    int getcClerkMoney() {
+        return cClerkMoney;
+    }
+    
+    int gettotalMoney() {
+        return totalMoney;
+    } //End of getters for different clerk money
 
 }; //end of manager class
 
@@ -886,8 +883,8 @@ public:
 class ApplicationMonitor {
 private:
 	Lock *clerkLineLock;					// move to be global variable
-	//Condition clerkLineCV[5];
-	//Condition clerkBribeLineCV[5];
+	Condition clerkLineCV[5];
+	Condition clerkBribeLineCV[5];
 
 	int clerkLineCount[5];
 	int clerkBribeLineCount[5];
@@ -910,8 +907,8 @@ public:
 class PictureMonitor {
 private:
 	Lock *clerkLineLock;
-	//Condition clerkLineCV[5];
-	//Condition clerkBribeLineCV[5];
+	Condition clerkLineCV[5];
+	Condition clerkBribeLineCV[5];
 
 	int clerkLineCount[5];
 	int clerkBribeLineCount[5];
@@ -934,8 +931,8 @@ public:
 class PassPortMonitor {
 private:
 	Lock *clerkLineLock;
-	//Condition clerkLineCV[5];
-	//Condition clerkBribeLineCV[5];
+	Condition clerkLineCV[5];
+	Condition clerkBribeLineCV[5];
 
 	int clerkLineCount[5];
 	int clerkBribeLineCount[5];
@@ -958,8 +955,8 @@ public:
 class CashierMonitor {
 private:
 	Lock *clerkLineLock;
-	//Condition clerkLineCV[5];
-	//Condition clerkBribeLineCV[5];
+	Condition clerkLineCV[5];
+	Condition clerkBribeLineCV[5];
 
 	int clerkLineCount[5];
 	int clerkBribeLineCount[5];
@@ -982,7 +979,7 @@ public:
 
 
 
-void* runCustomer(){
+void runCustomer(){
 
 }//end of making customer
 
@@ -1009,22 +1006,109 @@ void makeSenator(){
 }//end of making senator
 
 
+int checkInput(string s, int lowerBound, int upperBound){
+
+	int n;
+	stringstream ss;
+	ss << s;
+
+	return -1;
+}//end of checking input
+
 void Problem2(){
 	srand(time(NULL));
 	int customer_thread_num;
 	int applicationClerk_thread_num;
-	int passPortClerk_thread_num;
 	int pictureClerk_thread_num;
+	int passPortClerk_thread_num;
+	int cashierClerk_thread_num;
 	int manager_thread_num;
 	int senator_thread_num;
+
+	string input;
+	bool acceptInput = false;
+	stringstream ss;
+	int num_of_people = 0;
 	//create menu here to figure out how many threads of each
 
+	while(acceptInput){
+		std::cout << "Menu :: How many customers? (20 - 50)" << std::endl;
+		std::cout << "Input: " << std::endl;
+		cin >> num_of_people;  
+		//num_of_people = checkInput(input, 20, 50);
+		if(!cin.fail(){
+			customer_thread_num = num_of_people;
+			acceptInput = true;
+		}//end of if
+		else{
+			std::cout << " >> Error!  Input not accepted.  Your input: " << input << std::endl;
+		}
+	}//end of while
+
+	acceptInput = false;
+	while(acceptInput){
+		std::cout << "Menu :: How many Picture Clerks? (1 - 5)" << std::endl;
+		std::cout << "Input: " << std::endl;
+		cin >> input;  
+		num_of_people = checkInput(input, 1, 5);
+		if(num_of_people >= 1 && num_of_people <= 5){
+			applicationClerk_thread_num = num_of_people;
+			acceptInput = true;
+		}//end of if
+		else{
+			std::cout << " >> Error!  Input not accepted.  Your input: " << input << std::endl;
+		}
+	}//end of while
+
+	acceptInput = false;
+	while(acceptInput){
+		std::cout << "Menu :: How many Picture Clerks? (1 - 5)" << std::endl;
+		std::cout << "Input: " << std::endl;
+		cin >> input;  
+		num_of_people = checkInput(input, 1, 5);
+		if(num_of_people >= 1 && num_of_people <= 5){
+			pictureClerk_thread_numct = num_of_people;
+			acceptInput = true;
+		}//end of if
+		else{
+			std::cout << " >> Error!  Input not accepted.  Your input: " << input << std::endl;
+		}
+	}//end of while
+
+	acceptInput = false;
+	while(acceptInput){
+		std::cout << "Menu :: How many PassPort Clerks? (1 - 5)" << std::endl;
+		std::cout << "Input: " << std::endl;
+		cin >> input;  
+		num_of_people = checkInput(input, 1, 5);
+		if(num_of_people >= 1 && num_of_people <= 5){
+			passPortClerk_thread_num = num_of_people;
+			acceptInput = true;
+		}//end of if
+		else{
+			std::cout << " >> Error!  Input not accepted.  Your input: " << input << std::endl;
+		}
+	}//end of while
+
+	acceptInput = false;
+	while(acceptInput){
+		std::cout << "Menu :: How many Cashier Clerks? (1 - 5)" << std::endl;
+		std::cout << "Input: " << std::endl;
+		cin >> input;  
+		num_of_people = checkInput(input, 1, 5);
+		if(num_of_people >= 1 && num_of_people <= 5){
+			cashierClerk_thread_numsh = num_of_people;
+			acceptInput = true;
+		}//end of if
+		else{
+			std::cout << " >> Error!  Input not accepted.  Your input: " << input << std::endl;
+		}
+	}//end of while
 	//create for loop for each and fork
 	for(int i = 0; i < customer_thread_num; i++){
 		Thread *t = new Thread("customer thread");
-		// t->Fork(runCustomer(), 1);
-		// runCustomer();
-		t->Fork(((VoidFunctionPtr)runCustomer()), i+1);
+	
+		t->Fork((VoidFunctionPtr)runCustomer, i+1);
 	}//end of for
 
 }//end of problem 2
