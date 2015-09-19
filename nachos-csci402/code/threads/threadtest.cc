@@ -507,12 +507,14 @@ private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
 	int bribeLineCount;
+	int clerkMoney; //How much money the clerk has
 
 public:
 	ApplicationClerk(){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
+		clerkMoney = 0;
 	}//end of constructor
 
 	~ApplicationClerk(){
@@ -534,6 +536,14 @@ public:
 	void addToBribeLine(){
 		bribeLineCount++;
 	}//end of adding to bribe line
+
+	void addclerkMoney(int n){
+		clerkMoney = clerkMoney + n;
+	}//Adding money to clerk money variab;e
+
+	int getclerkMoney(){
+		return clerkMoney;
+	}//Get clerk money
 
 	void goOnBreak(){
 		clerkState = 2;
@@ -558,12 +568,14 @@ private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
 	int bribeLineCount;
+	int clerkMoney; //How much money the clerk has
 public:
 
 	PictureClerk(){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
+		clerkMoney = 0;
 	}//end of constructor
 
 	~PictureClerk(){
@@ -585,6 +597,14 @@ public:
 	void addToBribeLine(){
 		bribeLineCount++;
 	}//end of adding to bribe line
+
+	void addclerkMoney(int n){
+		clerkMoney = clerkMoney + n;
+	}//Adding money to clerk money variab;e
+
+	int getclerkMoney(){
+		return clerkMoney;
+	}//Get clerk money
 
 	void goOnBreak(){
 		clerkState = 2;
@@ -609,12 +629,14 @@ private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
 	int bribeLineCount;
+	int clerkMoney; //How much money the clerk has
 public:
 
 	PassPortClerk(){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
+		clerkMoney = 0;
 	}//end of constructor
 
 	~PassPortClerk(){
@@ -636,6 +658,14 @@ public:
 	void addToBribeLine(){
 		bribeLineCount++;
 	}//end of adding to bribe line
+
+	void addclerkMoney(int n){
+		clerkMoney = clerkMoney + n;
+	}//Adding money to clerk money variab;e
+
+	int getclerkMoney(){
+		return clerkMoney;
+	}//Get clerk money
 
 	void goOnBreak(){
 		clerkState = 2;
@@ -661,6 +691,7 @@ private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
 	int bribeLineCount;
+	int clerkMoney; //How much money the clerk has
 
 	//place map in monitor
 	//map<*Client, bool> clientRecords;   //records client and bool  if a passport got handed back
@@ -671,6 +702,7 @@ public:
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
+		clerkMoney=0;
 	}//end of constructor
 
 	~Cashier(){
@@ -692,6 +724,14 @@ public:
 	void addToBribeLine(){
 		bribeLineCount++;
 	}//end of adding to bribe line
+
+	void addclerkMoney(int n){
+		clerkMoney = clerkMoney + n;
+	}//Adding money to clerk money variab;e
+
+	int getclerkMoney(){
+		return clerkMoney;
+	}//Get clerk money
 
 	void goOnBreak(){
 		clerkState = 2;
@@ -723,12 +763,23 @@ private:
 	std::vector<PictureClerk *> pClerks;
 	std::vector<PassPortClerk *> ppClerks;
 	std::vector<Cashier *> cClerk;
+	int pClerkMoney;
+	int aClerkMoney;
+	int ppClerkMoney;
+	int cClerkMoney;
+	int totalMoney;
 public:
 	Manager(std::vector<ApplicationClerk *> ac, std::vector<PictureClerk *> pc, std::vector<PassPortClerk *> ppc, std::vector<Cashier *> cc) {
 		aClerks = ac;
 		pClerks = pc;
 		ppClerks = ppc;
 		cClerk = cc;
+		pClerkMoney = 0;
+		aClerkMoney = 0;
+		ppClerkMoney = 0;
+		cClerkMoney = 0;
+		totalMoney = pClerkMoney + aClerkMoney + ppClerkMoney + cClerkMoney;
+
 	}//end of constructor
 
 	~Manager(){
