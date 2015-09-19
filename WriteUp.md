@@ -28,3 +28,7 @@ The simulation is to support the following numbers of each type of person:
 * Clerks and Cashier: between 1 and 5
 * Manager: only 1
 * Senators: up to 10
+
+## Assumptions
+
+## Design
