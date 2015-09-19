@@ -51,3 +51,15 @@ Part 2: A description of Classes added and Methods.
 * Class Application Clerk
   * The following variables: the int clerkState which indicates the clerks state as follows: 0 available, 1 busy, 2 on break, the int lineCount representing the total number of customers in the clerk's line, and the int bribeCount, indicating the number of customers who have bribed the clerk waiting in line.
   * The following methods: a getter and setter method for clerkState, denoted as getclerkState() and setclerkState(), the method addToLine() which increases lineCount by 1, the method addToBribeLine() which increases the bribeCount by 1, the method goToWork() which changes the clerk's state to 1 (busy), and the method goOneBreak() which changes the clerk's state to 2(busy).
+
+* Class Picture Clerk
+  * The following variables: the int clerkState which indicates the clerks state as follows: 0 available, 1 busy, 2 on break, the int lineCount representing the total number of customers in the clerk's line, and the int bribeCount, indicating the number of customers who have bribed the clerk waiting in line.
+  * The following methods: a getter and setter method for clerkState, denoted as getclerkState() and setclerkState(), the method addToLine() which increases lineCount by 1, the method addToBribeLine() which increases the bribeCount by 1, the method goToWork() which changes the clerk's state to 1 (busy), and the method goOneBreak() which changes the clerk's state to 2(busy).
+ 
+* Class Passport Clerk
+  * The following variables: the int clerkState which indicates the clerks state as follows: 0 available, 1 busy, 2 on break, the int lineCount representing the total number of customers in the clerk's line, and the int bribeCount, indicating the number of customers who have bribed the clerk waiting in line.
+  * The following methods: a getter and setter method for clerkState, denoted as getclerkState() and setclerkState(), the method addToLine() which increases lineCount by 1, the method addToBribeLine() which increases the bribeCount by 1, the method goToWork() which changes the clerk's state to 1 (busy), and the method goOneBreak() which changes the clerk's state to 2(busy).
+
+* Class Cashier
+  * The following variables: the int clerkState which indicates the clerks state as follows: 0 available, 1 busy, 2 on break, the int lineCount representing the total number of customers in the clerk's line, and the int bribeCount, indicating the number of customers who have bribed the clerk waiting in line.
+  * The following methods: a getter and setter method for clerkState, denoted as getclerkState() and setclerkState(), the method addToLine() which increases lineCount by 1, the method addToBribeLine() which increases the bribeCount by 1, the method goToWork() which changes the clerk's state to 1 (busy), and the method goOneBreak() which changes the clerk's state to 2(busy).
