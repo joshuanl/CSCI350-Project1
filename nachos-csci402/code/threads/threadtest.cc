@@ -778,7 +778,7 @@ public:
 		aClerkMoney = 0;
 		ppClerkMoney = 0;
 		cClerkMoney = 0;
-		totalMoney = pClerkMoney + aClerkMoney + ppClerkMoney + cClerkMoney;
+		totalMoney = 0;
 
 	}//end of constructor
 
@@ -789,6 +789,50 @@ public:
 	void wakeupClerks(){
 
 	}//end of waking up clerks
+
+	void setMoney(std::vector<ApplicationClerk *> ac, std::vector<PictureClerk *> pc, std::vector<PassPortClerk *> ppc, std::vector<Cashier *> cc) {
+		for (int i=0; i<ac.size(); i++)
+		{
+			aClerkMoney = aClerkMoney + ac[i].getclerkMoney();
+		}
+
+		for (int i=0; i<pc.size(); i++)
+		{
+			pClerkMoney = pClerkMoney + pc[i].getclerkMoney();
+		}
+
+		for (int i=0; i<ppc.size(); i++)
+		{
+			ppClerkMoney = ppClerkMoney + ppc[i].getclerkMoney();
+		}
+
+		for (int i=0; i<cc.size(); i++)
+		{
+			cClerkMoney = cClerkMoney + cc[i].getclerkMoney();
+		}
+
+		totalMoney = aClerkMoney + pClerkMoney + ppClerkMoney + cClerkMoney;
+	}
+
+	int getaClerkMoney() {
+		return aClerkMoney;
+	}
+
+	int getpClerkMoney() {
+		return pClerkMoney;
+	}
+
+	int getppClerkMoney() {
+		return ppClerkMoney;
+	}
+
+	int getcClerkMoney() {
+		return cClerkMoney;
+	}
+
+	int gettotalMoney() {
+		return totalMoney;
+	}
 
 }; //end of manager class
 
