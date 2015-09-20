@@ -990,15 +990,20 @@ void runCustomer(){
 }//end of making customer
 
 void applicationClerk(){
+    ApplicationClerk *ac = new ApplicationClerk();
+    aClerks.insert(ac);
 
 }//end of making application clerk
 
 void passPortClerk(){
-
+    PassPortClerk *ppc = new PassPortClerk();
+    ppClerks.insert(ppc);
 }//end of making passportClerk
 
 
 void pictureClerk(){
+    PictureClerk *pc = new PictureClerk();
+    pClerks.insert(pc);
 
 
 }//end of making picture clerk
