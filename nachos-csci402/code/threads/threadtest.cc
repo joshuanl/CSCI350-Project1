@@ -991,10 +991,12 @@ public:
 
 
 void runCustomer(){
-	srand(time(NULL));
 	int rdmMoneyIndex = rand()%4;
+	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
 	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);
 	ssnCount++;
+
+
 }//end of making customer
 
 void applicationClerk(){
@@ -1021,6 +1023,7 @@ void makeSenator(){
 
 
 void Problem2(){
+	//srand(time(NULL));
 	int customer_thread_num;
 	int applicationClerk_thread_num;
 	int pictureClerk_thread_num;
@@ -1130,7 +1133,6 @@ void Problem2(){
 	std::cout << "reached.  applicationClerk_thread_num: " << applicationClerk_thread_num << std::endl; 
 	for(int i = 0; i < applicationClerk_thread_num; i++){
 		Thread *t = new Thread("application clerk thread");
-	
 		t->Fork((VoidFunctionPtr)applicationClerk, i+1);
 	}//end of for
 
