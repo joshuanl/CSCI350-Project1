@@ -1009,10 +1009,15 @@ void pictureClerk(){
 }//end of making picture clerk
 
 void makeManager(){
+    Manager *m = new Manager();
 
 }//end of making manager
 
 void makeSenator(){
+    int rdmMoneyIndex = rand()%4;
+    std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std:endl;
+    Senator *s = new Senator(ssnCount, clientStartMoney[rdmMoneyIndex]);
+    ssnCount++;
 
 }//end of making senator
 
