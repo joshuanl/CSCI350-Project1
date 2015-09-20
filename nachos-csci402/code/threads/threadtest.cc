@@ -11,19 +11,10 @@
 
 
 /*
-	
-	classes do not inheirit from Thread // fixed
+	Need to do:
 
-	need to figure out which member variables need to be global
-		- ex: lock in monitors need to be global // didnt fix yet
-
-	need to make functions to be able to fork 
-	ex:
-	void passPortClerk(){
-		PassPortClerk *ppc = new PassportClerk(...)
-			//maybe dont need to make a ptr?
-	}
-
+		- need to add run() for clerks 
+		- create interactions between client - application clerk first 
 	
 	How to share/communicate data between customer/clerk? 
 	 - customers should be created with index as a member variable // need to add
@@ -31,7 +22,6 @@
 	 	- when customer acquires lock from clerk, customer passes clerk their index	with a function
 	 		- store index in a vector // should be same size as lineCount
 		
-
 
 */
 
