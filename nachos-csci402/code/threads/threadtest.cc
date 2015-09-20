@@ -1008,6 +1008,13 @@ void pictureClerk(){
 
 }//end of making picture clerk
 
+void cashierClerk(){
+    Cashier *cc = new Cashier();
+    cClerks.insert(cc);
+
+
+}//end of making cashier clerk
+
 void makeManager(){
     Manager *m = new Manager();
 
@@ -1056,7 +1063,7 @@ void Problem2(){
 
 	acceptInput = false;
 	while(!acceptInput){
-		std::cout << "Menu :: How many Picture Clerks? (1 - 5)" << std::endl;
+		std::cout << "Menu :: How many Application Clerks? (1 - 5)" << std::endl;
 		std::cout << "Input: " << std::endl;
 		std::cin >> num_of_people;  
 		//num_of_people = checkInput(input, 1, 5);
@@ -1129,12 +1136,30 @@ void Problem2(){
 		Thread *t = new Thread("customer thread");			
 		t->Fork((VoidFunctionPtr)runCustomer, i+1);
 		
-	}//end of for
+	}//end of creating client threads
 
 	std::cout << "reached.  applicationClerk_thread_num: " << applicationClerk_thread_num << std::endl; 
 	for(int i = 0; i < applicationClerk_thread_num; i++){
 		Thread *t = new Thread("application clerk thread");
 		t->Fork((VoidFunctionPtr)applicationClerk, i+1);
-	}//end of for
+	}//end of creating application clerk threads
+
+    std::cout << "reached.  passPortClerk_thread_num: " << passPortClerk_thread_num << std::endl; 
+    for(int i = 0; i < passPortClerk_thread_num; i++){
+        Thread *t = new Thread("passport clerk thread");
+        t->Fork((VoidFunctionPtr)passPortClerk, i+1);
+    }//end of creating passPort clerk threads
+
+    std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
+    for(int i = 0; i < pictureClerk_thread_num; i++){
+        Thread *t = new Thread("picture clerk thread");
+        t->Fork((VoidFunctionPtr)pictureClerk, i+1);
+    }//end of creating picture clerk threads
+
+    std::cout << "reached.  cachierClerk_thread_num: " << cashierClerk_thread_num << std::endl; 
+    for(int i = 0; i < cashierClerk_thread_num; i++){
+        Thread *t = new Thread("cashier clerk thread");
+        t->Fork((VoidFunctionPtr)cashierClerk, i+1);
+    }//end of creating cahier clerk threads
 
 }//end of problem 2
