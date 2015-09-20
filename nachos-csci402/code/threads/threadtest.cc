@@ -52,7 +52,7 @@ const int clientStartMoney[4] = {100, 500, 1100, 1600};
 std::vector<ApplicationClerk *> aClerks;
 std::vector<PictureClerk *> pClerks;
 std::vector<PassPortClerk *> ppClerks;
-std::vector<Cashier *> cClerk;
+std::vector<Cashier *> cClerks;
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -801,13 +801,13 @@ public:
 			aClerkMoney += aClerks[i]->getclerkMoney();
 		}//end of for
 		for(unsigned int i=0; i < pClerks.size(); i++){
-			pClerkMoney += aClerks[i]->getclerkMoney();
+			pClerkMoney += pClerks[i]->getclerkMoney();
 		}//end of for
 		for(unsigned int i=0; i < ppClerks.size(); i++){
-			ppClerkMoney += aClerks[i]->getclerkMoney();
+			ppClerkMoney += ppClerks[i]->getclerkMoney();
 		}//end of for
-		for(unsigned int i=0; i < cClerk.size(); i++){
-			cClerkMoney += aClerks[i]->getclerkMoney();
+		for(unsigned int i=0; i < cClerks.size(); i++){
+			cClerkMoney += cClerks[i]->getclerkMoney();
 		}//end of for
 		totalMoney = pClerkMoney + aClerkMoney + ppClerkMoney + cClerkMoney;
 	}//end of updating total money 
@@ -1031,6 +1031,7 @@ void Problem2(){
 	int cashierClerk_thread_num;
 	int manager_thread_num;
 	int senator_thread_num;
+
 
 	bool acceptInput = false;
 	int num_of_people = 0;
