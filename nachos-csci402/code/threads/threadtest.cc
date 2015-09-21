@@ -45,11 +45,15 @@ class PassPortClerk;
 class Cashier;	 		
 
 struct ApplicationMonitor;
+struct PictureMonitor;
+struct PassportMonitor;
 
 // GLOBAL VARIABLES FOR PROBLEM 2
 int ssnCount = 0;
 const int clientStartMoney[4] = {100, 500, 1100, 1600};
 ApplicationMonitor* AMonitor;
+PictureMonitor* PMonitor;
+PassportMonitor* PPMonitor;
 
 
 std::vector<ApplicationClerk *> aClerks;
@@ -464,6 +468,8 @@ void TestSuite() {
 
 struct ApplicationMonitor {
 
+	Lock* AMonitorLock;
+
 	int numAClerks;
 	Lock** clerkLineLocks;					// move to be global variable
 	Condition** clerkLineCV;
@@ -473,9 +479,12 @@ struct ApplicationMonitor {
 	int* clerkBribeLineCount;
 	int* clerkState;	//0: available     1: busy    2: on break
 
+	std::queue<int>* clientSSNs;
 
-	ApplicationMonitor(int numApplicationClerks)
+	ApplicationMonitor(int numApplicationClerks, int numCustomers)
 	{
+		AMonitorLock = new Lock("Monitor Lock");
+
 		numAClerks = numApplicationClerks;
 		clerkLineLocks = new Lock*[numAClerks];
 		clerkLineCV = new Condition*[numAClerks];
@@ -485,11 +494,14 @@ struct ApplicationMonitor {
 		clerkBribeLineCount = new int[numAClerks];
 		clerkState = new int[numAClerks];
 
+		clientSSNs = new std::queue<int>[numCustomers];
+		
+
 		for(int i = 0; i < numAClerks; i++)
 		{			
 			clerkLineCV[i] = new Condition("");
 			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("");
+			clerkLineLocks[i] = new Lock("ClerkLineLock");
 			clerkLineCount[i] = 0;
 			clerkBribeLineCount[i] = 0;
 			clerkState[i] = 0;
@@ -498,42 +510,7 @@ struct ApplicationMonitor {
 
 	~ApplicationMonitor(){
 
-	}//end of deconstructor
-
-	/*void run()
-	{
-		while(true)
-		{
-			clerkLineLock->Acquire();
-			for(int myLine = 0; myLine < 5; myLine++)
-			{			
-				if(clerkBribeLineCount[myLine] > 0){
-					clerkBribeLineCV[myLine]->Signal(clerkLineLock);
-					clerkState[myLine] = 1;
-				}
-				else if(clerkLineCount[myLine] > 0)
-				{       //if bribe line is empty
-					clerkLineCV[myLine]->Signal(clerkLineLock);
-					clerkState[myLine] = 1;
-				}
-				else
-				{
-					clerkState[myLine] = 0;
-				}
-			
-				clerkLineLock->Acquire();     
-				//COULD GET CONTEXT SWITCHED AFTER RELEASE SO ACQUIRE  BEFORE
-				clerkLineLock->Release();
-				//wait for customer data
-				clerkLineCV[myLine]->Wait(clerkLineLock);              
-				//do my (clerk) job—customer now waiting 
-				clerkLineCV[myLine]->Signal(clerkLineLock);
-				clerkLineCV[myLine]->Wait(clerkLineLock);
-				clerkLineLock->Release();
-			}
-
-		}//end of while
-	}*/
+	}//end of destructor	
 
 	int getSmallestLine()
 	{
@@ -552,15 +529,84 @@ struct ApplicationMonitor {
 		return smallestIndex;
 	}
 
-	//Lock* getLock(){
-		//return clerkLineLock;
-	//}//end of getting lock
+	void giveSSN(int line, int ssn)
+	{
+		clientSSNs[line].push(ssn);
+	}
+};
+
+struct PictureMonitor {
+
+	Lock* PMonitorLock;
+
+	int numPClerks;
+	Lock** clerkLineLocks;					// move to be global variable
+	Condition** clerkLineCV;
+	Condition** clerkBribeLineCV;
+
+	int* clerkLineCount;
+	int* clerkBribeLineCount;
+	int* clerkState;	//0: available     1: busy    2: on break
+	std::queue<int>* clientSSNs;
+
+	PictureMonitor(int numPictureClerks, int numCustomers)
+	{
+		PMonitorLock = new Lock("Monitor Lock");
+
+		numPClerks = numPictureClerks;
+		clerkLineLocks = new Lock*[numPClerks];
+		clerkLineCV = new Condition*[numPClerks];
+		clerkBribeLineCV = new Condition*[numPClerks];
+		
+		clerkLineCount = new int[numPClerks];
+		clerkBribeLineCount = new int[numPClerks];
+		clerkState = new int[numPClerks];
+
+		clientSSNs = new std::queue<int>[numCustomers];
+
+		for(int i = 0; i < numPClerks; i++)
+		{			
+			clerkLineCV[i] = new Condition("");
+			clerkBribeLineCV[i] = new Condition("");
+			clerkLineLocks[i] = new Lock("ClerkLineLock");
+			clerkLineCount[i] = 0;
+			clerkBribeLineCount[i] = 0;
+			clerkState[i] = 0;
+		}
+	}//end of constructor
+
+	~PictureMonitor(){
+
+	}//end of destructor	
+
+	int getSmallestLine()
+	{
+		int smallest = 50;
+		int smallestIndex = 0;
+		for(int i = 0; i < numPClerks; i++)
+		{
+			//std::cout << clerkLineCount[i] << std::endl;
+			if(clerkLineCount[i] < smallest)
+			{
+				smallest = clerkLineCount[i];
+				smallestIndex = i;
+			}
+		}
+		return smallestIndex;
+	}
+
+	void giveSSN(int line, int ssn)
+	{
+		clientSSNs[line].push(ssn);
+	}
+
 };
 
 class Client {
 
 private:
 	int money;
+	int id;
 	int ssn;
     int selfIndex;
 	bool applicationAccepted;
@@ -569,7 +615,8 @@ private:
 public:
 	Client(int num, int startMoney){
 
-		ssn = num;
+		id = num;
+		ssn = id;
 		money = startMoney;
         selfIndex = 0; //defines position in the customer vector
 		std::cout << "ssn: " << ssn << "  startMoney: " << startMoney << std::endl;
@@ -589,25 +636,44 @@ public:
 
 	void joinApplicationLine()
 	{
-		std::cout << "joining app line..." << std::endl;
-		//aClerks.at(findShortestLine())->addToLine(this);
-
 		int whichLine = AMonitor->getSmallestLine();
 		std::cout << whichLine << std::endl;
-		/*int smallest = 50;
-		int smallestIndex = 0;
-		for(int i = 0; i < AMonitor->numAClerks; i++)
-		{
-			if(AMonitor->clerkLineCounts[i] < smallest)
-			{
-				smallest = AMonitor->clerkLineCounts[i];
-				smallestIndex = i;
-			}
-		}
-		return smallestIndex;*/
+		AMonitor->clerkLineCount[whichLine] += 1;	
+		AMonitor->giveSSN(whichLine, ssn);	
+		lineSpotA = AMonitor->clerkLineCount[whichLine];
 
-		AMonitor->clerkLineCount[whichLine] += 1;
+		std::cout << "Customer " << id << " has gotten in regular line for ApplicationClerk " << whichLine << "." << std::endl;
+		AMonitor->clerkLineLocks[whichLine]->Acquire();
+		while(lineSpotA > 1)
+		{
+			AMonitor->clerkLineCV[whichLine]->Wait(AMonitor->clerkLineLocks[whichLine]);			
+			lineSpotA--;
+		}
+		AMonitor->clerkLineLocks[whichLine]->Release();
+
+		applicationAccepted = true;
 	}
+
+	void joinPictureLine()
+	{
+		int whichLine = PMonitor->getSmallestLine();
+		std::cout << whichLine << std::endl;
+		PMonitor->clerkLineCount[whichLine] += 1;
+		PMonitor->giveSSN(whichLine, ssn);	
+		lineSpotP = PMonitor->clerkLineCount[whichLine];
+
+		std::cout << "Customer " << id << " has gotten in regular line for PictureClerk " << whichLine << "." << std::endl;
+		PMonitor->clerkLineLocks[whichLine]->Acquire();
+		while(lineSpotP > 1)
+		{
+			PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);			
+			lineSpotP--;
+		}
+		PMonitor->clerkLineLocks[whichLine]->Release();
+
+		pictureTaken = true;
+	}
+
 
 	void moveUpInLine(){
 		if(money >= 600){
@@ -655,17 +721,18 @@ private:
 	int lineCount;   
 	int bribeLineCount;
 	int clerkMoney; //How much money the clerk has
-    int selfIndex; //Position in app clerk vector
-    int currClientIndex; //Position of client in customer vector
+	int myLine;
+	//std::vector<Client*> myLine;
 
 public:
-	ApplicationClerk(){
+	ApplicationClerk(int line)
+	{
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-        selfIndex = 0;
-        currClientIndex = 1000; //arbitrary number
+		myLine = line;
+
 	}//end of constructor
 
 	~ApplicationClerk(){
@@ -674,11 +741,9 @@ public:
 
 	void run()
 	{	
-
 		while(true)
 		{
-			std::cout << "In Clerk " << myLine << " run." << std::endl;
-			AMonitor->clerkLineLocks[myLine]->Acquire();
+			
 			if(AMonitor->clerkBribeLineCount[myLine] > 0)
 			{
 				AMonitor->clerkBribeLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]);
@@ -686,31 +751,25 @@ public:
 			}
 			else if(AMonitor->clerkLineCount[myLine] > 0)
 			{       //if bribe line is empty
-				AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]);
 				AMonitor->clerkState[myLine] = 1;
-				std::cout << "Clerk " << myLine << " busy now" << std::endl;
-
+				std::cout << "ApplicationClerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
+					" from Customer " << AMonitor->clientSSNs[myLine].front() << "." << std::endl;
+				std::cout << "" << AMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
+				AMonitor->clientSSNs[myLine].pop();				
+				AMonitor->clerkLineCount[myLine]--;
+				AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]); 
+				std::cout << "ApplicationClerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				
 			}
 			else
 			{
+				std::cout << "ApplicationClerk " << myLine << "is going on break." << std::endl;
 				AMonitor->clerkState[myLine] = 0;
 			}
-
-			
-			AMonitor->clerkLineLocks[myLine]->Acquire();     
-			//COULD GET CONTEXT SWITCHED AFTER RELEASE SO ACQUIRE  BEFORE
-			AMonitor->clerkLineLocks[myLine]->Release();
-			//wait for customer data
-			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]);  
-			std::cout << "ApplicationClerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
-			//do my (clerk) job—customer now waiting 
-			AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]);
-			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]);
-			AMonitor->clerkLineLocks[myLine]->Release();
 		}//end of while
-
 		
 	}
+
 
 	int getclerkState(){
 		return clerkState;
@@ -720,23 +779,14 @@ public:
 		clerkState = n;
 	}//end of setting clerkState
 
-    int getselfIndex() {
-        return selfIndex;
-    }
+	int getLineCount()
+	{
+		return lineCount;
+	}
 
-    void setselfIndex (int i) {
-        selfIndex = i;
-    }
-
-    int getcurrClientIndex() {
-        return currClientIndex;
-    }
-
-    void setcurrClientIndex (int i) {
-        currClientIndex = i;
-    }
-
-	void addToLine(){
+	void addToLine(Client* client)
+	{
+		//myLine.push_back(client);
 		lineCount++;
 	}//end of adding to line
 
@@ -744,7 +794,7 @@ public:
 		bribeLineCount++;
 	}//end of adding to bribe line
 
-	void addclerkMoney(int n){
+	void addClerkMoney(int n){
 		clerkMoney = clerkMoney + n;
 	}//Adding money to clerk money variab;e
 
@@ -754,8 +804,8 @@ public:
 
 	void goOnBreak(){
 		clerkState = 2;
-		//send to sleep
-
+		//send to sleep		
+		currentThread->Sleep();	
 	}//end of sending clerk to break;
 
 	void goBackToWork(){
@@ -769,29 +819,62 @@ public:
 	} //set clerk state to available
 }; //end of class
 
-
 class PictureClerk {
 private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
 	int bribeLineCount;
 	int clerkMoney; //How much money the clerk has
-    int selfIndex; //Position in picture clerk vector
-    int currClientIndex; //Index of current client
-public:
+	int myLine;
+	//std::vector<Client*> myLine;
 
-	PictureClerk(){
+public:
+	PictureClerk(int line)
+	{
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-        selfIndex = 0;
-        currClientIndex = 1000; //Arbitrary number
+		myLine = line;
+
 	}//end of constructor
 
 	~PictureClerk(){
 
-	}//end of deconstructor
+	}//endo of deconstructor
+
+	void run()
+	{	
+		while(true)
+		{
+			
+			if(PMonitor->clerkBribeLineCount[myLine] > 0)
+			{
+				PMonitor->clerkBribeLineCV[myLine]->Signal(PMonitor->clerkLineLocks[myLine]);
+				PMonitor->clerkState[myLine] = 1;
+			}
+			else if(PMonitor->clerkLineCount[myLine] > 0)
+			{       //if bribe line is empty
+				PMonitor->clerkState[myLine] = 1;
+				std::cout << "PictureClerk " << myLine << " has received SSN " << PMonitor->clientSSNs[myLine].front() <<
+					" from Customer " << PMonitor->clientSSNs[myLine].front() << "." << std::endl;	
+				PMonitor->clientSSNs[myLine].pop();	
+				PMonitor->clerkLineCount[myLine]--;
+				std::cout << "" << PMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
+				
+				PMonitor->clerkLineCV[myLine]->Signal(PMonitor->clerkLineLocks[myLine]); 
+				std::cout << "PictureClerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				
+			}
+			else
+			{
+				//std::cout << "PictureClerk " << myLine << " is going on break." << std::endl;
+				//PMonitor->clerkState[myLine] = 0;
+			}
+		}//end of while
+		
+	}
+
 
 	int getclerkState(){
 		return clerkState;
@@ -801,23 +884,14 @@ public:
 		clerkState = n;
 	}//end of setting clerkState
 
-    int getselfIndex() {
-        return selfIndex;
-    }
+	int getLineCount()
+	{
+		return lineCount;
+	}
 
-    void setselfIndex(int i) {
-        selfIndex = i;
-    }
-
-    int getcurrClientIndex() {
-        return currClientIndex;
-    }
-
-    void setcurrClientIndex (int i) {
-        currClientIndex = i;
-    }
-
-	void addToLine(){
+	void addToLine(Client* client)
+	{
+		//myLine.push_back(client);
 		lineCount++;
 	}//end of adding to line
 
@@ -825,7 +899,7 @@ public:
 		bribeLineCount++;
 	}//end of adding to bribe line
 
-	void addclerkMoney(int n){
+	void addClerkMoney(int n){
 		clerkMoney = clerkMoney + n;
 	}//Adding money to clerk money variab;e
 
@@ -835,8 +909,8 @@ public:
 
 	void goOnBreak(){
 		clerkState = 2;
-		//send to sleep
-
+		//send to sleep		
+		currentThread->Sleep();	
 	}//end of sending clerk to break;
 
 	void goBackToWork(){
@@ -848,8 +922,7 @@ public:
 	void makeAvailable(){
 		clerkState = 0;
 	} //set clerk state to available
-
-}; //end of picture clerk
+}; //end of class
 
 class PassPortClerk {
 private:
@@ -1216,30 +1289,30 @@ public:
 
 
 
-void runCustomer(){
+void createCustomer(){
 	int rdmMoneyIndex = rand()%4;
+	ssnCount++; //Important: ssnCount has to be incremented before run is called. I recommend doing that with other calls below, too.
 	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
-	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);
-	ssnCount++;
+	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);	
     c.setselfIndex(customers.size());
     customers.insert(c);
 }//end of making customer
 
-void applicationClerk(){
+void createApplicationClerk(){
     ApplicationClerk *ac = new ApplicationClerk();
     ac.setselfIndex(customers.size());
     aClerks.insert(ac);
 
 }//end of making application clerk
 
-void passPortClerk(){
+void createPassPortClerk(){
     PassPortClerk *ppc = new PassPortClerk();
     ppc.setselfIndex(customers.size());
     ppClerks.insert(ppc);
 }//end of making passportClerk
 
 
-void pictureClerk(){
+void createPictureClerk(){
     PictureClerk *pc = new PictureClerk();
     pc.setselfIndex(customers.size());
     pClerks.insert(pc);
@@ -1247,7 +1320,7 @@ void pictureClerk(){
 
 }//end of making picture clerk
 
-void cashierClerk(){
+void createCashierClerk(){
     Cashier *cc = new Cashier();
     cc.setselfIndex(customers.size());
     cClerks.insert(cc);
@@ -1387,38 +1460,39 @@ void Problem2(){
     }//end of while
 
 	AMonitor = new ApplicationMonitor(applicationClerk_thread_num);
+	PMonitor = new PictureMonitor(pictureClerk_thread_num, customer_thread_num);
 
 	//create for loop for each and fork
 	//create 
 	std::cout << "reached.  customer_thread_num: " << customer_thread_num << std::endl; 
 	for(int i = 0; i < customer_thread_num; i++){
 		Thread *t = new Thread("customer thread");			
-		t->Fork((VoidFunctionPtr)runCustomer, i+1);
+		t->Fork((VoidFunctionPtr)createCustomer, i+1);
 		
 	}//end of creating client threads
 
 	std::cout << "reached.  applicationClerk_thread_num: " << applicationClerk_thread_num << std::endl; 
 	for(int i = 0; i < applicationClerk_thread_num; i++){
 		Thread *t = new Thread("application clerk thread");
-		t->Fork((VoidFunctionPtr)applicationClerk, i+1);
+		t->Fork((VoidFunctionPtr)createApplicationClerk, i+1);
 	}//end of creating application clerk threads
 
     std::cout << "reached.  passPortClerk_thread_num: " << passPortClerk_thread_num << std::endl; 
     for(int i = 0; i < passPortClerk_thread_num; i++){
         Thread *t = new Thread("passport clerk thread");
-        t->Fork((VoidFunctionPtr)passPortClerk, i+1);
+        t->Fork((VoidFunctionPtr)createPassPortClerk, i+1);
     }//end of creating passPort clerk threads
 
     std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
     for(int i = 0; i < pictureClerk_thread_num; i++){
         Thread *t = new Thread("picture clerk thread");
-        t->Fork((VoidFunctionPtr)pictureClerk, i+1);
+        t->Fork((VoidFunctionPtr)createPictureClerk, i+1);
     }//end of creating picture clerk threads
 
     std::cout << "reached.  cachierClerk_thread_num: " << cashierClerk_thread_num << std::endl; 
     for(int i = 0; i < cashierClerk_thread_num; i++){
         Thread *t = new Thread("cashier clerk thread");
-        t->Fork((VoidFunctionPtr)cashierClerk, i+1);
+        t->Fork((VoidFunctionPtr)createCashierClerk, i+1);
     }//end of creating cashier clerk threads
 
     std::cout <<"reached. manager_thread_num: " << manager_thread_num << std::endl;
