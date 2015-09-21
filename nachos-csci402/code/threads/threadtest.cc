@@ -44,9 +44,12 @@ class PictureClerk;
 class PassPortClerk;
 class Cashier;	 		
 
+struct ApplicationMonitor;
+
 // GLOBAL VARIABLES FOR PROBLEM 2
 int ssnCount = 0;
 const int clientStartMoney[4] = {100, 500, 1100, 1600};
+ApplicationMonitor* AMonitor;
 
 
 std::vector<ApplicationClerk *> aClerks;
@@ -459,6 +462,101 @@ void TestSuite() {
 #endif
 
 
+struct ApplicationMonitor {
+
+	int numAClerks;
+	Lock** clerkLineLocks;					// move to be global variable
+	Condition** clerkLineCV;
+	Condition** clerkBribeLineCV;
+
+	int* clerkLineCount;
+	int* clerkBribeLineCount;
+	int* clerkState;	//0: available     1: busy    2: on break
+
+
+	ApplicationMonitor(int numApplicationClerks)
+	{
+		numAClerks = numApplicationClerks;
+		clerkLineLocks = new Lock*[numAClerks];
+		clerkLineCV = new Condition*[numAClerks];
+		clerkBribeLineCV = new Condition*[numAClerks];
+		
+		clerkLineCount = new int[numAClerks];
+		clerkBribeLineCount = new int[numAClerks];
+		clerkState = new int[numAClerks];
+
+		for(int i = 0; i < numAClerks; i++)
+		{			
+			clerkLineCV[i] = new Condition("");
+			clerkBribeLineCV[i] = new Condition("");
+			clerkLineLocks[i] = new Lock("");
+			clerkLineCount[i] = 0;
+			clerkBribeLineCount[i] = 0;
+			clerkState[i] = 0;
+		}
+	}//end of constructor
+
+	~ApplicationMonitor(){
+
+	}//end of deconstructor
+
+	/*void run()
+	{
+		while(true)
+		{
+			clerkLineLock->Acquire();
+			for(int myLine = 0; myLine < 5; myLine++)
+			{			
+				if(clerkBribeLineCount[myLine] > 0){
+					clerkBribeLineCV[myLine]->Signal(clerkLineLock);
+					clerkState[myLine] = 1;
+				}
+				else if(clerkLineCount[myLine] > 0)
+				{       //if bribe line is empty
+					clerkLineCV[myLine]->Signal(clerkLineLock);
+					clerkState[myLine] = 1;
+				}
+				else
+				{
+					clerkState[myLine] = 0;
+				}
+			
+				clerkLineLock->Acquire();     
+				//COULD GET CONTEXT SWITCHED AFTER RELEASE SO ACQUIRE  BEFORE
+				clerkLineLock->Release();
+				//wait for customer data
+				clerkLineCV[myLine]->Wait(clerkLineLock);              
+				//do my (clerk) job—customer now waiting 
+				clerkLineCV[myLine]->Signal(clerkLineLock);
+				clerkLineCV[myLine]->Wait(clerkLineLock);
+				clerkLineLock->Release();
+			}
+
+		}//end of while
+	}*/
+
+	int getSmallestLine()
+	{
+		int smallest = 50;
+		int smallestIndex = 0;
+		//std::cout << "num clerks: " << numAClerks << std::endl;
+		for(int i = 0; i < numAClerks; i++)
+		{
+			std::cout << clerkLineCount[i] << std::endl;
+			if(clerkLineCount[i] < smallest)
+			{
+				smallest = clerkLineCount[i];
+				smallestIndex = i;
+			}
+		}
+		return smallestIndex;
+	}
+
+	//Lock* getLock(){
+		//return clerkLineLock;
+	//}//end of getting lock
+};
+
 class Client {
 
 private:
@@ -479,12 +577,37 @@ public:
 		applicationAccepted = false;
 		pictureTaken = false;
 		bribed = false;
+
+		joinApplicationLine();
+
 	}//end of client constructor
 
 	~Client(){
         //Adding code to reindex customers vector after deleting a client
 
 	}//end of client deconstructor
+
+	void joinApplicationLine()
+	{
+		std::cout << "joining app line..." << std::endl;
+		//aClerks.at(findShortestLine())->addToLine(this);
+
+		int whichLine = AMonitor->getSmallestLine();
+		std::cout << whichLine << std::endl;
+		/*int smallest = 50;
+		int smallestIndex = 0;
+		for(int i = 0; i < AMonitor->numAClerks; i++)
+		{
+			if(AMonitor->clerkLineCounts[i] < smallest)
+			{
+				smallest = AMonitor->clerkLineCounts[i];
+				smallestIndex = i;
+			}
+		}
+		return smallestIndex;*/
+
+		AMonitor->clerkLineCount[whichLine] += 1;
+	}
 
 	void moveUpInLine(){
 		if(money >= 600){
@@ -548,6 +671,46 @@ public:
 	~ApplicationClerk(){
 
 	}//endo of deconstructor
+
+	void run()
+	{	
+
+		while(true)
+		{
+			std::cout << "In Clerk " << myLine << " run." << std::endl;
+			AMonitor->clerkLineLocks[myLine]->Acquire();
+			if(AMonitor->clerkBribeLineCount[myLine] > 0)
+			{
+				AMonitor->clerkBribeLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]);
+				AMonitor->clerkState[myLine] = 1;
+			}
+			else if(AMonitor->clerkLineCount[myLine] > 0)
+			{       //if bribe line is empty
+				AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]);
+				AMonitor->clerkState[myLine] = 1;
+				std::cout << "Clerk " << myLine << " busy now" << std::endl;
+
+			}
+			else
+			{
+				AMonitor->clerkState[myLine] = 0;
+			}
+
+			
+			AMonitor->clerkLineLocks[myLine]->Acquire();     
+			//COULD GET CONTEXT SWITCHED AFTER RELEASE SO ACQUIRE  BEFORE
+			AMonitor->clerkLineLocks[myLine]->Release();
+			//wait for customer data
+			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]);  
+			std::cout << "ApplicationClerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+			//do my (clerk) job—customer now waiting 
+			AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]);
+			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]);
+			AMonitor->clerkLineLocks[myLine]->Release();
+		}//end of while
+
+		
+	}
 
 	int getclerkState(){
 		return clerkState;
@@ -976,29 +1139,7 @@ public:
 
 };//end of senator class
 
-class ApplicationMonitor {
-private:
-	Lock *clerkLineLock;					// move to be global variable
-	//Condition clerkLineCV[5];
-	//Condition clerkBribeLineCV[5];
 
-	int clerkLineCount[5];
-	int clerkBribeLineCount[5];
-	int clerkState[5];	//0: available     1: busy    2: on break
-
-public:
-	ApplicationMonitor(){
-
-	}//end of constructor
-
-	~ApplicationMonitor(){
-
-	}//end of deconstructor
-
-	Lock* getLock(){
-		return clerkLineLock;
-	}//end of getting lock
-};
 
 class PictureMonitor {
 private:
@@ -1244,6 +1385,8 @@ void Problem2(){
             std::cout << " >> Error!  Input not accepted.  " << std::endl;
         }
     }//end of while
+
+	AMonitor = new ApplicationMonitor(applicationClerk_thread_num);
 
 	//create for loop for each and fork
 	//create 
