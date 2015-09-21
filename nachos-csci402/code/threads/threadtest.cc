@@ -1080,27 +1080,27 @@ void runCustomer(){
 	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
 	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);
 	ssnCount++;
-    c.selfIndex = customers.size();
+    c.setselfIndex(customers.size());
     customers.insert(c);
 }//end of making customer
 
 void applicationClerk(){
     ApplicationClerk *ac = new ApplicationClerk();
-    ac.selfIndex = aClerks.size();
+    ac.setselfIndex(customers.size());
     aClerks.insert(ac);
 
 }//end of making application clerk
 
 void passPortClerk(){
     PassPortClerk *ppc = new PassPortClerk();
-    ppc.selfIndex = ppClerks.size();
+    ppc.setselfIndex(customers.size());
     ppClerks.insert(ppc);
 }//end of making passportClerk
 
 
 void pictureClerk(){
     PictureClerk *pc = new PictureClerk();
-    pc.selfIndex = pClerks.size();
+    pc.setselfIndex(customers.size());
     pClerks.insert(pc);
 
 
@@ -1108,7 +1108,7 @@ void pictureClerk(){
 
 void cashierClerk(){
     Cashier *cc = new Cashier();
-    cc.selfIndex = cClerks.size();
+    cc.setselfIndex(customers.size());
     cClerks.insert(cc);
 
 
