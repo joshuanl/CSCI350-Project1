@@ -1036,7 +1036,7 @@ void Problem2(){
 	int pictureClerk_thread_num;
 	int passPortClerk_thread_num;
 	int cashierClerk_thread_num;
-	int manager_thread_num;
+	int manager_thread_num = 1; //There can only be one manager in the simulation
 	int senator_thread_num;
 
 
@@ -1129,6 +1129,23 @@ void Problem2(){
 		}
 	}//end of while
 
+     acceptInput = false;
+    while(!acceptInput){
+        std::cout << "Menu :: How many Senators? (1 - 10)" << std::endl;
+        std::cout << "Input: " << std::endl;
+        std::cin >> num_of_people;  
+        //num_of_people = checkInput(input, 1, 5);
+        if(!std::cin.fail()){
+            if(num_of_people >= 1 && num_of_people <= 10){
+                senator_thread_num = num_of_people;
+                acceptInput = true;
+            }//end of if
+        }//end of if    
+        else{
+            std::cout << " >> Error!  Input not accepted.  " << std::endl;
+        }
+    }//end of while
+
 	//create for loop for each and fork
 	//create 
 	std::cout << "reached.  customer_thread_num: " << customer_thread_num << std::endl; 
@@ -1160,6 +1177,19 @@ void Problem2(){
     for(int i = 0; i < cashierClerk_thread_num; i++){
         Thread *t = new Thread("cashier clerk thread");
         t->Fork((VoidFunctionPtr)cashierClerk, i+1);
-    }//end of creating cahier clerk threads
+    }//end of creating cashier clerk threads
+
+    std::cout <<"reached. manager_thread_num: " << manager_thread_num << std::endl;
+    for (int i=0; i<manager_thread_num; i++){
+        Thread *t = new Thread("manager thread");
+        t->Fork((VoidFunctionPtr)makeManager, i+1);
+    }  //end of creating solo manager thread
+
+    std::cout <<"reached. senator_thread_num: " << senator_thread_num << std::endl;
+    for (int i=0; i<senator_thread_num; i++){
+        Thread *t = new Thread("senator thread");
+        t->Fork((VoidFunctionPtr)makeSenator, i+1);
+    }  //end of creating senator threads
+
 
 }//end of problem 2
