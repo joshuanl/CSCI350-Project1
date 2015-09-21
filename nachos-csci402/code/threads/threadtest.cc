@@ -53,7 +53,8 @@ std::vector<ApplicationClerk *> aClerks;
 std::vector<PictureClerk *> pClerks;
 std::vector<PassPortClerk *> ppClerks;
 std::vector<Cashier *> cClerks;
-std::vector<Customers *> customers;
+std::vector<Customers *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR. 
+//OTHERWISE WE WILL HAVE TO REINDEX THE CUSTOMERS AND THAT IS A BIG PAIN 
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -532,6 +533,7 @@ private:
 	int bribeLineCount;
 	int clerkMoney; //How much money the clerk has
     int selfIndex; //Position in app clerk vector
+    int currClientIndex; //Position of client in customer vector
 
 public:
 	ApplicationClerk(){
@@ -540,6 +542,7 @@ public:
 		bribeLineCount = 0;
 		clerkMoney = 0;
         selfIndex = 0;
+        currClientIndex = 1000; //arbitrary number
 	}//end of constructor
 
 	~ApplicationClerk(){
@@ -560,6 +563,14 @@ public:
 
     void setselfIndex (int i) {
         selfIndex = i;
+    }
+
+    int getcurrClientIndex() {
+        return currClientIndex;
+    }
+
+    void setcurrClientIndex (int i) {
+        currClientIndex = i;
     }
 
 	void addToLine(){
@@ -603,6 +614,7 @@ private:
 	int bribeLineCount;
 	int clerkMoney; //How much money the clerk has
     int selfIndex; //Position in picture clerk vector
+    int currClientIndex; //Index of current client
 public:
 
 	PictureClerk(){
@@ -611,6 +623,7 @@ public:
 		bribeLineCount = 0;
 		clerkMoney = 0;
         selfIndex = 0;
+        currClientIndex = 1000; //Arbitrary number
 	}//end of constructor
 
 	~PictureClerk(){
@@ -631,6 +644,14 @@ public:
 
     void setselfIndex(int i) {
         selfIndex = i;
+    }
+
+    int getcurrClientIndex() {
+        return currClientIndex;
+    }
+
+    void setcurrClientIndex (int i) {
+        currClientIndex = i;
     }
 
 	void addToLine(){
@@ -674,6 +695,7 @@ private:
 	int bribeLineCount;
 	int clerkMoney; //How much money the clerk has
     int selfIndex; //position in ppClerk vector
+    int currClientIndex; //index of current client in client vector
 public:
 
 	PassPortClerk(){
@@ -682,6 +704,7 @@ public:
 		bribeLineCount = 0;
 		clerkMoney = 0;
         selfIndex = 0;
+        currClientIndex = 1000; //arbitrary number
 	}//end of constructor
 
 	~PassPortClerk(){
@@ -702,6 +725,14 @@ public:
 
     void setselfIndex(int i) {
         selfIndex = i;
+    }
+
+    int getcurrClientIndex() {
+        return currClientIndex;
+    }
+
+    void setcurrClientIndex (int i) {
+        currClientIndex = i;
     }
 
 	void addToLine(){
@@ -746,6 +777,7 @@ private:
 	int bribeLineCount;
 	int clerkMoney; //How much money the clerk has
     int selfIndex; //position in cashier vector
+    int currClientIndex; //current client index in customer vector
 
 	//place map in monitor
 	//map<*Client, bool> clientRecords;   //records client and bool  if a passport got handed back
@@ -758,6 +790,7 @@ public:
 		bribeLineCount = 0;
 		clerkMoney=0;
         selfIndex = 0;
+        currClientIndex = 1000; //arbitrary value
 	}//end of constructor
 
 	~Cashier(){
@@ -778,6 +811,14 @@ public:
 
     void setselfIndex(int i) {
         selfIndex = i;
+    }
+
+    int getcurrClientIndex() {
+        return currClientIndex;
+    }
+
+    void setcurrClientIndex (int i) {
+        currClientIndex = i;
     }
 
 	void addToLine(){
