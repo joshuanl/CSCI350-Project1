@@ -481,6 +481,7 @@ public:
 	}//end of client constructor
 
 	~Client(){
+        //Adding code to reindex customers vector after deleting a client
 
 	}//end of client deconstructor
 
@@ -1039,6 +1040,7 @@ void runCustomer(){
 	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);
 	ssnCount++;
     c.selfIndex = customers.size();
+    customers.insert(c);
 }//end of making customer
 
 void applicationClerk(){
