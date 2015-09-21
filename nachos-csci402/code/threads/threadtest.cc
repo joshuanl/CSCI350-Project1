@@ -463,6 +463,7 @@ class Client {
 private:
 	int money;
 	int ssn;
+    int selfIndex;
 	bool applicationAccepted;
 	bool pictureTaken;
 	bool bribed; 	//reset after each line
@@ -471,6 +472,7 @@ public:
 
 		ssn = num;
 		money = startMoney;
+        selfIndex = 0; //defines position in the customer vector
 		std::cout << "ssn: " << ssn << "  startMoney: " << startMoney << std::endl;
 
 		applicationAccepted = false;
@@ -497,6 +499,16 @@ public:
 		pictureTaken = b;
 	}
 
+    void setselfIndex (int i) {
+        selfIndex = i;
+    } //Setter for self-index
+
+    int getselfIndex () {
+        return selfIndex;
+    }
+
+
+
 	bool isAppAccepted(){
 		return applicationAccepted;
 	}//end of isappaccepted
@@ -518,6 +530,7 @@ private:
 	int lineCount;   
 	int bribeLineCount;
 	int clerkMoney; //How much money the clerk has
+    int selfIndex; //Position in app clerk vector
 
 public:
 	ApplicationClerk(){
@@ -525,6 +538,7 @@ public:
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
+        selfIndex = 0;
 	}//end of constructor
 
 	~ApplicationClerk(){
@@ -538,6 +552,14 @@ public:
 	void setclerkState(int n){
 		clerkState = n;
 	}//end of setting clerkState
+
+    int getselfIndex() {
+        return selfIndex;
+    }
+
+    void setselfIndex (int i) {
+        selfIndex = i;
+    }
 
 	void addToLine(){
 		lineCount++;
@@ -579,6 +601,7 @@ private:
 	int lineCount;   
 	int bribeLineCount;
 	int clerkMoney; //How much money the clerk has
+    int selfIndex; //Position in picture clerk vector
 public:
 
 	PictureClerk(){
@@ -586,6 +609,7 @@ public:
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
+        selfIndex = 0;
 	}//end of constructor
 
 	~PictureClerk(){
@@ -599,6 +623,14 @@ public:
 	void setclerkState(int n){
 		clerkState = n;
 	}//end of setting clerkState
+
+    int getselfIndex() {
+        return selfIndex;
+    }
+
+    void setselfIndex(int i) {
+        selfIndex = i;
+    }
 
 	void addToLine(){
 		lineCount++;
@@ -640,6 +672,7 @@ private:
 	int lineCount;   
 	int bribeLineCount;
 	int clerkMoney; //How much money the clerk has
+    int selfIndex; //position in ppClerk vector
 public:
 
 	PassPortClerk(){
@@ -647,6 +680,7 @@ public:
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
+        selfIndex = 0;
 	}//end of constructor
 
 	~PassPortClerk(){
@@ -660,6 +694,14 @@ public:
 	void setclerkState(int n){
 		clerkState = n;
 	}//end of setting clerkState
+
+    int getselfIndex() {
+        return selfIndex;
+    }
+
+    void setselfIndex(int i) {
+        selfIndex = i;
+    }
 
 	void addToLine(){
 		lineCount++;
@@ -702,6 +744,7 @@ private:
 	int lineCount;   
 	int bribeLineCount;
 	int clerkMoney; //How much money the clerk has
+    int selfIndex; //position in cashier vector
 
 	//place map in monitor
 	//map<*Client, bool> clientRecords;   //records client and bool  if a passport got handed back
@@ -713,6 +756,7 @@ public:
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney=0;
+        selfIndex = 0;
 	}//end of constructor
 
 	~Cashier(){
@@ -726,6 +770,14 @@ public:
 	void setclerkState(int n){
 		clerkState = n;
 	}//end of setting clerkState
+
+    int getselfIndex() {
+        return selfIndex;
+    }
+
+    void setselfIndex(int i) {
+        selfIndex = i;
+    }
 
 	void addToLine(){
 		lineCount++;
