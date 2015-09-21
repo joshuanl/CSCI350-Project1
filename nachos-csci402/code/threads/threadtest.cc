@@ -53,6 +53,7 @@ std::vector<ApplicationClerk *> aClerks;
 std::vector<PictureClerk *> pClerks;
 std::vector<PassPortClerk *> ppClerks;
 std::vector<Cashier *> cClerks;
+std::vector<Customers *> customers;
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -985,6 +986,7 @@ void runCustomer(){
 	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
 	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);
 	ssnCount++;
+    customers.insert(c);
 
 
 }//end of making customer
