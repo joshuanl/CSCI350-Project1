@@ -58,7 +58,7 @@ PassportMonitor* PPMonitor;
 
 std::vector<ApplicationClerk *> aClerks;
 std::vector<PictureClerk *> pClerks;
-std::vector<PassPortClerk *> ppClerks;
+std::vector<PassportClerk *> ppClerks;
 std::vector<Cashier *> cClerks;
 std::vector<Customers *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR. 
 //OTHERWISE WE WILL HAVE TO REINDEX THE CUSTOMERS AND THAT IS A BIG PAIN 
@@ -625,8 +625,12 @@ public:
 		pictureTaken = false;
 		bribed = false;
 
+		//need to randomize
 		joinApplicationLine();
 
+		joinPictureLine();
+
+		joinPassportLine();
 	}//end of client constructor
 
 	~Client(){
@@ -685,6 +689,36 @@ public:
 		pictureTaken = true;
 	}
 
+	void joinPassportLine()
+	{
+		PPMonitor->MonitorLock->Acquire();
+		
+		int whichLine = PPMonitor->getSmallestLine();
+		
+		PPMonitor->clerkLineLocks[whichLine]->Acquire();
+		std::cout << whichLine << std::endl;
+		PPMonitor->clerkLineCount[whichLine] += 1;
+		std::cout << PPMonitor->clerkLineCount[whichLine] << " in line" << std::endl;
+		PPMonitor->giveSSN(whichLine, ssn);	
+		
+		PPMonitor->giveReqs(whichLine, ssn);
+		int lineSpot = PPMonitor->clerkLineCount[whichLine];
+
+		std::cout << "Customer " << id << " has gotten in regular line for Passport Clerk " << whichLine << "." << std::endl;
+		
+		PPMonitor->MonitorLock->Release();
+		//std::cout << "Released picture monitor lock" << std::endl;
+
+		while(lineSpot > 0)
+		{
+			//PPMonitor->clerkLineLocks[whichLine]->Acquire();
+			PPMonitor->clerkLineCV[whichLine]->Wait(PPMonitor->clerkLineLocks[whichLine]);			
+			lineSpot--;
+			
+		}
+		std::cout << "Customer " << id << " has given SSN " << ssn << " to Passport Clerk " << whichLine << std::endl;
+		PPMonitor->clerkLineLocks[whichLine]->Release();
+	}
 
 	void moveUpInLine(){
 		if(money >= 600){
@@ -948,28 +982,82 @@ public:
 	} //set clerk state to available
 }; //end of class
 
-class PassPortClerk {
+class PassportClerk {
 private:
 	int clerkState; // 0: available     1: busy       2: on break
 	int lineCount;   
 	int bribeLineCount;
 	int clerkMoney; //How much money the clerk has
-    int selfIndex; //position in ppClerk vector
-    int currClientIndex; //index of current client in client vector
+	int myLine;
+
 public:
 
-	PassPortClerk(){
+	PassportClerk(int line){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-        selfIndex = 0;
-        currClientIndex = 1000; //arbitrary number
+		myLine = line;
 	}//end of constructor
 
-	~PassPortClerk(){
+	~PassportClerk(){
 
 	}//end of deconstructor
+
+	void run()
+	{	
+		while(true)
+		{
+			//std::cout << "should be here" << std::endl;
+			//PMonitor->PMonitorLock->Acquire();
+			//std::cout << "should not be here" << std::endl;
+
+			PPMonitor->clerkLineLocks[myLine]->Acquire();
+			if(PPMonitor->clerkBribeLineCount[myLine] > 0)
+			{
+				//PMonitor->clerkBribeLineCV[myLine]->Signal(PMonitor->clerkLineLocks[myLine]);
+				//PMonitor->clerkState[myLine] = 1;
+			}
+			else if(PPMonitor->clerkLineCount[myLine] > 0)
+			{       //if bribe line is empty
+
+				PPMonitor->clerkLineCV[myLine]->Signal(PPMonitor->clerkLineLocks[myLine]); 
+				std::cout << "Passport Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+
+				PPMonitor->clerkState[myLine] = 1;
+
+				std::cout << "Passport Clerk " << myLine << " has received SSN " << PPMonitor->clientSSNs[myLine].front() <<
+					" from Customer " << PPMonitor->clientSSNs[myLine].front() << "." << std::endl;	
+
+				if(PPMonitor->clientReqs[myLine].front() != 2)
+				{
+					std::cout << "PassportClerk " << myLine << " has determined that Customer " << PPMonitor->clientSSNs[myLine].front() << " does not have both their application and picture completed." << std::endl;
+				}
+				else
+				{
+					std::cout << "PassportClerk " << myLine << " has determined that Customer " << PPMonitor->clientSSNs[myLine].front() << " has both their application and picture completed." << std::endl;
+					std::cout << "PassportClerk " << myLine << " has recorded Customer " << PPMonitor->clientSSNs[myLine].front() << " passport information." << std::endl;
+				}
+				
+				PPMonitor->clientSSNs[myLine].pop();	
+				PPMonitor->clientReqs[myLine].pop();
+				PPMonitor->clerkLineCount[myLine]--;
+				std::cout << "" << PPMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
+				
+				
+				
+			}
+			else
+			{
+				//std::cout << "PictureClerk " << myLine << " is going on break." << std::endl;
+				//PMonitor->clerkState[myLine] = 0;
+			}
+			//PMonitor->PMonitorLock->Release();
+			//PMonitor->clerkLineLocks[myLine]->Acquire();
+			PPMonitor->clerkLineLocks[myLine]->Release();
+		}//end of while
+	}
+
 
 	int getclerkState(){
 		return clerkState;
@@ -978,22 +1066,6 @@ public:
 	void setclerkState(int n){
 		clerkState = n;
 	}//end of setting clerkState
-
-    int getselfIndex() {
-        return selfIndex;
-    }
-
-    void setselfIndex(int i) {
-        selfIndex = i;
-    }
-
-    int getcurrClientIndex() {
-        return currClientIndex;
-    }
-
-    void setcurrClientIndex (int i) {
-        currClientIndex = i;
-    }
 
 	void addToLine(){
 		lineCount++;
@@ -1028,97 +1100,6 @@ public:
 	} //set clerk state to available
 
 }; // end of passport clerk	
-
-
-class Cashier {
-private:
-	int clerkState; // 0: available     1: busy       2: on break
-	int lineCount;   
-	int bribeLineCount;
-	int clerkMoney; //How much money the clerk has
-    int selfIndex; //position in cashier vector
-    int currClientIndex; //current client index in customer vector
-
-	//place map in monitor
-	//map<*Client, bool> clientRecords;   //records client and bool  if a passport got handed back
-									  //only one passport per client
-public:
-
-	Cashier(){
-		clerkState = 0;
-		lineCount = 0;
-		bribeLineCount = 0;
-		clerkMoney=0;
-        selfIndex = 0;
-        currClientIndex = 1000; //arbitrary value
-	}//end of constructor
-
-	~Cashier(){
-
-	}//end of deconstructor
-
-	int getclerkState(){
-		return clerkState;
-	}//end of getclerkState
-
-	void setclerkState(int n){
-		clerkState = n;
-	}//end of setting clerkState
-
-    int getselfIndex() {
-        return selfIndex;
-    }
-
-    void setselfIndex(int i) {
-        selfIndex = i;
-    }
-
-    int getcurrClientIndex() {
-        return currClientIndex;
-    }
-
-    void setcurrClientIndex (int i) {
-        currClientIndex = i;
-    }
-
-	void addToLine(){
-		lineCount++;
-	}//end of adding to line
-
-	void addToBribeLine(){
-		bribeLineCount++;
-	}//end of adding to bribe line
-
-	void addclerkMoney(int n){
-		clerkMoney = clerkMoney + n;
-	}//Adding money to clerk money variab;e
-
-	int getclerkMoney(){
-		return clerkMoney;
-	}//Get clerk money
-
-	void goOnBreak(){
-		clerkState = 2;
-		//send to sleep
-
-	}//end of sending clerk to break;
-
-	void goBackToWork(){
-		clerkState = 1;
-		//wake up from sleep
-
-	}//end of going back to work
-
-	void makeAvailable(){
-		clerkState = 0;
-	} //set clerk state to available
-
-	// place below in monitor
-	// void recordCustomer(Client *c){	//should only be called after payment
-	// 	clientRecords(std::pair<*Client, bool>(c, true));
-	// }//end of recording customer in books 
-
-}; // end of cashier clerk	
 
 
 class Manager {
@@ -1262,28 +1243,78 @@ public:
 	}//end of getting lock
 };
 
-class PassPortMonitor {
-private:
-	Lock *clerkLineLock;
-	//Condition clerkLineCV[5];
-	//Condition clerkBribeLineCV[5];
+struct PassportMonitor {
 
-	int clerkLineCount[5];
-	int clerkBribeLineCount[5];
-	int clerkState[5];	//0: available     1: busy    2: on break
+	Lock* MonitorLock;
 
-public:
-	PassPortMonitor(){
+	int numClerks;
+	Lock** clerkLineLocks;					// move to be global variable
+	Condition** clerkLineCV;
+	Condition** clerkBribeLineCV;
 
+	int* clerkLineCount;
+	int* clerkBribeLineCount;
+	int* clerkState;	//0: available     1: busy    2: on break
+	std::queue<int>* clientSSNs;
+	std::queue<int>* clientReqs; //0: neither picture nor application, 1: 1 of the two, 2: both
+
+	PassportMonitor(int numPassportClerks, int numCustomers)
+	{
+		MonitorLock = new Lock("Monitor Lock");
+
+		numClerks = numPassportClerks;
+		clerkLineLocks = new Lock*[numClerks];
+		clerkLineCV = new Condition*[numClerks];
+		clerkBribeLineCV = new Condition*[numClerks];
+		
+		clerkLineCount = new int[numClerks];
+		clerkBribeLineCount = new int[numClerks];
+		clerkState = new int[numClerks];
+
+		clientSSNs = new std::queue<int>[numCustomers];
+		clientReqs = new std::queue<int>[numCustomers];
+
+		for(int i = 0; i < numClerks; i++)
+		{			
+			clerkLineCV[i] = new Condition("");
+			clerkBribeLineCV[i] = new Condition("");
+			clerkLineLocks[i] = new Lock("ClerkLineLock");
+			clerkLineCount[i] = 0;
+			clerkBribeLineCount[i] = 0;
+			clerkState[i] = 0;
+		}
 	}//end of constructor
 
-	~PassPortMonitor(){
+	~PassportMonitor(){
 
-	}//end of deconstructor
+	}//end of destructor	
 
-	Lock* getLock(){
-		return clerkLineLock;
-	}//end of getting lock
+	int getSmallestLine()
+	{
+		int smallest = 50;
+		int smallestIndex = 0;
+		for(int i = 0; i < numClerks; i++)
+		{
+			//std::cout << clerkLineCount[i] << std::endl;
+			if(clerkLineCount[i] < smallest)
+			{
+				smallest = clerkLineCount[i];
+				smallestIndex = i;
+			}
+		}
+		return smallestIndex;
+	}
+
+	void giveSSN(int line, int ssn)
+	{
+		clientSSNs[line].push(ssn);
+	}
+
+	void giveReqs(int line, int completed)
+	{
+		clientReqs[line].push(completed);
+	}
+
 };
 
 class CashierMonitor {
