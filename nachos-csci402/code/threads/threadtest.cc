@@ -671,25 +671,24 @@ public:
 
 	void joinPictureLine()
 	{
-		int whichLine = PMonitor->getSmallestLine();
+		PMonitor->PMonitorLock->Acquire();
+        int whichLine = PMonitor->getSmallestLine();
 		std::cout << whichLine << std::endl;
 		PMonitor->clerkLineCount[whichLine] += 1;
 		PMonitor->giveSSN(whichLine, ssn);	
-		lineSpotP = PMonitor->clerkLineCount[whichLine];
-
 		std::cout << "Customer " << id << " has gotten in regular line for PictureClerk " << whichLine << "." << std::endl;
 		PMonitor->clerkLineLocks[whichLine]->Acquire();
-		while(lineSpotP > 1)
-		{
-			PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);			
-			lineSpotP--;
-		}
-		PMonitor->clerkLineLocks[whichLine]->Release();
-
+        PMonitor->PMonitorLock->Release();
+        PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);
+        std::cout << "Customer " << id << " has given SSN " << ssn << " to Picture Clerk " << whichLine << std::endl;
+        PMonitor->clerkLineCV[whichLine]->Signal(PMonitor->clerkLineLocks[whichLine]);
+        PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);
 		pictureTaken = true;
+        PMonitor->clerkLineLocks[whichLine]->Release();
 	}
 
-	void joinPassportLine()
+
+	/*void joinPassportLine()
 	{
 		PPMonitor->MonitorLock->Acquire();
 		
@@ -718,7 +717,45 @@ public:
 		}
 		std::cout << "Customer " << id << " has given SSN " << ssn << " to Passport Clerk " << whichLine << std::endl;
 		PPMonitor->clerkLineLocks[whichLine]->Release();
-	}
+	}*/
+
+    void joinPassportLine() {
+        PPMonitor->PPMonitorLock->Acquire();
+        int whichLine = PPMonitor->getSmallestLine();
+        std::cout << whichLine << std::endl;
+        PPMonitor->clerkLineCount[whichLine] += 1;
+        PPMonitor->giveSSN(whichLine, ssn);
+        std::cout << "Customer " << id << " has gotten in regular line for Passport Clerk " << whichLine << "." << std::endl;
+        PPMonitor->clerkLineLocks[whichLine]->Acquire();
+        PPMonitor->PPMonitorLock->Release();
+        PPMonitor->clerkLineCV[whichLine]->Wait(PPMonitor->clerkLineLocks[whichLine]);
+        std::cout << "Customer " << id << " has given SSN " << ssn << " to Passport Clerk " << whichLine << std::endl;
+        PPMonitor->clerkLineCV[whichLine]->Signal(PPMonitor->clerkLineLocks[whichLine]);
+        PPMonitor->clerkLineCV[whichLine]->Wait(PPMonitor->clerkLineLocks[whichLine]);
+        //Something should be declared true here
+        PPMonitor->clerkLineLocks[whichLine]->Release();
+        
+    }
+
+    void joinCashierLine() {
+    CashierMonitor->CashierMonitorLock->Acquire();
+        int whichLine = CashierMonitor->getSmallestLine();
+        std::cout << whichLine << std::endl;
+        CashierMonitor->clerkLineCount[whichLine] += 1;
+        CashierMonitor->giveSSN(whichLine, ssn);
+        std::cout << "Customer " << id << " has gotten in regular line for Cashier " << whichLine << "." << std::endl;
+        CashierMonitor->clerkLineLocks[whichLine]->Acquire();
+        CashierMonitor->CashierMonitorLock->Release();
+        CashierMonitor->clerkLineCV[whichLine]->Wait(CashierMonitor->clerkLineLocks[whichLine]);
+        std::cout << "Customer " << id << " has given SSN " << ssn << " to Cashier " << whichLine << std::endl;
+        CashierMonitor->clerkLineCV[whichLine]->Signal(CashierMonitor->clerkLineLocks[whichLine]);
+        CashierMonitor->clerkLineCV[whichLine]->Wait(CashierMonitor->clerkLineLocks[whichLine]);
+        //Something should be declared true here
+        CashierMonitor->clerkLineLocks[whichLine]->Release();
+        
+    }
+
+>>>>>>> 8a1304794a473b00b7e5db3a065d174affa8d00f
 
 	void moveUpInLine(){
 		if(money >= 600){
@@ -1149,22 +1186,32 @@ public:
 	}//end of updating total money 
 
     int getaClerkMoney() {
+        updateTotalMoney();
+        std::cout << "Manager has counted a total of $" << aClerkMoney << " for ApplicationClerks" << std::endl;
         return aClerkMoney;
     }
     
     int getpClerkMoney() {
+        updateTotalMoney();
+        std::cout << "Manager has counted a total of $" << pClerkMoney << " for PictureClerks" << std::endl;
         return pClerkMoney;
     }
     
     int getppClerkMoney() {
+        updateTotalMoney();
+        std::cout << "Manager has counted a total of $" << ppClerkMoney << " for PassportClerks" << std::endl;
         return ppClerkMoney;
     }
     
     int getcClerkMoney() {
+        updateTotalMoney();
+        std::cout << "Manager has counted a total of $" << cClerkMoney << " for Cashiers" << std::endl;
         return cClerkMoney;
     }
     
     int gettotalMoney() {
+        updateTotalMoney();
+        std::cout << "Manager has counted a total of $" << totalMoney << " for the passport office" << std::endl;
         return totalMoney;
     } //End of getters for different clerk money
 
