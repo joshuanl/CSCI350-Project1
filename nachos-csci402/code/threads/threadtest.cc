@@ -699,7 +699,6 @@ public:
 		PPMonitor->clerkLineCount[whichLine] += 1;
 		std::cout << PPMonitor->clerkLineCount[whichLine] << " in line" << std::endl;
 		PPMonitor->giveSSN(whichLine, ssn);	
-		
 		PPMonitor->giveReqs(whichLine, ssn);
 		int lineSpot = PPMonitor->clerkLineCount[whichLine];
 
@@ -725,6 +724,16 @@ public:
         std::cout << whichLine << std::endl;
         PPMonitor->clerkLineCount[whichLine] += 1;
         PPMonitor->giveSSN(whichLine, ssn);
+        int completed = 0;
+        if(applicationAccepted)
+        {
+            completed++;
+        }
+        if(pictureTaken)
+        {
+            completed++;
+        }
+        PPMonitor->giveReqs(whichLine, completed);
         std::cout << "Customer " << id << " has gotten in regular line for Passport Clerk " << whichLine << "." << std::endl;
         PPMonitor->clerkLineLocks[whichLine]->Acquire();
         PPMonitor->PPMonitorLock->Release();
