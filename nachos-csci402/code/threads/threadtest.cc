@@ -465,6 +465,7 @@ private:
 	int money;
 	int ssn;
     int selfIndex;
+    int currClerkIndex;
 	bool applicationAccepted;
 	bool pictureTaken;
 	bool bribed; 	//reset after each line
@@ -474,6 +475,7 @@ public:
 		ssn = num;
 		money = startMoney;
         selfIndex = 0; //defines position in the customer vector
+        currClientIndex = 1000; //Arbitrary value
 		std::cout << "ssn: " << ssn << "  startMoney: " << startMoney << std::endl;
 
 		applicationAccepted = false;
@@ -507,6 +509,14 @@ public:
 
     int getselfIndex () {
         return selfIndex;
+    }
+
+    void setcurrClerkIndex (int i) {
+        currClerkIndex = i;
+    } //Setter for self-index
+
+    int getcurrClerkIndex () {
+        return currClerkIndex;
     }
 
 
