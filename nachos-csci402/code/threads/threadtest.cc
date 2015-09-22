@@ -667,23 +667,57 @@ public:
 
 	void joinPictureLine()
 	{
-		int whichLine = PMonitor->getSmallestLine();
+		PMonitor->PMonitorLock->Acquire();
+        int whichLine = PMonitor->getSmallestLine();
 		std::cout << whichLine << std::endl;
 		PMonitor->clerkLineCount[whichLine] += 1;
 		PMonitor->giveSSN(whichLine, ssn);	
-		lineSpotP = PMonitor->clerkLineCount[whichLine];
-
 		std::cout << "Customer " << id << " has gotten in regular line for PictureClerk " << whichLine << "." << std::endl;
 		PMonitor->clerkLineLocks[whichLine]->Acquire();
-		while(lineSpotP > 1)
-		{
-			PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);			
-			lineSpotP--;
-		}
-		PMonitor->clerkLineLocks[whichLine]->Release();
-
+        PMonitor->PMonitorLock->Release();
+        PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);
+        std::cout << "Customer " << id << " has given SSN " << ssn << " to Picture Clerk " << whichLine << std::endl;
+        PMonitor->clerkLineCV[whichLine]->Signal(PMonitor->clerkLineLocks[whichLine]);
+        PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);
 		pictureTaken = true;
+        PMonitor->clerkLineLocks[whichLine]->Release();
 	}
+
+    void joinPassportLine() {
+        PPMonitor->PPMonitorLock->Acquire();
+        int whichLine = PPMonitor->getSmallestLine();
+        std::cout << whichLine << std::endl;
+        PPMonitor->clerkLineCount[whichLine] += 1;
+        PPMonitor->giveSSN(whichLine, ssn);
+        std::cout << "Customer " << id << " has gotten in regular line for Passport Clerk " << whichLine << "." << std::endl;
+        PPMonitor->clerkLineLocks[whichLine]->Acquire();
+        PPMonitor->PPMonitorLock->Release();
+        PPMonitor->clerkLineCV[whichLine]->Wait(PPMonitor->clerkLineLocks[whichLine]);
+        std::cout << "Customer " << id << " has given SSN " << ssn << " to Passport Clerk " << whichLine << std::endl;
+        PPMonitor->clerkLineCV[whichLine]->Signal(PPMonitor->clerkLineLocks[whichLine]);
+        PPMonitor->clerkLineCV[whichLine]->Wait(PPMonitor->clerkLineLocks[whichLine]);
+        //Something should be declared true here
+        PPMonitor->clerkLineLocks[whichLine]->Release();
+        
+    }
+
+    void joinCashierLine() {
+    CashierMonitor->CashierMonitorLock->Acquire();
+        int whichLine = CashierMonitor->getSmallestLine();
+        std::cout << whichLine << std::endl;
+        CashierMonitor->clerkLineCount[whichLine] += 1;
+        CashierMonitor->giveSSN(whichLine, ssn);
+        std::cout << "Customer " << id << " has gotten in regular line for Cashier " << whichLine << "." << std::endl;
+        CashierMonitor->clerkLineLocks[whichLine]->Acquire();
+        CashierMonitor->CashierMonitorLock->Release();
+        CashierMonitor->clerkLineCV[whichLine]->Wait(CashierMonitor->clerkLineLocks[whichLine]);
+        std::cout << "Customer " << id << " has given SSN " << ssn << " to Cashier " << whichLine << std::endl;
+        CashierMonitor->clerkLineCV[whichLine]->Signal(CashierMonitor->clerkLineLocks[whichLine]);
+        CashierMonitor->clerkLineCV[whichLine]->Wait(CashierMonitor->clerkLineLocks[whichLine]);
+        //Something should be declared true here
+        CashierMonitor->clerkLineLocks[whichLine]->Release();
+        
+    }
 
 
 	void moveUpInLine(){
