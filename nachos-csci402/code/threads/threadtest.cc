@@ -36,6 +36,7 @@
 #include <time.h>
 #include <map>
 #include <iostream>
+#include <queue>
 
 //PROTOTYPES
 class Client;
@@ -60,7 +61,7 @@ std::vector<ApplicationClerk *> aClerks;
 std::vector<PictureClerk *> pClerks;
 std::vector<PassPortClerk *> ppClerks;
 std::vector<Cashier *> cClerks;
-std::vector<Customers *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR. 
+std::vector<Client *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR. 
 //OTHERWISE WE WILL HAVE TO REINDEX THE CUSTOMERS AND THAT IS A BIG PAIN 
 
 //----------------------------------------------------------------------
@@ -667,22 +668,7 @@ public:
 
 	void joinPictureLine()
 	{
-		int whichLine = PMonitor->getSmallestLine();
-		std::cout << whichLine << std::endl;
-		PMonitor->clerkLineCount[whichLine] += 1;
-		PMonitor->giveSSN(whichLine, ssn);	
-		lineSpotP = PMonitor->clerkLineCount[whichLine];
-
-		std::cout << "Customer " << id << " has gotten in regular line for PictureClerk " << whichLine << "." << std::endl;
-		PMonitor->clerkLineLocks[whichLine]->Acquire();
-		while(lineSpotP > 1)
-		{
-			PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);			
-			lineSpotP--;
-		}
-		PMonitor->clerkLineLocks[whichLine]->Release();
-
-		pictureTaken = true;
+		
 	}
 
 
@@ -736,13 +722,12 @@ private:
 	//std::vector<Client*> myLine;
 
 public:
-	ApplicationClerk(int line)
-	{
+	ApplicationClerk(){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-		myLine = line;
+		myLine = -1;
 
 	}//end of constructor
 
@@ -750,10 +735,7 @@ public:
 
 	}//endo of deconstructor
 
-	void run()
-	{	
-		void run()
-	{	
+	void run(){		
 		while(true)
 		{
 			
@@ -803,12 +785,16 @@ public:
 		clerkState = n;
 	}//end of setting clerkState
 
+	void setselfIndex (int i) {
+        myLine = i;
+    } //Setter for self-index
+
 	int getLineCount()
 	{
 		return lineCount;
 	}
 
-	void addToLine(Client* client)
+	void addToLine()
 	{
 		//myLine.push_back(client);
 		lineCount++;
@@ -853,13 +839,13 @@ private:
 	//std::vector<Client*> myLine;
 
 public:
-	PictureClerk(int line)
+	PictureClerk()
 	{
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-		myLine = line;
+		myLine = -1;
 
 	}//end of constructor
 
@@ -867,8 +853,7 @@ public:
 
 	}//endo of deconstructor
 
-	void run()
-	{	
+	void run(){	
 		while(true)
 		{
 			
@@ -908,12 +893,16 @@ public:
 		clerkState = n;
 	}//end of setting clerkState
 
+	void setselfIndex (int i) {
+        myLine = i;
+    } //Setter for self-index
+
 	int getLineCount()
 	{
 		return lineCount;
 	}
 
-	void addToLine(Client* client)
+	void addToLine()
 	{
 		//myLine.push_back(client);
 		lineCount++;
@@ -1199,8 +1188,9 @@ private:
 	bool bribed;
 public:
 
-	Senator(){
-
+	Senator(int sn, int startMoney){
+		ssn = sn;
+		money = startMoney;
 	}//end of constructor
 
 	~Senator(){
@@ -1236,31 +1226,6 @@ public:
 
 };//end of senator class
 
-
-
-class PictureMonitor {
-private:
-	Lock *clerkLineLock;
-	//Condition clerkLineCV[5];
-	//Condition clerkBribeLineCV[5];
-
-	int clerkLineCount[5];
-	int clerkBribeLineCount[5];
-	int clerkState[5];	//0: available     1: busy    2: on break
-
-public:
-	PictureMonitor(){
-
-	}//end of constructor
-
-	~PictureMonitor(){
-
-	}//end of deconstructor
-
-	Lock* getLock(){
-		return clerkLineLock;
-	}//end of getting lock
-};
 
 class PassPortMonitor {
 private:
@@ -1318,36 +1283,36 @@ void createCustomer(){
 	ssnCount++; //Important: ssnCount has to be incremented before run is called. I recommend doing that with other calls below, too.
 	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
 	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);	
-    c.setselfIndex(customers.size());
-    customers.insert(c);
+    c->setselfIndex(customers.size());
+    customers.push_back(c);
 }//end of making customer
 
 void createApplicationClerk(){
     ApplicationClerk *ac = new ApplicationClerk();
-    ac.setselfIndex(customers.size());
-    aClerks.insert(ac);
+    ac->setselfIndex(customers.size());
+    aClerks.push_back(ac);
 
 }//end of making application clerk
 
 void createPassPortClerk(){
     PassPortClerk *ppc = new PassPortClerk();
-    ppc.setselfIndex(customers.size());
-    ppClerks.insert(ppc);
+    ppc->setselfIndex(customers.size());
+    ppClerks.push_back(ppc);
 }//end of making passportClerk
 
 
 void createPictureClerk(){
     PictureClerk *pc = new PictureClerk();
-    pc.setselfIndex(customers.size());
-    pClerks.insert(pc);
+    pc->setselfIndex(customers.size());
+    pClerks.push_back(pc);
 
 
 }//end of making picture clerk
 
 void createCashierClerk(){
     Cashier *cc = new Cashier();
-    cc.setselfIndex(customers.size());
-    cClerks.insert(cc);
+    cc->setselfIndex(customers.size());
+    cClerks.push_back(cc);
 
 
 }//end of making cashier clerk
@@ -1359,7 +1324,7 @@ void makeManager(){
 
 void makeSenator(){
     int rdmMoneyIndex = rand()%4;
-    std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std:endl;
+    std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
     Senator *s = new Senator(ssnCount, clientStartMoney[rdmMoneyIndex]);
     ssnCount++;
 
@@ -1483,7 +1448,7 @@ void Problem2(){
         }
     }//end of while
 
-	AMonitor = new ApplicationMonitor(applicationClerk_thread_num);
+	AMonitor = new ApplicationMonitor(applicationClerk_thread_num, customer_thread_num);
 	PMonitor = new PictureMonitor(pictureClerk_thread_num, customer_thread_num);
 
 	//create for loop for each and fork
