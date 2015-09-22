@@ -1202,22 +1202,32 @@ public:
 	}//end of updating total money 
 
     int getaClerkMoney() {
+        updateTotalMoney();
+        std::cout << "Manager has counted a total of $" << aClerkMoney << " for ApplicationClerks" << std::endl;
         return aClerkMoney;
     }
     
     int getpClerkMoney() {
+        updateTotalMoney();
+        std::cout << "Manager has counted a total of $" << pClerkMoney << " for PictureClerks" << std::endl;
         return pClerkMoney;
     }
     
     int getppClerkMoney() {
+        updateTotalMoney();
+        std::cout << "Manager has counted a total of $" << ppClerkMoney << " for PassportClerks" << std::endl;
         return ppClerkMoney;
     }
     
     int getcClerkMoney() {
+        updateTotalMoney();
+        std::cout << "Manager has counted a total of $" << cClerkMoney << " for Cashiers" << std::endl;
         return cClerkMoney;
     }
     
     int gettotalMoney() {
+        updateTotalMoney();
+        std::cout << "Manager has counted a total of $" << totalMoney << " for the passport office" << std::endl;
         return totalMoney;
     } //End of getters for different clerk money
 
