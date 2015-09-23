@@ -277,7 +277,6 @@ struct PassportMonitor {
 // GLOBAL VARIABLES FOR PROBLEM 2
 int ssnCount = 0;
 const int clientStartMoney[4] = {100, 500, 1100, 1600};
-bool allMade = false;
 ApplicationMonitor* AMonitor;
 PictureMonitor* PMonitor;
 PassportMonitor* PPMonitor;
@@ -800,10 +799,10 @@ public:
 		//need to randomize
 		
 		joinApplicationLine();
+		
+		// joinPictureLine();
 
-		joinPictureLine();
-
-		joinPassportLine();
+		// joinPassportLine();
 	}//end of client constructor
 
 	~Client(){
@@ -813,34 +812,36 @@ public:
 
 	void joinApplicationLine()
 	{
+		// AMonitor->AMonitorLock->Acquire();
+		// int whichLine = AMonitor->getSmallestLine();
+		// std::cout << whichLine << std::endl;
+		// AMonitor->clerkLineCount[whichLine] += 1;	
+		// AMonitor->giveSSN(whichLine, ssn);	
+		// std::cout << "Customer " << id << " has gotten in regular line for ApplicationClerk " << whichLine << "." << std::endl;
+		// //AMonitor->clerkLineLocks[whichLine]->Release();
+		// AMonitor->clerkLineLocks[whichLine]->Acquire();
+		// AMonitor->AMonitorLock->Release();
+		// AMonitor->clerkLineCV[whichLine]->Wait(AMonitor->clerkLineLocks[whichLine]);
+		// std::cout << "Customer " << id << " has given SSN " << ssn << " to Application Clerk " << whichLine << std::endl;
+		// AMonitor->clerkLineCV[whichLine]->Signal(AMonitor->clerkLineLocks[whichLine]);
+		// AMonitor->clerkLineCV[whichLine]->Wait(AMonitor->clerkLineLocks[whichLine]);
+		// applicationAccepted = true;
+		// AMonitor->clerkLineLocks[whichLine]->Release();	
+
 		AMonitor->AMonitorLock->Acquire();
 		int whichLine = AMonitor->getSmallestLine();
-
-		
 		std::cout << whichLine << std::endl;
-		AMonitor->clerkLineCount[whichLine] += 1;	
-		AMonitor->giveSSN(whichLine, ssn);	
-
-		std::cout << "Customer " << id << " has gotten in regular line for ApplicationClerk " << whichLine << "." << std::endl;
-		
-		//AMonitor->clerkLineLocks[whichLine]->Release();
-
 		AMonitor->clerkLineLocks[whichLine]->Acquire();
-
-		AMonitor->AMonitorLock->Release();
-
-		AMonitor->clerkLineCV[whichLine]->Wait(AMonitor->clerkLineLocks[whichLine]);
-		
+		AMonitor->clerkLineCount[whichLine] += 1;	
+		AMonitor->giveSSN(whichLine, ssn);
 		std::cout << "Customer " << id << " has given SSN " << ssn << " to Application Clerk " << whichLine << std::endl;
-
 		AMonitor->clerkLineCV[whichLine]->Signal(AMonitor->clerkLineLocks[whichLine]);
-
 		AMonitor->clerkLineCV[whichLine]->Wait(AMonitor->clerkLineLocks[whichLine]);
-
 		applicationAccepted = true;
-		
-		AMonitor->clerkLineLocks[whichLine]->Release();	
-	}
+		AMonitor->clerkLineCV[whichLine]->Signal(AMonitor->clerkLineLocks[whichLine]);
+		AMonitor->AMonitorLock->Release();
+		std::cout << "Customer: " << id << " is out of line" << std::endl;
+	}	
 
 	void joinPictureLine()
 	{
@@ -971,7 +972,7 @@ public:
 	void run(){		
 		while(true)
 		{
-			
+			AMonitor->AMonitorLock->Acquire();
 			std::cout << "\n\naquiring clerkLineLocks[myLine]  from AMonitor in ApplicationClerk run()." << std::endl;
 			std::cout << "clerkLineLocks.size: " << applicationClerk_thread_num << std::endl;
 			std::cout << "myLine: " << myLine << std::endl << std::endl;
@@ -984,28 +985,37 @@ public:
 			}
 			else if(AMonitor->clerkLineCount[myLine] > 0)
 			{       //if bribe line is empty
-				
+
 				AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]); 
-				std::cout << "Application Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 				AMonitor->clerkState[myLine] = 1;
+				
+				// std::cout << "Application Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				
+				// AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]); 
 
-				AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]); 
+				// //wait
+				// std::cout << "Application Clerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
+				// 	" from Customer " << AMonitor->clientSSNs[myLine].front() << "." << std::endl;
+				// AMonitor->clientSSNs[myLine].pop();				
+				// AMonitor->clerkLineCount[myLine]--;
+				// std::cout << "" << AMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
 
-				//wait
-				std::cout << "Application Clerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
+				// AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]); 
+			}
+			else{
+				AMonitor->clerkState[myLine] = 0;
+			}
+			AMonitor->clerkLineLocks[myLine]->Acquire();  
+			AMonitor->AMonitorLock->Release();
+			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]); 
+			std::cout << "Application Clerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
 					" from Customer " << AMonitor->clientSSNs[myLine].front() << "." << std::endl;
-				AMonitor->clientSSNs[myLine].pop();				
-				AMonitor->clerkLineCount[myLine]--;
-				std::cout << "" << AMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
+			AMonitor->clientSSNs[myLine].pop();				
+			AMonitor->clerkLineCount[myLine]--;
+			std::cout << "" << AMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
 
-				AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]); 
-			}
-			else
-			{
-				//std::cout << "ApplicationClerk " << myLine << "is going on break." << std::endl;
-				//AMonitor->clerkState[myLine] = 0;
-			}
-
+			AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]); 
+			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]); 
 			AMonitor->clerkLineLocks[myLine]->Release();
 		
 		}
@@ -1679,8 +1689,6 @@ void Problem2(){
 		Thread *t = new Thread("application clerk thread");
 		t->Fork((VoidFunctionPtr)createApplicationClerk, i+1);
 	}//end of creating application clerk threads
-
-	allMade = true;
 
  //    std::cout << "reached.  PassportClerk_thread_num: " << passportClerk_thread_num << std::endl; 
  //    for(int i = 0; i < passportClerk_thread_num; i++){
