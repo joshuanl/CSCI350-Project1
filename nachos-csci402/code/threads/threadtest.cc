@@ -273,7 +273,6 @@ struct PassportMonitor {
 	}
 
 };
->>>>>>> f5d59452f7817e54843dd436946891e7325a5e66
 
 // GLOBAL VARIABLES FOR PROBLEM 2
 int ssnCount = 0;
@@ -1733,6 +1732,8 @@ void Problem2(){
 
 	AMonitor = new ApplicationMonitor(applicationClerk_thread_num, customer_thread_num);
 	PMonitor = new PictureMonitor(pictureClerk_thread_num, customer_thread_num);
+	PPMonitor = new PassportMonitor(passPortClerk_thread_num, customer_thread_num);
+	CMonitor = new CashierMonitor(cashier_thread_num, customer_thread_num);
 
 	//create for loop for each and fork
 	//create 
