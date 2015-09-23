@@ -277,10 +277,24 @@ struct PassportMonitor {
 // GLOBAL VARIABLES FOR PROBLEM 2
 int ssnCount = 0;
 const int clientStartMoney[4] = {100, 500, 1100, 1600};
+bool allMade = false;
 ApplicationMonitor* AMonitor;
 PictureMonitor* PMonitor;
 PassportMonitor* PPMonitor;
 CashierMonitor* CMonitor;
+
+int customer_thread_num;
+int applicationClerk_thread_num;
+int applicationClerkID = 0;
+int pictureClerk_thread_num;
+int pictureClerkID = 0;
+int passportClerk_thread_num;
+int passportClerkID = 0;
+int cashier_thread_num;
+int cashierID = 0;
+int manager_thread_num = 1; //There can only be one manager in the simulation
+int senator_thread_num;
+int senatorID = 0;
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -759,6 +773,7 @@ struct CashierMonitor
 
 };
 
+
 class Client {
 
 private:
@@ -783,6 +798,7 @@ public:
 		bribed = false;
 
 		//need to randomize
+		
 		joinApplicationLine();
 
 		joinPictureLine();
@@ -908,14 +924,9 @@ public:
 		pictureTaken = b;
 	}
 
-    void setselfIndex (int i) {
-        selfIndex = i;
-    } //Setter for self-index
-
     int getselfIndex () {
         return selfIndex;
     }
-
 
 
 	bool isAppAccepted(){
@@ -943,12 +954,12 @@ private:
 	//std::vector<Client*> myLine;
 
 public:
-	ApplicationClerk(){
+	ApplicationClerk(int n){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-		myLine = -1;
+		myLine = n;
 
 		run();
 	}//end of constructor
@@ -961,6 +972,9 @@ public:
 		while(true)
 		{
 			
+			std::cout << "\n\naquiring clerkLineLocks[myLine]  from AMonitor in ApplicationClerk run()." << std::endl;
+			std::cout << "clerkLineLocks.size: " << applicationClerk_thread_num << std::endl;
+			std::cout << "myLine: " << myLine << std::endl << std::endl;
 			AMonitor->clerkLineLocks[myLine]->Acquire();
 
 			if(AMonitor->clerkBribeLineCount[myLine] > 0)
@@ -1061,13 +1075,13 @@ private:
 	//std::vector<Client*> myLine;
 
 public:
-	PictureClerk()
+	PictureClerk(int n)
 	{
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-		myLine = -1;
+		myLine = n;
 
 	}//end of constructor
 
@@ -1169,12 +1183,12 @@ private:
 
 public:
 
-	PassportClerk(){
+	PassportClerk(int n){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-		myLine = -1;
+		myLine = n;
 	}//end of constructor
 
 	~PassportClerk(){
@@ -1493,27 +1507,27 @@ void createCustomer(){
 	ssnCount++; //Important: ssnCount has to be incremented before run is called. I recommend doing that with other calls below, too.
 	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
 	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);	
-    c->setselfIndex(customers.size());
+    //c->setselfIndex(customers.size());
     customers.push_back(c);
 }//end of making customer
 
 void createApplicationClerk(){
-    ApplicationClerk *ac = new ApplicationClerk();
-    ac->setselfIndex(customers.size());
+    ApplicationClerk *ac = new ApplicationClerk(applicationClerkID);
+    applicationClerkID++;
     aClerks.push_back(ac);
 
 }//end of making application clerk
 
 void createPassportClerk(){
-    PassportClerk *ppc = new PassportClerk();
-    ppc->setselfIndex(customers.size());
+    PassportClerk *ppc = new PassportClerk(passportClerkID);
+    passportClerkID++;
     ppClerks.push_back(ppc);
 }//end of making PassportClerk
 
 
 void createPictureClerk(){
-    PictureClerk *pc = new PictureClerk();
-    pc->setselfIndex(customers.size());
+    PictureClerk *pc = new PictureClerk(pictureClerkID);
+    pictureClerkID++;
     pClerks.push_back(pc);
 
 
@@ -1543,14 +1557,6 @@ void makeSenator(){
 
 void Problem2(){
 	//srand(time(NULL));
-	int customer_thread_num;
-	int applicationClerk_thread_num;
-	int pictureClerk_thread_num;
-
-	int passportClerk_thread_num;
-	int cashier_thread_num;
-	int manager_thread_num = 1; //There can only be one manager in the simulation
-	int senator_thread_num;
 
 
 	bool acceptInput = false;
@@ -1666,12 +1672,7 @@ void Problem2(){
 
 	//create for loop for each and fork
 	//create 
-	std::cout << "reached.  customer_thread_num: " << customer_thread_num << std::endl; 
-	for(int i = 0; i < customer_thread_num; i++){
-		Thread *t = new Thread("customer thread");			
-		t->Fork((VoidFunctionPtr)createCustomer, i+1);
-		
-	}//end of creating client threads
+	
 
 	std::cout << "reached.  applicationClerk_thread_num: " << applicationClerk_thread_num << std::endl; 
 	for(int i = 0; i < applicationClerk_thread_num; i++){
@@ -1679,34 +1680,43 @@ void Problem2(){
 		t->Fork((VoidFunctionPtr)createApplicationClerk, i+1);
 	}//end of creating application clerk threads
 
-    std::cout << "reached.  PassportClerk_thread_num: " << passportClerk_thread_num << std::endl; 
-    for(int i = 0; i < passportClerk_thread_num; i++){
-        Thread *t = new Thread("passport clerk thread");
-        t->Fork((VoidFunctionPtr)createPassportClerk, i+1);
-    }//end of creating passPort clerk threads
+	allMade = true;
 
-    std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
-    for(int i = 0; i < pictureClerk_thread_num; i++){
-        Thread *t = new Thread("picture clerk thread");
-        t->Fork((VoidFunctionPtr)createPictureClerk, i+1);
-    }//end of creating picture clerk threads
+ //    std::cout << "reached.  PassportClerk_thread_num: " << passportClerk_thread_num << std::endl; 
+ //    for(int i = 0; i < passportClerk_thread_num; i++){
+ //        Thread *t = new Thread("passport clerk thread");
+ //        t->Fork((VoidFunctionPtr)createPassportClerk, i+1);
+ //    }//end of creating passPort clerk threads
 
-	std::cout << "reached.  cashier_thread_num: " << cashier_thread_num << std::endl; 
-    for(int i = 0; i < cashier_thread_num; i++){
-        Thread *t = new Thread("cashier thread");
-        t->Fork((VoidFunctionPtr)createCashier, i+1);
-    }//end of creating cashier threads
+ //    std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
+ //    for(int i = 0; i < pictureClerk_thread_num; i++){
+ //        Thread *t = new Thread("picture clerk thread");
+ //        t->Fork((VoidFunctionPtr)createPictureClerk, i+1);
+ //    }//end of creating picture clerk threads
 
-    std::cout <<"reached. manager_thread_num: " << manager_thread_num << std::endl;
-    for (int i=0; i<manager_thread_num; i++){
-        Thread *t = new Thread("manager thread");
-        t->Fork((VoidFunctionPtr)makeManager, i+1);
-    }  //end of creating solo manager thread
+	// std::cout << "reached.  cashier_thread_num: " << cashier_thread_num << std::endl; 
+ //    for(int i = 0; i < cashier_thread_num; i++){
+ //        Thread *t = new Thread("cashier thread");
+ //        t->Fork((VoidFunctionPtr)createCashier, i+1);
+ //    }//end of creating cashier threads
 
-    std::cout <<"reached. senator_thread_num: " << senator_thread_num << std::endl;
-    for (int i=0; i<senator_thread_num; i++){
-        Thread *t = new Thread("senator thread");
-        t->Fork((VoidFunctionPtr)makeSenator, i+1);
-    }  //end of creating senator threads
+ //    std::cout <<"reached. manager_thread_num: " << manager_thread_num << std::endl;
+ //    for (int i=0; i<manager_thread_num; i++){
+ //        Thread *t = new Thread("manager thread");
+ //        t->Fork((VoidFunctionPtr)makeManager, i+1);
+ //    }  //end of creating solo manager thread
+
+ //    std::cout <<"reached. senator_thread_num: " << senator_thread_num << std::endl;
+ //    for (int i=0; i<senator_thread_num; i++){
+ //        Thread *t = new Thread("senator thread");
+ //        t->Fork((VoidFunctionPtr)makeSenator, i+1);
+ //    }  //end of creating senator threads
+
+    std::cout << "reached.  customer_thread_num: " << customer_thread_num << std::endl; 
+	for(int i = 0; i < customer_thread_num; i++){
+		Thread *t = new Thread("customer thread");			
+		t->Fork((VoidFunctionPtr)createCustomer, i+1);
+		
+	}//end of creating client threads
 
 }//end of problem 2

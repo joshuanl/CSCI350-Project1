@@ -114,8 +114,12 @@ Lock::~Lock() {
 }
 void Lock::Acquire() {
     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
-    if(owner != NULL && owner == currentThread){
-       (void) interrupt->SetLevel(old);;
+    if(owner == NULL){
+        (void) interrupt->SetLevel(old);
+        return;
+    }
+    if(owner == currentThread){
+       (void) interrupt->SetLevel(old);
        return;
     }//end of if current thread is already lock owner
     if(!BUSY){                                  //if not busy then available
