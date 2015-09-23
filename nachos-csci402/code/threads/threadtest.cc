@@ -47,6 +47,7 @@ class Cashier;
 struct ApplicationMonitor;
 struct PictureMonitor;
 struct PassportMonitor;
+struct CashierMonitor;
 
 // GLOBAL VARIABLES FOR PROBLEM 2
 int ssnCount = 0;
@@ -54,12 +55,13 @@ const int clientStartMoney[4] = {100, 500, 1100, 1600};
 ApplicationMonitor* AMonitor;
 PictureMonitor* PMonitor;
 PassportMonitor* PPMonitor;
+CashierMonitor* CMonitor;
 
 
 std::vector<ApplicationClerk *> aClerks;
 std::vector<PictureClerk *> pClerks;
 std::vector<PassportClerk *> ppClerks;
-std::vector<Cashier *> cClerks;
+std::vector<Cashier *> cashiers;
 std::vector<Customers *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR. 
 //OTHERWISE WE WILL HAVE TO REINDEX THE CUSTOMERS AND THAT IS A BIG PAIN 
 
@@ -602,6 +604,80 @@ struct PictureMonitor {
 
 };
 
+struct CashierMonitor 
+{
+	Lock* MonitorLock;
+
+	int numClerks;
+	Lock** clerkLineLocks;					// move to be global variable
+	Condition** clerkLineCV;
+	Condition** clerkBribeLineCV;
+
+	int* clerkLineCount;
+	int* clerkBribeLineCount;
+	int* clerkState;	//0: available     1: busy    2: on break
+	std::queue<int>* clientSSNs;
+	std::queue<bool>* customerCertifications; //0: neither picture nor application, 1: 1 of the two, 2: both
+
+	CashierMonitor(int numPassportClerks, int numCustomers)
+	{
+		MonitorLock = new Lock("Monitor Lock");
+
+		numClerks = numPassportClerks;
+		clerkLineLocks = new Lock*[numClerks];
+		clerkLineCV = new Condition*[numClerks];
+		clerkBribeLineCV = new Condition*[numClerks];
+		
+		clerkLineCount = new int[numClerks];
+		clerkBribeLineCount = new int[numClerks];
+		clerkState = new int[numClerks];
+
+		clientSSNs = new std::queue<int>[numCustomers];
+		customerCertifications = new std::queue<bool>[numCustomers];
+
+		for(int i = 0; i < numClerks; i++)
+		{			
+			clerkLineCV[i] = new Condition("");
+			clerkBribeLineCV[i] = new Condition("");
+			clerkLineLocks[i] = new Lock("ClerkLineLock");
+			clerkLineCount[i] = 0;
+			clerkBribeLineCount[i] = 0;
+			clerkState[i] = 0;
+		}
+	}//end of constructor
+
+	~CashierMonitor(){
+
+	}//end of destructor	
+
+	int getSmallestLine()
+	{
+		int smallest = 50;
+		int smallestIndex = 0;
+		for(int i = 0; i < numClerks; i++)
+		{
+			//std::cout << clerkLineCount[i] << std::endl;
+			if(clerkLineCount[i] < smallest)
+			{
+				smallest = clerkLineCount[i];
+				smallestIndex = i;
+			}
+		}
+		return smallestIndex;
+	}
+
+	void giveSSN(int line, int ssn)
+	{
+		clientSSNs[line].push(ssn);
+	}
+
+	void giveCertification(int line, bool certified)
+	{
+		customerCertifications[line].push(certified);
+	}
+
+};
+
 class Client {
 
 private:
@@ -737,25 +813,25 @@ public:
         
     }
 
-    void joinCashierLine() {
-    CashierMonitor->CashierMonitorLock->Acquire();
-        int whichLine = CashierMonitor->getSmallestLine();
-        std::cout << whichLine << std::endl;
-        CashierMonitor->clerkLineCount[whichLine] += 1;
-        CashierMonitor->giveSSN(whichLine, ssn);
-        std::cout << "Customer " << id << " has gotten in regular line for Cashier " << whichLine << "." << std::endl;
-        CashierMonitor->clerkLineLocks[whichLine]->Acquire();
-        CashierMonitor->CashierMonitorLock->Release();
-        CashierMonitor->clerkLineCV[whichLine]->Wait(CashierMonitor->clerkLineLocks[whichLine]);
-        std::cout << "Customer " << id << " has given SSN " << ssn << " to Cashier " << whichLine << std::endl;
-        CashierMonitor->clerkLineCV[whichLine]->Signal(CashierMonitor->clerkLineLocks[whichLine]);
-        CashierMonitor->clerkLineCV[whichLine]->Wait(CashierMonitor->clerkLineLocks[whichLine]);
-        //Something should be declared true here
-        CashierMonitor->clerkLineLocks[whichLine]->Release();
-        
-    }
+	void joinCashierLine()
+	{
+		CMonitor->MonitorLock->Acquire();
+        int whichLine = CMonitor->getSmallestLine();
+		std::cout << whichLine << std::endl;
+		CMonitor->clerkLineCount[whichLine] += 1;
+		CMonitor->giveSSN(whichLine, ssn);
+		CMonitor->giveCertification(whichLine, certified);
+		std::cout << "Customer " << id << " has gotten in regular line for Cashier Clerk " << whichLine << "." << std::endl;
+		CMonitor->clerkLineLocks[whichLine]->Acquire();
+        CMonitor->MonitorLock->Release();
+        CMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);
+        std::cout << "Customer " << id << " has given SSN " << ssn << " to Cashier Clerk " << whichLine << std::endl;
+        CMonitor->clerkLineCV[whichLine]->Signal(PMonitor->clerkLineLocks[whichLine]);
+        CMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);
+		pictureTaken = true;
+        CMonitor->clerkLineLocks[whichLine]->Release();
+	}
 
->>>>>>> 8a1304794a473b00b7e5db3a065d174affa8d00f
 
 	void moveUpInLine(){
 		if(money >= 600){
@@ -1422,10 +1498,12 @@ void createPictureClerk(){
 
 }//end of making picture clerk
 
-void createCashierClerk(){
-    Cashier *cc = new Cashier();
-    cc.setselfIndex(customers.size());
-    cClerks.insert(cc);
+void createCashier()
+{
+    Cashier *cashier = new Cashier(cashiers.size());
+    cashiers.push_back(cashier);
+	cashier->run();
+}
 
 
 }//end of making cashier clerk
@@ -1450,7 +1528,7 @@ void Problem2(){
 	int applicationClerk_thread_num;
 	int pictureClerk_thread_num;
 	int passPortClerk_thread_num;
-	int cashierClerk_thread_num;
+	int cashier_thread_num;
 	int manager_thread_num = 1; //There can only be one manager in the simulation
 	int senator_thread_num;
 
@@ -1591,11 +1669,11 @@ void Problem2(){
         t->Fork((VoidFunctionPtr)createPictureClerk, i+1);
     }//end of creating picture clerk threads
 
-    std::cout << "reached.  cachierClerk_thread_num: " << cashierClerk_thread_num << std::endl; 
-    for(int i = 0; i < cashierClerk_thread_num; i++){
-        Thread *t = new Thread("cashier clerk thread");
-        t->Fork((VoidFunctionPtr)createCashierClerk, i+1);
-    }//end of creating cashier clerk threads
+	std::cout << "reached.  cashier_thread_num: " << cashier_thread_num << std::endl; 
+    for(int i = 0; i < cashier_thread_num; i++){
+        Thread *t = new Thread("cashier thread");
+        t->Fork((VoidFunctionPtr)createCashier, i+1);
+    }//end of creating cashier threads
 
     std::cout <<"reached. manager_thread_num: " << manager_thread_num << std::endl;
     for (int i=0; i<manager_thread_num; i++){
