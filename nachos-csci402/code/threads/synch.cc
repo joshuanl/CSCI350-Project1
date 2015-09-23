@@ -114,22 +114,22 @@ Lock::~Lock() {
 }
 void Lock::Acquire() {
     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
+    
     if(owner == NULL){
-        (void) interrupt->SetLevel(old);
-        return;
-    }
+        if(!BUSY){                                  //if not busy then available
+            BUSY = true;
+            owner = currentThread;
+        }
+        else{                                     //lock is acquired by someone else so put currentthread to sleep
+            lockWaitQueue.push_back(currentThread);
+            currentThread->Sleep();
+        }
+    } //end of if owner is NULL
     if(owner == currentThread){
        (void) interrupt->SetLevel(old);
        return;
     }//end of if current thread is already lock owner
-    if(!BUSY){                                  //if not busy then available
-        BUSY = true;
-        owner = currentThread;
-    }
-    else{                                     //lock is acquired by someone else so put currentthread to sleep
-        lockWaitQueue.push_back(currentThread);
-        currentThread->Sleep();
-    }
+   
     (void) interrupt->SetLevel(old);
     return;
 
@@ -139,6 +139,7 @@ void Lock::Release() {
     if(currentThread != owner){
         std::cout << " >> Error!  Trying to release a lock.\n >> You are not the lock owner!" << std::endl;
         std::cout << " >> Name of Thread: " << (currentThread->getName()) << std::endl;
+        //std::cout << " >> Owner of Lock: " << owner->getName() << std::endl;
         (void) interrupt->SetLevel(old);
         return;
     }//end of if not owner
