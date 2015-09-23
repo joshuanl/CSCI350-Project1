@@ -282,16 +282,6 @@ PictureMonitor* PMonitor;
 PassportMonitor* PPMonitor;
 CashierMonitor* CMonitor;
 
-
-
-std::vector<ApplicationClerk *> aClerks;
-std::vector<PictureClerk *> pClerks;
-std::vector<PassportClerk *> ppClerks;
-std::vector<Cashier *> cashiers;
-std::vector<Customers *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR. 
-//OTHERWISE WE WILL HAVE TO REINDEX THE CUSTOMERS AND THAT IS A BIG PAIN 
-
-
 //----------------------------------------------------------------------
 // SimpleThread
 // 	Loop 5 times, yielding the CPU to another ready thread 
@@ -854,37 +844,6 @@ public:
         PMonitor->clerkLineLocks[whichLine]->Release();
 	}
 
-
-	/*void joinPassportLine()
-	{
-		PPMonitor->MonitorLock->Acquire();
-		
-		int whichLine = PPMonitor->getSmallestLine();
-		
-		PPMonitor->clerkLineLocks[whichLine]->Acquire();
-		std::cout << whichLine << std::endl;
-		PPMonitor->clerkLineCount[whichLine] += 1;
-		std::cout << PPMonitor->clerkLineCount[whichLine] << " in line" << std::endl;
-		PPMonitor->giveSSN(whichLine, ssn);	
-		PPMonitor->giveReqs(whichLine, ssn);
-		int lineSpot = PPMonitor->clerkLineCount[whichLine];
-
-		std::cout << "Customer " << id << " has gotten in regular line for Passport Clerk " << whichLine << "." << std::endl;
-		
-		PPMonitor->MonitorLock->Release();
-		//std::cout << "Released picture monitor lock" << std::endl;
-
-		while(lineSpot > 0)
-		{
-			//PPMonitor->clerkLineLocks[whichLine]->Acquire();
-			PPMonitor->clerkLineCV[whichLine]->Wait(PPMonitor->clerkLineLocks[whichLine]);			
-			lineSpot--;
-			
-		}
-		std::cout << "Customer " << id << " has given SSN " << ssn << " to Passport Clerk " << whichLine << std::endl;
-		PPMonitor->clerkLineLocks[whichLine]->Release();
-	}*/
-
     void joinPassportLine() {
         PPMonitor->PPMonitorLock->Acquire();
         int whichLine = PPMonitor->getSmallestLine();
@@ -921,7 +880,7 @@ public:
 		std::cout << whichLine << std::endl;
 		CMonitor->clerkLineCount[whichLine] += 1;
 		CMonitor->giveSSN(whichLine, ssn);
-		CMonitor->giveCertification(whichLine, certified);
+		CMonitor->giveCertification(whichLine, true);
 		std::cout << "Customer " << id << " has gotten in regular line for Cashier Clerk " << whichLine << "." << std::endl;
 		CMonitor->clerkLineLocks[whichLine]->Acquire();
         CMonitor->MonitorLock->Release();
@@ -991,6 +950,7 @@ public:
 		clerkMoney = 0;
 		myLine = -1;
 
+		run();
 	}//end of constructor
 
 	~ApplicationClerk(){
@@ -1333,12 +1293,12 @@ private:
 
 public:
 
-	Cashier(){
+	Cashier(int n){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-		myLine = -1;
+		myLine = n;
 	}//end of constructor
 
 	~Cashier(){
@@ -1528,34 +1488,6 @@ public:
 };//end of senator clas
 
 
-
-class CashierMonitor {
-private:
-	Lock *clerkLineLock;
-	//Condition clerkLineCV[5];
-	//Condition clerkBribeLineCV[5];
-
-	int clerkLineCount[5];
-	int clerkBribeLineCount[5];
-	int clerkState[5];	//0: available     1: busy    2: on break
-
-public:
-	CashierMonitor(){
-
-	}//end of constructor
-
-	~CashierMonitor(){
-
-	}//end of deconstructor
-
-	Lock* getLock(){
-		return clerkLineLock;
-	}//end of getting lock
-};
-
-
-
-
 void createCustomer(){
 	int rdmMoneyIndex = rand()%4;
 	ssnCount++; //Important: ssnCount has to be incremented before run is called. I recommend doing that with other calls below, too.
@@ -1590,12 +1522,9 @@ void createPictureClerk(){
 
 void createCashier()
 {
-    Cashier *cashier = new Cashier(cashiers.size());
-    cashiers.push_back(cashier);
+    Cashier *cashier = new Cashier(cClerks.size());
+    cClerks.push_back(cashier);
 	cashier->run();
-}
-
-
 }//end of making cashier clerk
 
 void makeManager(){
@@ -1687,7 +1616,7 @@ void Problem2(){
 		//num_of_people = checkInput(input, 1, 5);
 		if(!std::cin.fail()){
 			if(num_of_people >= 1 && num_of_people <= 5){
-				PassportClerk_thread_num = num_of_people;
+				passportClerk_thread_num = num_of_people;
 				acceptInput = true;
 			}//end of if
 		}//end of if	
@@ -1704,7 +1633,7 @@ void Problem2(){
 		//num_of_people = checkInput(input, 1, 5);
 		if(!std::cin.fail()){
 			if(num_of_people >= 1 && num_of_people <= 5){
-				cashierClerk_thread_num = num_of_people;
+				cashier_thread_num = num_of_people;
 				acceptInput = true;
 			}//end of if
 		}//end of if	
@@ -1732,7 +1661,7 @@ void Problem2(){
 
 	AMonitor = new ApplicationMonitor(applicationClerk_thread_num, customer_thread_num);
 	PMonitor = new PictureMonitor(pictureClerk_thread_num, customer_thread_num);
-	PPMonitor = new PassportMonitor(passPortClerk_thread_num, customer_thread_num);
+	PPMonitor = new PassportMonitor(passportClerk_thread_num, customer_thread_num);
 	CMonitor = new CashierMonitor(cashier_thread_num, customer_thread_num);
 
 	//create for loop for each and fork
@@ -1750,8 +1679,8 @@ void Problem2(){
 		t->Fork((VoidFunctionPtr)createApplicationClerk, i+1);
 	}//end of creating application clerk threads
 
-    std::cout << "reached.  PassportClerk_thread_num: " << PassportClerk_thread_num << std::endl; 
-    for(int i = 0; i < PassportClerk_thread_num; i++){
+    std::cout << "reached.  PassportClerk_thread_num: " << passportClerk_thread_num << std::endl; 
+    for(int i = 0; i < passportClerk_thread_num; i++){
         Thread *t = new Thread("passport clerk thread");
         t->Fork((VoidFunctionPtr)createPassportClerk, i+1);
     }//end of creating passPort clerk threads
@@ -1779,6 +1708,5 @@ void Problem2(){
         Thread *t = new Thread("senator thread");
         t->Fork((VoidFunctionPtr)makeSenator, i+1);
     }  //end of creating senator threads
-
 
 }//end of problem 2
