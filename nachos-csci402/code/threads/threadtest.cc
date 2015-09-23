@@ -783,6 +783,7 @@ private:
 	bool applicationAccepted;
 	bool pictureTaken;
 	bool bribed; 	//reset after each line
+	bool missingReqs;
 public:
 	Client(int num, int startMoney){
 
@@ -795,12 +796,16 @@ public:
 		applicationAccepted = false;
 		pictureTaken = false;
 		bribed = false;
+		missingReqs = false;
 
 		//need to randomize	
 		joinApplicationLine();
 		joinPictureLine();
+		std::cout << "REACHED, JOINGING PASSPORT LINE-- ID: " << id << std::endl;
+		joinPassportLine();
+		missingReqs = false;
+		joinCashierLine();
 
-		// joinPassportLine();
 	}//end of client constructor
 
 	~Client(){
@@ -812,8 +817,9 @@ public:
 	{
 		AMonitor->AMonitorLock->Acquire();
 		int whichLine = AMonitor->getSmallestLine();
-		AMonitor->clerkLineLocks[whichLine]->Acquire();
 		AMonitor->clerkLineCount[whichLine] += 1;	
+		AMonitor->clerkLineLocks[whichLine]->Acquire();
+		
 		AMonitor->giveSSN(whichLine, ssn);
 		std::cout << "Customer " << id << " has given SSN " << ssn << " to Application Clerk " << whichLine << std::endl;
 		AMonitor->clerkLineCV[whichLine]->Signal(AMonitor->clerkLineLocks[whichLine]);
@@ -821,6 +827,7 @@ public:
 		applicationAccepted = true;
 		AMonitor->clerkLineCV[whichLine]->Signal(AMonitor->clerkLineLocks[whichLine]);
 		AMonitor->AMonitorLock->Release();
+		AMonitor->clerkLineLocks[whichLine]->Release();
 		std::cout << "Customer: " << id << " is out of application line" << std::endl;
 	}	
 
@@ -828,8 +835,9 @@ public:
 	{
 		PMonitor->PMonitorLock->Acquire();
         int whichLine = PMonitor->getSmallestLine();
+        PMonitor->clerkLineCount[whichLine] += 1;
         PMonitor->clerkLineLocks[whichLine]->Acquire();
-		PMonitor->clerkLineCount[whichLine] += 1;
+		
 		PMonitor->giveSSN(whichLine, ssn);	
 		std::cout << "Customer " << id << " has gotten in regular line for PictureClerk " << whichLine << "." << std::endl;
 		PMonitor->clerkLineCV[whichLine]->Signal(PMonitor->clerkLineLocks[whichLine]);
@@ -837,7 +845,8 @@ public:
         //client has the option to retake the picture, therefore we need a while loop here
 		pictureTaken = true;
 		PMonitor->clerkLineCV[whichLine]->Signal(PMonitor->clerkLineLocks[whichLine]);
-		PMonitor->PMonitorLock->Acquire();
+		PMonitor->clerkLineLocks[whichLine]->Release();
+		PMonitor->PMonitorLock->Release();
 		std::cout << "customer: " << id << " is out of picture line" << std::endl;
 
 	}
@@ -845,8 +854,9 @@ public:
     void joinPassportLine() {
         PPMonitor->PPMonitorLock->Acquire();
         int whichLine = PPMonitor->getSmallestLine();
-        std::cout << whichLine << std::endl;
         PPMonitor->clerkLineCount[whichLine] += 1;
+        PPMonitor->clerkLineLocks[whichLine]->Acquire();
+        
         PPMonitor->giveSSN(whichLine, ssn);
         int completed = 0;
         if(applicationAccepted)
@@ -857,17 +867,25 @@ public:
         {
             completed++;
         }
+
         PPMonitor->giveReqs(whichLine, completed);
         std::cout << "Customer " << id << " has gotten in regular line for Passport Clerk " << whichLine << "." << std::endl;
-        PPMonitor->clerkLineLocks[whichLine]->Acquire();
-        PPMonitor->PPMonitorLock->Release();
-        PPMonitor->clerkLineCV[whichLine]->Wait(PPMonitor->clerkLineLocks[whichLine]);
-        std::cout << "Customer " << id << " has given SSN " << ssn << " to Passport Clerk " << whichLine << std::endl;
+        std::cout << "Customer " << id << " has given id " << id << " to Passport Clerk " << whichLine << std::endl;
         PPMonitor->clerkLineCV[whichLine]->Signal(PPMonitor->clerkLineLocks[whichLine]);
         PPMonitor->clerkLineCV[whichLine]->Wait(PPMonitor->clerkLineLocks[whichLine]);
-        //Something should be declared true here
+        PPMonitor->clerkLineCV[whichLine]->Signal(PPMonitor->clerkLineLocks[whichLine]);
+        if(missingReqs){
+        	if(!applicationAccepted){
+        		joinApplicationLine();
+        	}
+        	if(!pictureTaken){
+        		joinPictureLine();
+        	}
+        	joinPassportLine();	
+        }//end of if need to get additional reqs
         PPMonitor->clerkLineLocks[whichLine]->Release();
-        
+        PPMonitor->PPMonitorLock->Release();
+        std::cout << "customer: " << id << " is out of passport line" << std::endl;
     }
 
 
@@ -890,6 +908,9 @@ public:
         CMonitor->clerkLineLocks[whichLine]->Release();
 	}
 
+	void reqsNotMet(bool b){
+		missingReqs = b;
+	}
 
 	void moveUpInLine(){
 		if(money >= 600){
@@ -971,7 +992,7 @@ public:
 				AMonitor->clerkState[myLine] = 1;
 			}
 			else{
-				AMonitor->clerkState[myLine] = 2; // on break
+				//AMonitor->clerkState[myLine] = 2; // on break
 			}
 			AMonitor->clerkLineLocks[myLine]->Acquire();  
 			AMonitor->AMonitorLock->Release();
@@ -1194,53 +1215,53 @@ public:
 	{	
 		while(true)
 		{
-			//std::cout << "should be here" << std::endl;
-			//PMonitor->PMonitorLock->Acquire();
-			//std::cout << "should not be here" << std::endl;
-
+			PPMonitor->PPMonitorLock->Acquire();
+			std::cout << "\n\naquiring clerkLineLocks[myLine]  from PPMonitor in PassportClerk run()." << std::endl;
+			std::cout << "clerkLineLocks.size: " << applicationClerk_thread_num << std::endl;
+			std::cout << "myLine: " << myLine << std::endl << std::endl;
 			PPMonitor->clerkLineLocks[myLine]->Acquire();
+
 			if(PPMonitor->clerkBribeLineCount[myLine] > 0)
 			{
-				//PMonitor->clerkBribeLineCV[myLine]->Signal(PMonitor->clerkLineLocks[myLine]);
-				//PMonitor->clerkState[myLine] = 1;
+				//PPMonitor->clerkBribeLineCV[myLine]->Signal(PPMonitor->clerkLineLocks[myLine]);
+				//PPMonitor->clerkState[myLine] = 1;
 			}
 			else if(PPMonitor->clerkLineCount[myLine] > 0)
 			{       //if bribe line is empty
 
 				PPMonitor->clerkLineCV[myLine]->Signal(PPMonitor->clerkLineLocks[myLine]); 
-				std::cout << "Passport Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
-
 				PPMonitor->clerkState[myLine] = 1;
+			}
+			else{
+				PPMonitor->clerkState[myLine] = 2; // on break
+			}
+			PPMonitor->clerkLineLocks[myLine]->Acquire();  
+			PPMonitor->PPMonitorLock->Release();
+			PPMonitor->clerkLineCV[myLine]->Wait(PPMonitor->clerkLineLocks[myLine]); 
 
-				std::cout << "Passport Clerk " << myLine << " has received SSN " << PPMonitor->clientSSNs[myLine].front() <<
-					" from Customer " << PPMonitor->clientSSNs[myLine].front() << "." << std::endl;	
-
-				if(PPMonitor->clientReqs[myLine].front() != 2)
-				{
-					std::cout << "PassportClerk " << myLine << " has determined that Customer " << PPMonitor->clientSSNs[myLine].front() << " does not have both their application and picture completed." << std::endl;
-				}
-				else
-				{
-					std::cout << "PassportClerk " << myLine << " has determined that Customer " << PPMonitor->clientSSNs[myLine].front() << " has both their application and picture completed." << std::endl;
-					std::cout << "PassportClerk " << myLine << " has recorded Customer " << PPMonitor->clientSSNs[myLine].front() << " passport information." << std::endl;
-				}
-				
-				PPMonitor->clientSSNs[myLine].pop();	
+			if(PPMonitor->clerkLineCount[myLine] != 0){
+				std::cout << "Passport Clerk " << myLine << " has received id: " << PPMonitor->clientSSNs[myLine].front() <<
+						" from Customer " << PPMonitor->clientSSNs[myLine].front() << "." << std::endl;
+				std::cout << "Passport Clerk " << myLine << " has received reqs: " << PPMonitor->clientReqs[myLine].front() <<
+						" from Customer " << PPMonitor->clientSSNs[myLine].front() << "." << std::endl;
+ 
+				// if(PPMonitor->clientReqs[myLine].front() != 2){
+				// 	int waitTime = rand()%1000+100;
+				// 	for(int i=0; i < waitTime; i++){
+				// 		currentThread->Yield();
+				// 	}//end of wait punishment
+				// 	customers[PPMonitor->clientSSNs[myLine].front()]->reqsNotMet(true);
+				// }//end of if client does not have both reqs
+				customers[PPMonitor->clientSSNs[myLine].front()]->reqsNotMet(false);
 				PPMonitor->clientReqs[myLine].pop();
+				PPMonitor->clientSSNs[myLine].pop();				
 				PPMonitor->clerkLineCount[myLine]--;
 				std::cout << "" << PPMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
-				
-				
-				
-			}
-			else
-			{
-				//std::cout << "PictureClerk " << myLine << " is going on break." << std::endl;
-				//PMonitor->clerkState[myLine] = 0;
-			}
-			//PMonitor->PMonitorLock->Release();
-			//PMonitor->clerkLineLocks[myLine]->Acquire();
+			}//end of if empty line
+			PPMonitor->clerkLineCV[myLine]->Signal(PPMonitor->clerkLineLocks[myLine]); 
+			PPMonitor->clerkLineCV[myLine]->Wait(PPMonitor->clerkLineLocks[myLine]); 
 			PPMonitor->clerkLineLocks[myLine]->Release();
+		
 		}//end of while
 	}
 
