@@ -30,6 +30,11 @@ The simulation is to support the following numbers of each type of person:
 * Senators: up to 10
 
 ## II. Assumptions
+Part 1:
+* Locks have 2 states, Free or Busy
+* Lock wait Q should be thread pointers
+* Condition variables have no states, but they have operations- 3 of them! Wait, signal, and broadcast.
+
 Part 2:
 * We assume that if multiple clerks are on break, and multiple lines reach more than 3 customers waiting in line, the manager is to wake up one clerk at a time at an order chosen by us (can be random).
 * We assume that 5% of the time, the Passport Clerk will make a mistake with a customer and will not be able to process their application and the customer is to return to the back of the line.
@@ -43,6 +48,14 @@ Part 2:
 * Make a form of user input to be able to set the number of clerks prior to running the simulation.
 
 ## III. Design
+Part 1: A description of Classes added and Methods.
+* The method 'void Lock:Acquire() is supposed to do the following: make the state of the lock busy, make the current thread thw owner of the lock, otherwise if the lock is busy, we should put the current thread on the lock's waiting queue. 
+* The method 'void Lock:Release() is supposed to release the lock from a current thread holding onto it. First, we disable interrupts. If a thread that is not the owner of a lock tries to release the lock, we inform them that they cannot perform that action, restore interrupts, and return. If the thread is the owner of the lock and the lock Q is not empty, we remove the waiting thread from the queue, make it the lock owner, and tell the scheduler that the thread is ready to run. Otherwise, we simply make the lock available and unset the ownership (the ownership is simply a pointer, unset it).
+* Condition Variables have three operations: wait, or put myself to sleep, signal or wake up 1 sleeping thread, and broadcast or wake up all the sleeping threads.
+* The method void Condition:Wait(Lock* lock)disables interrupts, and checks whether a lock is null or not null. If it is, inform the user and restore interrupts. If it is not null but waiting locks are null, we set the waiting lock to be the current lock, if the waiting lock is null, inform the user and return, and if it is ok to ait, we release the lock, and put the current thread to sleep, and acquire the lock and restore interrupts.
+* The method void Condition:Signal(Lock* lock) checks to make sure that the lock passed in is a waiting lock, and if it is, it will wake up the waiting thread, remove the thread from the wait Q, and put the thread into the Ready Q. If the wait Q is empty, the waiting lock will be null.
+* The method void Condition:Broadcast(Lock* lock) will simply perform a while-loop checking the wait Q, and will perform the function signal on all the locks in the Q.
+
 Part 2: A description of Classes added and Methods.
 * Class Client (aka Customer in Simulation) contains:
   * The following variables: the int money representing how much money the customer has and int ssn to represent the social security number and customer identifier. The class contains two booleans to represent the stages of going through the passport office: pictureTaken to indicate whether the customer has successfully interacted with the Picture Clerk and received a photo, and applicationAccepted to denote whether or not the customer's application has been accepted after interacting with the Application clerk. There is an additional Boolean, bribed, that keeps track of whether the customer has currently bribed during this line, or not. The bribe boolean is reset with each line that the customer is in. The int selfIndex represents the customer's own position in the customer queue (making it easier for the clerk to call). The int currClerkIndex represents the current clerk who the customer is speaking to's index. 
