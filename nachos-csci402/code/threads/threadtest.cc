@@ -821,6 +821,7 @@ public:
 		int whichLine = AMonitor->getSmallestLine();
 		if(AMonitor->clerkState[whichLine] = 1){
 			AMonitor->clerkLineCount[whichLine] += 1;
+			AMonitor->AMonitorLock->Release();
 			AMonitor->clerkLineCV[whichLine]->Wait(AMonitor->clerkLineLocks[whichLine]);
 			AMonitor->clerkLineCount[whichLine] -= 1;
 		}	
@@ -1010,8 +1011,8 @@ public:
 			else{
 				AMonitor->clerkState[myLine] = 2; // go on break
 			}
-			std::cout << "appClerk: " << myLine << " getting clerkLine Lock after else" << std::endl;
-			AMonitor->clerkLineLocks[myLine]->Acquire();  
+			std::cout << "appClerk: " << myLine << " releasing clerkLine Lock after else" << std::endl;
+			AMonitor->clerkLineLocks[myLine]->Release();  
 			std::cout << "appClerk: " << myLine << " releasing appMonitor lock " << std::endl;
 			AMonitor->AMonitorLock->Release();
 			//wait for customer data
@@ -1719,17 +1720,17 @@ void Problem2(){
 	}//end of creating application clerk threads
 
 
-    std::cout << "reached.  PassportClerk_thread_num: " << passportClerk_thread_num << std::endl; 
-    for(int i = 0; i < passportClerk_thread_num; i++){
-        Thread *t = new Thread("passport clerk thread");
-        t->Fork((VoidFunctionPtr)createPassportClerk, i+1);
-    }//end of creating passPort clerk threads
+    // std::cout << "reached.  PassportClerk_thread_num: " << passportClerk_thread_num << std::endl; 
+    // for(int i = 0; i < passportClerk_thread_num; i++){
+    //     Thread *t = new Thread("passport clerk thread");
+    //     t->Fork((VoidFunctionPtr)createPassportClerk, i+1);
+    // }//end of creating passPort clerk threads
 
-    std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
-    for(int i = 0; i < pictureClerk_thread_num; i++){
-        Thread *t = new Thread("picture clerk thread");
-        t->Fork((VoidFunctionPtr)createPictureClerk, i+1);
-    }//end of creating picture clerk threads
+    // std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
+    // for(int i = 0; i < pictureClerk_thread_num; i++){
+    //     Thread *t = new Thread("picture clerk thread");
+    //     t->Fork((VoidFunctionPtr)createPictureClerk, i+1);
+    // }//end of creating picture clerk threads
 
 	// std::cout << "reached.  cashier_thread_num: " << cashier_thread_num << std::endl; 
  //    for(int i = 0; i < cashier_thread_num; i++){
