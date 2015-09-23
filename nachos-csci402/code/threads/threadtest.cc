@@ -275,7 +275,7 @@ struct PassportMonitor {
 };
 
 // GLOBAL VARIABLES FOR PROBLEM 2
-int ssnCount = 0;
+int ssnCount = -1;
 const int clientStartMoney[4] = {100, 500, 1100, 1600};
 ApplicationMonitor* AMonitor;
 PictureMonitor* PMonitor;
@@ -787,9 +787,9 @@ public:
 	Client(int num, int startMoney){
 
 		id = num;
-		ssn = id;
+		ssn = num;
 		money = startMoney;
-        selfIndex = 0; //defines position in the customer vector
+        selfIndex = num; //defines position in the customer vector
 		std::cout << "ssn: " << ssn << "  startMoney: " << startMoney << std::endl;
 
 		applicationAccepted = false;
@@ -971,7 +971,7 @@ public:
 				AMonitor->clerkState[myLine] = 1;
 			}
 			else{
-				AMonitor->clerkState[myLine] = 0;
+				//AMonitor->clerkState[myLine] = 0;
 			}
 			AMonitor->clerkLineLocks[myLine]->Acquire();  
 			AMonitor->AMonitorLock->Release();
@@ -1089,7 +1089,7 @@ public:
 				PMonitor->clerkState[myLine] = 1;
 			}
 			else{
-				PMonitor->clerkState[myLine] = 0;
+				//PMonitor->clerkState[myLine] = 0;
 			}
 			PMonitor->clerkLineLocks[myLine]->Acquire();  
 			PMonitor->PMonitorLock->Release();
@@ -1496,10 +1496,9 @@ public:
 
 void createCustomer(){
 	int rdmMoneyIndex = rand()%4;
-	ssnCount++; //Important: ssnCount has to be incremented before run is called. I recommend doing that with other calls below, too.
 	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
-	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);	
-    //c->setselfIndex(customers.size());
+	ssnCount++;
+	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);	 
     customers.push_back(c);
 }//end of making customer
 
@@ -1541,8 +1540,8 @@ void makeManager(){
 void makeSenator(){
     int rdmMoneyIndex = rand()%4;
     std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
-    Senator *s = new Senator(ssnCount, clientStartMoney[rdmMoneyIndex]);
-    ssnCount++;
+    senatorID++;
+    Senator *s = new Senator(senatorID, clientStartMoney[rdmMoneyIndex]);
 
 }//end of making senator
 
