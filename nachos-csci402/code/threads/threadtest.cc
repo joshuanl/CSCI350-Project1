@@ -971,17 +971,19 @@ public:
 				AMonitor->clerkState[myLine] = 1;
 			}
 			else{
-				//AMonitor->clerkState[myLine] = 0;
+				AMonitor->clerkState[myLine] = 2; // on break
 			}
 			AMonitor->clerkLineLocks[myLine]->Acquire();  
 			AMonitor->AMonitorLock->Release();
 			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]); 
-			std::cout << "Application Clerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
-					" from Customer " << AMonitor->clientSSNs[myLine].front() << "." << std::endl;
-			AMonitor->clientSSNs[myLine].pop();				
-			AMonitor->clerkLineCount[myLine]--;
-			std::cout << "" << AMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
 
+			if(AMonitor->clerkLineCount[myLine] != 0){
+				std::cout << "Application Clerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
+						" from Customer " << AMonitor->clientSSNs[myLine].front() << "." << std::endl;
+				AMonitor->clientSSNs[myLine].pop();				
+				AMonitor->clerkLineCount[myLine]--;
+				std::cout << "" << AMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
+			}//end of if empty line
 			AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]); 
 			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]); 
 			AMonitor->clerkLineLocks[myLine]->Release();
@@ -1099,12 +1101,13 @@ public:
 			//a delay needs to be added here with yeild()
 			//client also has the option to refuse the picture so a while loop is needed here
 				// to refuse, probably create a bool acceptedPicture that client has access too
-			
-			std::cout << "Picture Clerk " << myLine << " has received id: " << PMonitor->clientSSNs[myLine].front() <<
-					" from Customer " << PMonitor->clientSSNs[myLine].front() << "." << std::endl;
-			PMonitor->clientSSNs[myLine].pop();				
-			PMonitor->clerkLineCount[myLine]--;
-			std::cout << "" << PMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
+			if(AMonitor->clerkLineCount[myLine] != 0){
+				std::cout << "Picture Clerk " << myLine << " has received id: " << PMonitor->clientSSNs[myLine].front() <<
+						" from Customer " << PMonitor->clientSSNs[myLine].front() << "." << std::endl;
+				PMonitor->clientSSNs[myLine].pop();				
+				PMonitor->clerkLineCount[myLine]--;
+				std::cout << "" << PMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
+			}//end of if empty line	
 			PMonitor->clerkLineCV[myLine]->Signal(PMonitor->clerkLineLocks[myLine]); 
 			PMonitor->clerkLineCV[myLine]->Wait(PMonitor->clerkLineLocks[myLine]); 
 			PMonitor->clerkLineLocks[myLine]->Release();
