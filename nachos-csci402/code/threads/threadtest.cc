@@ -1559,6 +1559,7 @@ void createPassportClerk(){
     PassportClerk *ppc = new PassportClerk(passportClerkID);
     passportClerkID++;
     ppClerks.push_back(ppc);
+    ppc->run();
 }//end of making PassportClerk
 
 
@@ -1566,7 +1567,7 @@ void createPictureClerk(){
     PictureClerk *pc = new PictureClerk(pictureClerkID);
     pictureClerkID++;
     pClerks.push_back(pc);
-
+    pc->run();
 
 }//end of making picture clerk
 
