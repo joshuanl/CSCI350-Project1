@@ -42,13 +42,14 @@
 class Client;
 class ApplicationClerk;
 class PictureClerk;
-class PassPortClerk;
+class PassportClerk;
 class Cashier;	 	
+class CashierMonitor;
 
 
 std::vector<ApplicationClerk *> aClerks;
 std::vector<PictureClerk *> pClerks;
-std::vector<PassPortClerk *> ppClerks;
+std::vector<PassportClerk *> ppClerks;
 std::vector<Cashier *> cClerks;
 std::vector<Client *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR. 
 //OTHERWISE WE WILL HAVE TO REINDEX THE CUSTOMERS AND THAT IS A BIG PAIN 	
@@ -822,7 +823,7 @@ public:
         PPMonitor->clerkLineLocks[whichLine]->Release();
         
     }
-
+/*
     void joinCashierLine() {
     CashierMonitor->CashierMonitorLock->Acquire();
         int whichLine = CashierMonitor->getSmallestLine();
@@ -840,7 +841,7 @@ public:
         CashierMonitor->clerkLineLocks[whichLine]->Release();
         
     }
-
+*/
 	void moveUpInLine(){
 		if(money >= 600){
 			money -= 500;
@@ -1116,12 +1117,12 @@ private:
 
 public:
 
-	PassportClerk(int line){
+	PassportClerk(){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-		myLine = line;
+		myLine = -1;
 	}//end of constructor
 
 	~PassportClerk(){
@@ -1190,6 +1191,10 @@ public:
 	void setclerkState(int n){
 		clerkState = n;
 	}//end of setting clerkState
+
+	void setselfIndex(int n){
+		myLine = n;
+	}
 
 	void addToLine(){
 		lineCount++;
@@ -1397,11 +1402,11 @@ void createApplicationClerk(){
 
 }//end of making application clerk
 
-void createPassPortClerk(){
-    PassPortClerk *ppc = new PassPortClerk();
+void createPassportClerk(){
+    PassportClerk *ppc = new PassportClerk();
     ppc->setselfIndex(customers.size());
     ppClerks.push_back(ppc);
-}//end of making passportClerk
+}//end of making PassportClerk
 
 
 void createPictureClerk(){
@@ -1439,7 +1444,7 @@ void Problem2(){
 	int customer_thread_num;
 	int applicationClerk_thread_num;
 	int pictureClerk_thread_num;
-	int passPortClerk_thread_num;
+	int PassportClerk_thread_num;
 	int cashierClerk_thread_num;
 	int manager_thread_num = 1; //There can only be one manager in the simulation
 	int senator_thread_num;
@@ -1508,7 +1513,7 @@ void Problem2(){
 		//num_of_people = checkInput(input, 1, 5);
 		if(!std::cin.fail()){
 			if(num_of_people >= 1 && num_of_people <= 5){
-				passPortClerk_thread_num = num_of_people;
+				PassportClerk_thread_num = num_of_people;
 				acceptInput = true;
 			}//end of if
 		}//end of if	
@@ -1569,10 +1574,10 @@ void Problem2(){
 		t->Fork((VoidFunctionPtr)createApplicationClerk, i+1);
 	}//end of creating application clerk threads
 
-    std::cout << "reached.  passPortClerk_thread_num: " << passPortClerk_thread_num << std::endl; 
-    for(int i = 0; i < passPortClerk_thread_num; i++){
+    std::cout << "reached.  PassportClerk_thread_num: " << PassportClerk_thread_num << std::endl; 
+    for(int i = 0; i < PassportClerk_thread_num; i++){
         Thread *t = new Thread("passport clerk thread");
-        t->Fork((VoidFunctionPtr)createPassPortClerk, i+1);
+        t->Fork((VoidFunctionPtr)createPassportClerk, i+1);
     }//end of creating passPort clerk threads
 
     std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
