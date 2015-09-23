@@ -36,18 +36,244 @@
 #include <time.h>
 #include <map>
 #include <iostream>
+#include <queue>
 
 //PROTOTYPES
 class Client;
 class ApplicationClerk;
 class PictureClerk;
-class PassPortClerk;
-class Cashier;	 		
+class PassportClerk;
+class Cashier;	 	
+
 
 struct ApplicationMonitor;
 struct PictureMonitor;
 struct PassportMonitor;
 struct CashierMonitor;
+
+
+std::vector<ApplicationClerk *> aClerks;
+std::vector<PictureClerk *> pClerks;
+std::vector<PassportClerk *> ppClerks;
+std::vector<Cashier *> cClerks;
+std::vector<Client *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR. 
+//OTHERWISE WE WILL HAVE TO REINDEX THE CUSTOMERS AND THAT IS A BIG PAIN 	
+
+// struct ApplicationMonitor;
+// struct PictureMonitor;
+// struct PassportMonitor;
+
+
+struct ApplicationMonitor {
+
+	Lock* AMonitorLock;
+
+	int numAClerks;
+	Lock** clerkLineLocks;					// move to be global variable
+	Condition** clerkLineCV;
+	Condition** clerkBribeLineCV;
+
+	int* clerkLineCount;
+	int* clerkBribeLineCount;
+	int* clerkState;	//0: available     1: busy    2: on break
+
+	std::queue<int>* clientSSNs;
+
+	ApplicationMonitor(int numApplicationClerks, int numCustomers)
+	{
+		AMonitorLock = new Lock("Monitor Lock");
+
+		numAClerks = numApplicationClerks;
+		clerkLineLocks = new Lock*[numAClerks];
+		clerkLineCV = new Condition*[numAClerks];
+		clerkBribeLineCV = new Condition*[numAClerks];
+		
+		clerkLineCount = new int[numAClerks];
+		clerkBribeLineCount = new int[numAClerks];
+		clerkState = new int[numAClerks];
+
+		clientSSNs = new std::queue<int>[numCustomers];
+		
+
+		for(int i = 0; i < numAClerks; i++)
+		{			
+			clerkLineCV[i] = new Condition("");
+			clerkBribeLineCV[i] = new Condition("");
+			clerkLineLocks[i] = new Lock("ClerkLineLock");
+			clerkLineCount[i] = 0;
+			clerkBribeLineCount[i] = 0;
+			clerkState[i] = 0;
+		}
+	}//end of constructor
+
+	~ApplicationMonitor(){
+
+	}//end of destructor	
+
+	int getSmallestLine()
+	{
+		int smallest = 50;
+		int smallestIndex = 0;
+		//std::cout << "num clerks: " << numAClerks << std::endl;
+		for(int i = 0; i < numAClerks; i++)
+		{
+			std::cout << clerkLineCount[i] << std::endl;
+			if(clerkLineCount[i] < smallest)
+			{
+				smallest = clerkLineCount[i];
+				smallestIndex = i;
+			}
+		}
+		return smallestIndex;
+	}
+
+	void giveSSN(int line, int ssn)
+	{
+		clientSSNs[line].push(ssn);
+	}
+};
+
+struct PictureMonitor {
+
+	Lock* PMonitorLock;
+
+	int numPClerks;
+	Lock** clerkLineLocks;					// move to be global variable
+	Condition** clerkLineCV;
+	Condition** clerkBribeLineCV;
+
+	int* clerkLineCount;
+	int* clerkBribeLineCount;
+	int* clerkState;	//0: available     1: busy    2: on break
+	std::queue<int>* clientSSNs;
+
+	PictureMonitor(int numPictureClerks, int numCustomers)
+	{
+		PMonitorLock = new Lock("Monitor Lock");
+
+		numPClerks = numPictureClerks;
+		clerkLineLocks = new Lock*[numPClerks];
+		clerkLineCV = new Condition*[numPClerks];
+		clerkBribeLineCV = new Condition*[numPClerks];
+		
+		clerkLineCount = new int[numPClerks];
+		clerkBribeLineCount = new int[numPClerks];
+		clerkState = new int[numPClerks];
+
+		clientSSNs = new std::queue<int>[numCustomers];
+
+		for(int i = 0; i < numPClerks; i++)
+		{			
+			clerkLineCV[i] = new Condition("");
+			clerkBribeLineCV[i] = new Condition("");
+			clerkLineLocks[i] = new Lock("ClerkLineLock");
+			clerkLineCount[i] = 0;
+			clerkBribeLineCount[i] = 0;
+			clerkState[i] = 0;
+		}
+	}//end of constructor
+
+	~PictureMonitor(){
+
+	}//end of destructor	
+
+	int getSmallestLine()
+	{
+		int smallest = 50;
+		int smallestIndex = 0;
+		for(int i = 0; i < numPClerks; i++)
+		{
+			//std::cout << clerkLineCount[i] << std::endl;
+			if(clerkLineCount[i] < smallest)
+			{
+				smallest = clerkLineCount[i];
+				smallestIndex = i;
+			}
+		}
+		return smallestIndex;
+	}
+
+	void giveSSN(int line, int ssn)
+	{
+		clientSSNs[line].push(ssn);
+	}
+
+};
+
+struct PassportMonitor {
+
+	Lock* PPMonitorLock;
+
+	int numClerks;
+	Lock** clerkLineLocks;					// move to be global variable
+	Condition** clerkLineCV;
+	Condition** clerkBribeLineCV;
+
+	int* clerkLineCount;
+	int* clerkBribeLineCount;
+	int* clerkState;	//0: available     1: busy    2: on break
+	std::queue<int>* clientSSNs;
+	std::queue<int>* clientReqs; //0: neither picture nor application, 1: 1 of the two, 2: both
+
+	PassportMonitor(int numPassportClerks, int numCustomers)
+	{
+		PPMonitorLock = new Lock("Monitor Lock");
+
+		numClerks = numPassportClerks;
+		clerkLineLocks = new Lock*[numClerks];
+		clerkLineCV = new Condition*[numClerks];
+		clerkBribeLineCV = new Condition*[numClerks];
+		
+		clerkLineCount = new int[numClerks];
+		clerkBribeLineCount = new int[numClerks];
+		clerkState = new int[numClerks];
+
+		clientSSNs = new std::queue<int>[numCustomers];
+		clientReqs = new std::queue<int>[numCustomers];
+
+		for(int i = 0; i < numClerks; i++)
+		{			
+			clerkLineCV[i] = new Condition("");
+			clerkBribeLineCV[i] = new Condition("");
+			clerkLineLocks[i] = new Lock("ClerkLineLock");
+			clerkLineCount[i] = 0;
+			clerkBribeLineCount[i] = 0;
+			clerkState[i] = 0;
+		}
+	}//end of constructor
+
+	~PassportMonitor(){
+
+	}//end of destructor	
+
+	int getSmallestLine()
+	{
+		int smallest = 50;
+		int smallestIndex = 0;
+		for(int i = 0; i < numClerks; i++)
+		{
+			//std::cout << clerkLineCount[i] << std::endl;
+			if(clerkLineCount[i] < smallest)
+			{
+				smallest = clerkLineCount[i];
+				smallestIndex = i;
+			}
+		}
+		return smallestIndex;
+	}
+
+	void giveSSN(int line, int ssn)
+	{
+		clientSSNs[line].push(ssn);
+	}
+
+	void giveReqs(int line, int completed)
+	{
+		clientReqs[line].push(completed);
+	}
+
+};
+>>>>>>> f5d59452f7817e54843dd436946891e7325a5e66
 
 // GLOBAL VARIABLES FOR PROBLEM 2
 int ssnCount = 0;
@@ -58,12 +284,14 @@ PassportMonitor* PPMonitor;
 CashierMonitor* CMonitor;
 
 
+
 std::vector<ApplicationClerk *> aClerks;
 std::vector<PictureClerk *> pClerks;
 std::vector<PassportClerk *> ppClerks;
 std::vector<Cashier *> cashiers;
 std::vector<Customers *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR. 
 //OTHERWISE WE WILL HAVE TO REINDEX THE CUSTOMERS AND THAT IS A BIG PAIN 
+
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -468,142 +696,6 @@ void TestSuite() {
 #endif
 
 
-struct ApplicationMonitor {
-
-	Lock* AMonitorLock;
-
-	int numAClerks;
-	Lock** clerkLineLocks;					// move to be global variable
-	Condition** clerkLineCV;
-	Condition** clerkBribeLineCV;
-
-	int* clerkLineCount;
-	int* clerkBribeLineCount;
-	int* clerkState;	//0: available     1: busy    2: on break
-
-	std::queue<int>* clientSSNs;
-
-	ApplicationMonitor(int numApplicationClerks, int numCustomers)
-	{
-		AMonitorLock = new Lock("Monitor Lock");
-
-		numAClerks = numApplicationClerks;
-		clerkLineLocks = new Lock*[numAClerks];
-		clerkLineCV = new Condition*[numAClerks];
-		clerkBribeLineCV = new Condition*[numAClerks];
-		
-		clerkLineCount = new int[numAClerks];
-		clerkBribeLineCount = new int[numAClerks];
-		clerkState = new int[numAClerks];
-
-		clientSSNs = new std::queue<int>[numCustomers];
-		
-
-		for(int i = 0; i < numAClerks; i++)
-		{			
-			clerkLineCV[i] = new Condition("");
-			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("ClerkLineLock");
-			clerkLineCount[i] = 0;
-			clerkBribeLineCount[i] = 0;
-			clerkState[i] = 0;
-		}
-	}//end of constructor
-
-	~ApplicationMonitor(){
-
-	}//end of destructor	
-
-	int getSmallestLine()
-	{
-		int smallest = 50;
-		int smallestIndex = 0;
-		//std::cout << "num clerks: " << numAClerks << std::endl;
-		for(int i = 0; i < numAClerks; i++)
-		{
-			std::cout << clerkLineCount[i] << std::endl;
-			if(clerkLineCount[i] < smallest)
-			{
-				smallest = clerkLineCount[i];
-				smallestIndex = i;
-			}
-		}
-		return smallestIndex;
-	}
-
-	void giveSSN(int line, int ssn)
-	{
-		clientSSNs[line].push(ssn);
-	}
-};
-
-struct PictureMonitor {
-
-	Lock* PMonitorLock;
-
-	int numPClerks;
-	Lock** clerkLineLocks;					// move to be global variable
-	Condition** clerkLineCV;
-	Condition** clerkBribeLineCV;
-
-	int* clerkLineCount;
-	int* clerkBribeLineCount;
-	int* clerkState;	//0: available     1: busy    2: on break
-	std::queue<int>* clientSSNs;
-
-	PictureMonitor(int numPictureClerks, int numCustomers)
-	{
-		PMonitorLock = new Lock("Monitor Lock");
-
-		numPClerks = numPictureClerks;
-		clerkLineLocks = new Lock*[numPClerks];
-		clerkLineCV = new Condition*[numPClerks];
-		clerkBribeLineCV = new Condition*[numPClerks];
-		
-		clerkLineCount = new int[numPClerks];
-		clerkBribeLineCount = new int[numPClerks];
-		clerkState = new int[numPClerks];
-
-		clientSSNs = new std::queue<int>[numCustomers];
-
-		for(int i = 0; i < numPClerks; i++)
-		{			
-			clerkLineCV[i] = new Condition("");
-			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("ClerkLineLock");
-			clerkLineCount[i] = 0;
-			clerkBribeLineCount[i] = 0;
-			clerkState[i] = 0;
-		}
-	}//end of constructor
-
-	~PictureMonitor(){
-
-	}//end of destructor	
-
-	int getSmallestLine()
-	{
-		int smallest = 50;
-		int smallestIndex = 0;
-		for(int i = 0; i < numPClerks; i++)
-		{
-			//std::cout << clerkLineCount[i] << std::endl;
-			if(clerkLineCount[i] < smallest)
-			{
-				smallest = clerkLineCount[i];
-				smallestIndex = i;
-			}
-		}
-		return smallestIndex;
-	}
-
-	void giveSSN(int line, int ssn)
-	{
-		clientSSNs[line].push(ssn);
-	}
-
-};
-
 struct CashierMonitor 
 {
 	Lock* MonitorLock;
@@ -775,7 +867,6 @@ public:
 		PPMonitor->clerkLineCount[whichLine] += 1;
 		std::cout << PPMonitor->clerkLineCount[whichLine] << " in line" << std::endl;
 		PPMonitor->giveSSN(whichLine, ssn);	
-		
 		PPMonitor->giveReqs(whichLine, ssn);
 		int lineSpot = PPMonitor->clerkLineCount[whichLine];
 
@@ -801,6 +892,16 @@ public:
         std::cout << whichLine << std::endl;
         PPMonitor->clerkLineCount[whichLine] += 1;
         PPMonitor->giveSSN(whichLine, ssn);
+        int completed = 0;
+        if(applicationAccepted)
+        {
+            completed++;
+        }
+        if(pictureTaken)
+        {
+            completed++;
+        }
+        PPMonitor->giveReqs(whichLine, completed);
         std::cout << "Customer " << id << " has gotten in regular line for Passport Clerk " << whichLine << "." << std::endl;
         PPMonitor->clerkLineLocks[whichLine]->Acquire();
         PPMonitor->PPMonitorLock->Release();
@@ -812,6 +913,7 @@ public:
         PPMonitor->clerkLineLocks[whichLine]->Release();
         
     }
+
 
 	void joinCashierLine()
 	{
@@ -883,13 +985,12 @@ private:
 	//std::vector<Client*> myLine;
 
 public:
-	ApplicationClerk(int line)
-	{
+	ApplicationClerk(){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-		myLine = line;
+		myLine = -1;
 
 	}//end of constructor
 
@@ -897,10 +998,7 @@ public:
 
 	}//endo of deconstructor
 
-	void run()
-	{	
-		void run()
-	{	
+	void run(){		
 		while(true)
 		{
 			
@@ -950,12 +1048,16 @@ public:
 		clerkState = n;
 	}//end of setting clerkState
 
+	void setselfIndex (int i) {
+        myLine = i;
+    } //Setter for self-index
+
 	int getLineCount()
 	{
 		return lineCount;
 	}
 
-	void addToLine(Client* client)
+	void addToLine()
 	{
 		//myLine.push_back(client);
 		lineCount++;
@@ -1000,13 +1102,13 @@ private:
 	//std::vector<Client*> myLine;
 
 public:
-	PictureClerk(int line)
+	PictureClerk()
 	{
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-		myLine = line;
+		myLine = -1;
 
 	}//end of constructor
 
@@ -1014,8 +1116,7 @@ public:
 
 	}//endo of deconstructor
 
-	void run()
-	{	
+	void run(){	
 		while(true)
 		{
 			
@@ -1055,12 +1156,16 @@ public:
 		clerkState = n;
 	}//end of setting clerkState
 
+	void setselfIndex (int i) {
+        myLine = i;
+    } //Setter for self-index
+
 	int getLineCount()
 	{
 		return lineCount;
 	}
 
-	void addToLine(Client* client)
+	void addToLine()
 	{
 		//myLine.push_back(client);
 		lineCount++;
@@ -1105,12 +1210,12 @@ private:
 
 public:
 
-	PassportClerk(int line){
+	PassportClerk(){
 		clerkState = 0;
 		lineCount = 0;
 		bribeLineCount = 0;
 		clerkMoney = 0;
-		myLine = line;
+		myLine = -1;
 	}//end of constructor
 
 	~PassportClerk(){
@@ -1180,6 +1285,10 @@ public:
 		clerkState = n;
 	}//end of setting clerkState
 
+	void setselfIndex(int n){
+		myLine = n;
+	}
+
 	void addToLine(){
 		lineCount++;
 	}//end of adding to line
@@ -1213,6 +1322,84 @@ public:
 	} //set clerk state to available
 
 }; // end of passport clerk	
+
+
+class Cashier{
+private:
+	int clerkState; // 0: available     1: busy       2: on break
+	int lineCount;   
+	int bribeLineCount;
+	int clerkMoney; //How much money the clerk has
+	int myLine;
+
+public:
+
+	Cashier(){
+		clerkState = 0;
+		lineCount = 0;
+		bribeLineCount = 0;
+		clerkMoney = 0;
+		myLine = -1;
+	}//end of constructor
+
+	~Cashier(){
+
+	}//end of deconstructor
+
+	void run(){	
+		while(true){
+
+		}//end of while
+		
+	}//end of run
+
+
+	int getclerkState(){
+		return clerkState;
+	}//end of getclerkState
+
+	void setclerkState(int n){
+		clerkState = n;
+	}//end of setting clerkState
+
+	void setselfIndex(int n){
+		myLine = n;
+	}
+
+	void addToLine(){
+		lineCount++;
+	}//end of adding to line
+
+	void addToBribeLine(){
+		bribeLineCount++;
+	}//end of adding to bribe line
+
+	void addclerkMoney(int n){
+		clerkMoney = clerkMoney + n;
+	}//Adding money to clerk money variab;e
+
+	int getclerkMoney(){
+		return clerkMoney;
+	}//Get clerk money
+
+	void goOnBreak(){
+		clerkState = 2;
+		//send to sleep
+
+	}//end of sending clerk to break;
+
+	void goBackToWork(){
+		clerkState = 1;
+		//wake up from sleep
+
+	}//end of going back to work
+
+	void makeAvailable(){
+		clerkState = 0;
+	} //set clerk state to available
+
+}; // end of passport clerk	
+
 
 
 class Manager {
@@ -1303,8 +1490,9 @@ private:
 	bool bribed;
 public:
 
-	Senator(){
-
+	Senator(int sn, int startMoney){
+		ssn = sn;
+		money = startMoney;
 	}//end of constructor
 
 	~Senator(){
@@ -1338,107 +1526,9 @@ public:
 		return bribed;
 	}//end of br
 
-};//end of senator class
+};//end of senator clas
 
 
-
-class PictureMonitor {
-private:
-	Lock *clerkLineLock;
-	//Condition clerkLineCV[5];
-	//Condition clerkBribeLineCV[5];
-
-	int clerkLineCount[5];
-	int clerkBribeLineCount[5];
-	int clerkState[5];	//0: available     1: busy    2: on break
-
-public:
-	PictureMonitor(){
-
-	}//end of constructor
-
-	~PictureMonitor(){
-
-	}//end of deconstructor
-
-	Lock* getLock(){
-		return clerkLineLock;
-	}//end of getting lock
-};
-
-struct PassportMonitor {
-
-	Lock* MonitorLock;
-
-	int numClerks;
-	Lock** clerkLineLocks;					// move to be global variable
-	Condition** clerkLineCV;
-	Condition** clerkBribeLineCV;
-
-	int* clerkLineCount;
-	int* clerkBribeLineCount;
-	int* clerkState;	//0: available     1: busy    2: on break
-	std::queue<int>* clientSSNs;
-	std::queue<int>* clientReqs; //0: neither picture nor application, 1: 1 of the two, 2: both
-
-	PassportMonitor(int numPassportClerks, int numCustomers)
-	{
-		MonitorLock = new Lock("Monitor Lock");
-
-		numClerks = numPassportClerks;
-		clerkLineLocks = new Lock*[numClerks];
-		clerkLineCV = new Condition*[numClerks];
-		clerkBribeLineCV = new Condition*[numClerks];
-		
-		clerkLineCount = new int[numClerks];
-		clerkBribeLineCount = new int[numClerks];
-		clerkState = new int[numClerks];
-
-		clientSSNs = new std::queue<int>[numCustomers];
-		clientReqs = new std::queue<int>[numCustomers];
-
-		for(int i = 0; i < numClerks; i++)
-		{			
-			clerkLineCV[i] = new Condition("");
-			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("ClerkLineLock");
-			clerkLineCount[i] = 0;
-			clerkBribeLineCount[i] = 0;
-			clerkState[i] = 0;
-		}
-	}//end of constructor
-
-	~PassportMonitor(){
-
-	}//end of destructor	
-
-	int getSmallestLine()
-	{
-		int smallest = 50;
-		int smallestIndex = 0;
-		for(int i = 0; i < numClerks; i++)
-		{
-			//std::cout << clerkLineCount[i] << std::endl;
-			if(clerkLineCount[i] < smallest)
-			{
-				smallest = clerkLineCount[i];
-				smallestIndex = i;
-			}
-		}
-		return smallestIndex;
-	}
-
-	void giveSSN(int line, int ssn)
-	{
-		clientSSNs[line].push(ssn);
-	}
-
-	void giveReqs(int line, int completed)
-	{
-		clientReqs[line].push(completed);
-	}
-
-};
 
 class CashierMonitor {
 private:
@@ -1472,31 +1562,32 @@ void createCustomer(){
 	ssnCount++; //Important: ssnCount has to be incremented before run is called. I recommend doing that with other calls below, too.
 	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
 	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);	
-    c.setselfIndex(customers.size());
-    customers.insert(c);
+    c->setselfIndex(customers.size());
+    customers.push_back(c);
 }//end of making customer
 
 void createApplicationClerk(){
     ApplicationClerk *ac = new ApplicationClerk();
-    ac.setselfIndex(customers.size());
-    aClerks.insert(ac);
+    ac->setselfIndex(customers.size());
+    aClerks.push_back(ac);
 
 }//end of making application clerk
 
-void createPassPortClerk(){
-    PassPortClerk *ppc = new PassPortClerk();
-    ppc.setselfIndex(customers.size());
-    ppClerks.insert(ppc);
-}//end of making passportClerk
+void createPassportClerk(){
+    PassportClerk *ppc = new PassportClerk();
+    ppc->setselfIndex(customers.size());
+    ppClerks.push_back(ppc);
+}//end of making PassportClerk
 
 
 void createPictureClerk(){
     PictureClerk *pc = new PictureClerk();
-    pc.setselfIndex(customers.size());
-    pClerks.insert(pc);
+    pc->setselfIndex(customers.size());
+    pClerks.push_back(pc);
 
 
 }//end of making picture clerk
+
 
 void createCashier()
 {
@@ -1515,7 +1606,7 @@ void makeManager(){
 
 void makeSenator(){
     int rdmMoneyIndex = rand()%4;
-    std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std:endl;
+    std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
     Senator *s = new Senator(ssnCount, clientStartMoney[rdmMoneyIndex]);
     ssnCount++;
 
@@ -1527,7 +1618,8 @@ void Problem2(){
 	int customer_thread_num;
 	int applicationClerk_thread_num;
 	int pictureClerk_thread_num;
-	int passPortClerk_thread_num;
+
+	int passportClerk_thread_num;
 	int cashier_thread_num;
 	int manager_thread_num = 1; //There can only be one manager in the simulation
 	int senator_thread_num;
@@ -1596,7 +1688,7 @@ void Problem2(){
 		//num_of_people = checkInput(input, 1, 5);
 		if(!std::cin.fail()){
 			if(num_of_people >= 1 && num_of_people <= 5){
-				passPortClerk_thread_num = num_of_people;
+				PassportClerk_thread_num = num_of_people;
 				acceptInput = true;
 			}//end of if
 		}//end of if	
@@ -1639,7 +1731,7 @@ void Problem2(){
         }
     }//end of while
 
-	AMonitor = new ApplicationMonitor(applicationClerk_thread_num);
+	AMonitor = new ApplicationMonitor(applicationClerk_thread_num, customer_thread_num);
 	PMonitor = new PictureMonitor(pictureClerk_thread_num, customer_thread_num);
 
 	//create for loop for each and fork
@@ -1657,10 +1749,10 @@ void Problem2(){
 		t->Fork((VoidFunctionPtr)createApplicationClerk, i+1);
 	}//end of creating application clerk threads
 
-    std::cout << "reached.  passPortClerk_thread_num: " << passPortClerk_thread_num << std::endl; 
-    for(int i = 0; i < passPortClerk_thread_num; i++){
+    std::cout << "reached.  PassportClerk_thread_num: " << PassportClerk_thread_num << std::endl; 
+    for(int i = 0; i < PassportClerk_thread_num; i++){
         Thread *t = new Thread("passport clerk thread");
-        t->Fork((VoidFunctionPtr)createPassPortClerk, i+1);
+        t->Fork((VoidFunctionPtr)createPassportClerk, i+1);
     }//end of creating passPort clerk threads
 
     std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
