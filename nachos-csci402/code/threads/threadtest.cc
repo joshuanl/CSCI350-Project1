@@ -1231,6 +1231,84 @@ public:
 }; // end of passport clerk	
 
 
+class Cashier{
+private:
+	int clerkState; // 0: available     1: busy       2: on break
+	int lineCount;   
+	int bribeLineCount;
+	int clerkMoney; //How much money the clerk has
+	int myLine;
+
+public:
+
+	Cashier(){
+		clerkState = 0;
+		lineCount = 0;
+		bribeLineCount = 0;
+		clerkMoney = 0;
+		myLine = -1;
+	}//end of constructor
+
+	~Cashier(){
+
+	}//end of deconstructor
+
+	void run(){	
+		while(true){
+
+		}//end of while
+		
+	}//end of run
+
+
+	int getclerkState(){
+		return clerkState;
+	}//end of getclerkState
+
+	void setclerkState(int n){
+		clerkState = n;
+	}//end of setting clerkState
+
+	void setselfIndex(int n){
+		myLine = n;
+	}
+
+	void addToLine(){
+		lineCount++;
+	}//end of adding to line
+
+	void addToBribeLine(){
+		bribeLineCount++;
+	}//end of adding to bribe line
+
+	void addclerkMoney(int n){
+		clerkMoney = clerkMoney + n;
+	}//Adding money to clerk money variab;e
+
+	int getclerkMoney(){
+		return clerkMoney;
+	}//Get clerk money
+
+	void goOnBreak(){
+		clerkState = 2;
+		//send to sleep
+
+	}//end of sending clerk to break;
+
+	void goBackToWork(){
+		clerkState = 1;
+		//wake up from sleep
+
+	}//end of going back to work
+
+	void makeAvailable(){
+		clerkState = 0;
+	} //set clerk state to available
+
+}; // end of passport clerk	
+
+
+
 class Manager {
 private:
 	
