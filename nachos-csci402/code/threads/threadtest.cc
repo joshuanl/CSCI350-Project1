@@ -1596,6 +1596,7 @@ private:
 	int ppClerkMoney;
 	int cClerkMoney;
 	int totalMoney;
+	int randomDelay;
 public:
 	Manager() {
 		pClerkMoney = 0;
@@ -1611,7 +1612,43 @@ public:
 	}//end of deconstructor
 
 	void wakeupClerks(){
+		//manager looks at the lines of all the clerks and looks for any line with +3 ppl
+		//if there is at least 3 people in line and clerk is on break, manager wakes them up
+		AMonitor->AMonitorLock->Acquire("Manager");
+		for(int i = 0; i < applicationClerk_thread_num; i++){
+			if(AMonitor->clerkLineCount[i] >= 3 && AMonitor->clerkState[i] == 2){
+				std::cout << "MANAGER WAKING UP APPLICATION CLERK FROM BREAK" << std::endl;
+				AMonitor->clerkLineCV[i]->Signal("Manager", AMonitor->clerkLineLocks[i]);
+			}//end of if clerk on break and 3 people in line
+		}//end of looping  
+		AMonitor->AMonitorLock->Release("Manager");
 
+		PMonitor->PMonitorLock->Acquire("Manager");
+		for(int i = 0; i < pictureClerk_thread_num; i++){
+			if(PMonitor->clerkLineCount[i] >= 3 && PMonitor->clerkState[i] == 2){
+				std::cout << "MANAGER WAKING UP PICTURE CLERK FROM BREAK" << std::endl;
+				PMonitor->clerkLineCV[i]->Signal("Manager", PMonitor->clerkLineLocks[i]);
+			}//end of if clerk on break and 3 people in line
+		}//end of looping  
+		PMonitor->PMonitorLock->Release("Manager");
+
+		PPMonitor->MonitorLock->Acquire("Manager");
+		for(int i = 0; i < passportClerk_thread_num; i++){
+			if(PPMonitor->clerkLineCount[i] >= 3 && PPMonitor->clerkState[i] == 2){
+				std::cout << "MANAGER WAKING UP PASSPORT CLERK FROM BREAK" << std::endl;
+				PPMonitor->clerkLineCV[i]->Signal("Manager", PPMonitor->clerkLineLocks[i]);
+			}//end of if clerk on break and 3 people in line
+		}//end of looping  
+		PPMonitor->MonitorLock->Release("Manager");
+
+		CMonitor->MonitorLock->Acquire("Manager");
+		for(int i = 0; i < cashier_thread_num; i++){
+			if(CMonitor->clerkLineCount[i] >= 3 && CMonitor->clerkState[i] == 2){
+				std::cout << "MANAGER WAKING UP CASHIER CLERK FROM BREAK" << std::endl;
+				CMonitor->clerkLineCV[i]->Signal("Manager", CMonitor->clerkLineLocks[i]);
+			}//end of if clerk on break and 3 people in line
+		}//end of looping  
+		CMonitor->MonitorLock->Release("Manager");
 	}//end of waking up clerks
 	
 	void updateTotalMoney(){
@@ -1664,6 +1701,26 @@ public:
 		return totalMoney;
 	} //End of getters for different clerk money
 
+	void run(){
+		//manager first acesses monitor to look at clerk information
+		std::cout<< "Manager is making rounds to wake up clerks" << std::endl;
+		wakeupClerks();
+		std::cout << "Manager is going around getting money from clerks" << std::endl;
+		updateTotalMoney();
+
+		std::cout << "Manager has counted a total of $" << aClerkMoney << " for ApplicationClerks" << std::endl;
+		std::cout << "Manager has counted a total of $" << pClerkMoney << " for PictureClerks" << std::endl;
+		std::cout << "Manager has counted a total of $" << ppClerkMoney << " for PassportClerks" << std::endl;
+		std::cout << "Manager has counted a total of $" << cClerkMoney << " for Cashiers" << std::endl;
+		std::cout << "Manager has counted a total of $" << totalMoney << " for the passport office" << std::endl;
+
+		//simulating that manager does not patrol clerks constantly, every second, so a random delay is added
+		// randomDelay = rand()%20;
+		// for(int i=0; i < randomDelay; i++){
+		// 	currentThread->Yield();
+		// }//end of delay
+
+	}//end of run
 }; //end of manager class
 
 
@@ -1732,13 +1789,14 @@ void createApplicationClerk(){
 	ApplicationClerk *ac = new ApplicationClerk(applicationClerkID);
 	applicationClerkID++;
 	aClerks.push_back(ac);
-
+	ac->run();
 }//end of making application clerk
 
 void createPassportClerk(){
 	PassportClerk *ppc = new PassportClerk(passportClerkID);
 	passportClerkID++;
 	ppClerks.push_back(ppc);
+	ppc->run();
 }//end of making PassportClerk
 
 
@@ -1746,21 +1804,23 @@ void createPictureClerk(){
 	PictureClerk *pc = new PictureClerk(pictureClerkID);
 	pictureClerkID++;
 	pClerks.push_back(pc);
-
+	pc->run();
 
 }//end of making picture clerk
 
 
 void createCashier()
 {
-	Cashier *cashier = new Cashier(cClerks.size());
+	Cashier *cashier = new Cashier(cashierID);
+	cashierID++;
 	cClerks.push_back(cashier);
 	cashier->run();
 }//end of making cashier clerk
 
 void makeManager(){
 	Manager *m = new Manager();
-
+	m->run();
+	std::cout<< "manager run function called" << std::endl;
 }//end of making manager
 
 void makeSenator(){
@@ -1911,17 +1971,15 @@ void Problem2(){
 		t->Fork((VoidFunctionPtr)createPictureClerk, i+1);
 	}//end of creating picture clerk threads
 
-	// std::cout << "reached.  cashier_thread_num: " << cashier_thread_num << std::endl; 
- //    for(int i = 0; i < cashier_thread_num; i++){
- //        Thread *t = new Thread("cashier thread");
- //        t->Fork((VoidFunctionPtr)createCashier, i+1);
- //    }//end of creating cashier threads
+	std::cout << "reached.  cashier_thread_num: " << cashier_thread_num << std::endl; 
+    for(int i = 0; i < cashier_thread_num; i++){
+        Thread *t = new Thread("cashier thread");
+        t->Fork((VoidFunctionPtr)createCashier, i+1);
+    }//end of creating cashier threads
 
- //    std::cout <<"reached. manager_thread_num: " << manager_thread_num << std::endl;
- //    for (int i=0; i<manager_thread_num; i++){
- //        Thread *t = new Thread("manager thread");
- //        t->Fork((VoidFunctionPtr)makeManager, i+1);
- //    }  //end of creating solo manager thread
+    std::cout <<"reached. manager thread being created: " << std::endl;
+    Thread *t = new Thread("manager thread");
+    t->Fork((VoidFunctionPtr)makeManager, 1);
 
  //    std::cout <<"reached. senator_thread_num: " << senator_thread_num << std::endl;
  //    for (int i=0; i<senator_thread_num; i++){
