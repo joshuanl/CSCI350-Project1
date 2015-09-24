@@ -128,5 +128,14 @@ void Lock::Acquire() in synch.cc acquires the lock if possible and sets the owne
 void Lock::Release() in synch.cc releases the lock if possible, sets the owner thread to null, and sets the lock state to available.
 Condition::Condition(char* debugName) in synch.cc is the constructor and initializes the debugName, waitingLock, and queue.
 Condition::~Condition() in synch.cc is the condition destructor.
-void Condition::Wait(Lock* conditionLock) disables interrupts, waits for the condition, adds the current thread to the queue, releases the lock, puts the current thread to sleep, acquires the conditionLock, and then re-enables interrupt. 
+void Condition::Wait(Lock* conditionLock) disables interrupts, waits for the condition, adds the current thread to the queue, releases the lock, puts the current thread to sleep, acquires the conditionLock, and then re-enables interrupts. 
+void Condition::Signal(Lock* conditionLock) signals for one thread to wake up, it disables interrupts, removes one thread from the queue and schedules it, sets the waiting lock to null, and then re-enables interrupts.
+void Condition::Broadcast(Lock* conditionLock) runs the Condition::Signal on all of the threads to wake them all up.
+
+V. Testing
++ How to test
+Run the following command:
+nachos
+A menu will print in the command line, from which we can select one of the test cases.
+
 
