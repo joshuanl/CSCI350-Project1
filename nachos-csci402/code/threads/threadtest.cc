@@ -820,9 +820,11 @@ public:
 
 		//need to randomize	
 		joinApplicationLine();
+		std::cout << "xxxxxxxxxxxxxCustomer: " << id <<" joining picture line" << std::endl;
 		joinPictureLine();
-		std::cout << "REACHED, JOINGING PASSPORT LINE-- ID: " << id << std::endl;
-		joinPassportLine();
+		std::cout << "=======REACHED, JOINGING PASSPORT LINE-- ID: " << id << std::endl;
+
+		//joinPassportLine();
 		missingReqs = false;
 		std::cout << "\nCUSTOMER: " << id << " HAS GONE THROUGH ALL LINES" << std:: endl << std::endl;
 		//joinCashierLine();
@@ -836,7 +838,7 @@ public:
 
 	void joinApplicationLine()
 	{
-		std::cout << "customer: " << id << " getting appMonitor lock " << std::endl;
+		//std::cout << "customer: " << id << " getting appMonitor lock " << std::endl;
 		AMonitor->AMonitorLock->Acquire();
 		int whichLine = AMonitor->getSmallestLine();
 		AMonitor->giveSSN(whichLine, ssn);
@@ -846,29 +848,29 @@ public:
 			AMonitor->clerkLineCount[whichLine] -= 1;
 		}	
 		AMonitor->clerkState[whichLine] = 1;
-		std::cout << "customer: " << id << " releasing appMonitor lock " << std::endl;
+		//std::cout << "customer: " << id << " releasing appMonitor lock " << std::endl;
 		AMonitor->AMonitorLock->Release();
 
 
 		// std::cout << "customer: " << id << " getting appMonitor lock " << std::endl;
 		// AMonitor->AMonitorLock->Acquire();
-		std::cout << "customer: " << id << " getting clerkLineLock lock " << std::endl;
+		//std::cout << "customer: " << id << " getting clerkLineLock lock " << std::endl;
 		AMonitor->clerkLineLocks[whichLine]->Acquire();
 
 		//AMonitor->giveSSN(whichLine, ssn);
-		std::cout << "\nCustomer " << id << "has lock to Application Clerk\n " << whichLine << std::endl;
-		std::cout << "customer: " << id << " signalling clerkLineLock lock " << std::endl;
+		//std::cout << "\nCustomer " << id << "has lock to Application Clerk\n " << whichLine << std::endl;
+		//std::cout << "customer: " << id << " signalling clerkLineLock lock " << std::endl;
 		AMonitor->clerkLineCV[whichLine]->Signal(AMonitor->clerkLineLocks[whichLine]);
-		std::cout << "customer: " << id << " waiting on clerkLineLock lock " << std::endl;
+		//std::cout << "customer: " << id << " waiting on clerkLineLock lock " << std::endl;
 		AMonitor->clerkLineCV[whichLine]->Wait(AMonitor->clerkLineLocks[whichLine]);
 		applicationAccepted = true;
-		std::cout << "customer: " << id << " signalling clerkLineLock lock " << std::endl;
+		//std::cout << "customer: " << id << " signalling clerkLineLock lock " << std::endl;
 		AMonitor->clerkLineCV[whichLine]->Signal(AMonitor->clerkLineLocks[whichLine]);
-		std::cout << "customer: " << id << " releasing clerkLineLock lock " << std::endl;
+		//std::cout << "customer: " << id << " releasing clerkLineLock lock " << std::endl;
 		AMonitor->clerkLineLocks[whichLine]->Release();
-		std::cout << "customer: " << id << " releasing applMonitor lock " << std::endl;
+		//std::cout << "customer: " << id << " releasing applMonitor lock " << std::endl;
 		//AMonitor->AMonitorLock->Release();
-		std::cout << "\n\n\nCustomer: " << id << " is out of application line\n\n" << std::endl;
+		//std::cout << "\n\n\nCustomer: " << id << " is out of application line\n\n" << std::endl;
 	}	
 
 	void joinPictureLine()
@@ -876,23 +878,24 @@ public:
 		std::cout << "customer: " << id << " getting picMonitor lock " << std::endl;
 		PMonitor->PMonitorLock->Acquire();
 		int whichLine = PMonitor->getSmallestLine();
-		if(PMonitor->clerkState[whichLine] = 1){
+		PMonitor->giveSSN(whichLine, ssn);
+		if(PMonitor->clerkState[whichLine] == 1){
 			PMonitor->clerkLineCount[whichLine] += 1;
-			PMonitor->PMonitorLock->Release();
-			PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);
+			PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->PMonitorLock);
 			PMonitor->clerkLineCount[whichLine] -= 1;
 		}	
 		PMonitor->clerkState[whichLine] = 1;
 		std::cout << "customer: " << id << " releasing picMonitor lock " << std::endl;
 		PMonitor->PMonitorLock->Release();
-		
-		std::cout << "customer: " << id << " getting picMonitor lock " << std::endl;
-		PMonitor->PMonitorLock->Acquire();
+
+
+		// std::cout << "customer: " << id << " getting picMonitor lock " << std::endl;
+		// PMonitor->PMonitorLock->Acquire();
 		std::cout << "customer: " << id << " getting clerkLineLock lock " << std::endl;
 		PMonitor->clerkLineLocks[whichLine]->Acquire();
 
-		PMonitor->giveSSN(whichLine, ssn);
-		std::cout << "\nCustomer " << id << " has given id " << ssn << " to Picture Clerk\n " << whichLine << std::endl;
+		//PMonitor->giveSSN(whichLine, ssn);
+		std::cout << "\nCustomer " << id << "has lock to picture Clerk\n " << whichLine << std::endl;
 		std::cout << "customer: " << id << " signalling clerkLineLock lock " << std::endl;
 		PMonitor->clerkLineCV[whichLine]->Signal(PMonitor->clerkLineLocks[whichLine]);
 		std::cout << "customer: " << id << " waiting on clerkLineLock lock " << std::endl;
@@ -902,9 +905,9 @@ public:
 		PMonitor->clerkLineCV[whichLine]->Signal(PMonitor->clerkLineLocks[whichLine]);
 		std::cout << "customer: " << id << " releasing clerkLineLock lock " << std::endl;
 		PMonitor->clerkLineLocks[whichLine]->Release();
-		std::cout << "customer: " << id << " releasing picture monitor lock " << std::endl;
-		PMonitor->PMonitorLock->Release();
-		std::cout << "\nCustomer: " << id << " is out of picture line\n" << std::endl;
+		std::cout << "customer: " << id << " releasing picMonitor lock " << std::endl;
+		//PMonitor->AMonitorLock->Release();
+		std::cout << "\n\n\nCustomer: " << id << " is out of picture line\n\n" << std::endl;
 
 	}
 
@@ -1030,7 +1033,7 @@ public:
 	void run(){		
 		while(true)
 		{
-			std::cout << "appClerk: " << myLine << " getting appMonitor lock " << std::endl;
+			// std::cout << "appClerk: " << myLine << " getting appMonitor lock " << std::endl;
 			AMonitor->AMonitorLock->Acquire();
 			// std::cout << "appClerk: " << myLine << " getting clerkLineLock lock " << std::endl;
 			// AMonitor->clerkLineLocks[myLine]->Acquire();
@@ -1042,33 +1045,33 @@ public:
 			}
 			else if(AMonitor->clerkLineCount[myLine] > 0)
 			{       //if bribe line is empty
-				std::cout << "appClerk: " << myLine << " signalling appMonitor lock " << std::endl;
+				// std::cout << "appClerk: " << myLine << " signalling appMonitor lock " << std::endl;
 				AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]); 
 				AMonitor->clerkState[myLine] = 1;
 			}
 			else{
 				AMonitor->clerkState[myLine] = 2; // go on break
 			}
-			 std::cout << "appClerk: " << myLine << " getting clerkLine Lock after else" << std::endl;
+			 // std::cout << "appClerk: " << myLine << " getting clerkLine Lock after else" << std::endl;
 			 AMonitor->clerkLineLocks[myLine]->Acquire();  
-			std::cout << "appClerk: " << myLine << " releasing appMonitor lock " << std::endl;
+			// std::cout << "appClerk: " << myLine << " releasing appMonitor lock " << std::endl;
 			AMonitor->AMonitorLock->Release();
 			//wait for customer data
-			std::cout << "appClerk: " << myLine << " waiting on clerkLine lock for customer data" << std::endl;
+			// std::cout << "appClerk: " << myLine << " waiting on clerkLine lock for customer data" << std::endl;
 			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]); 
 
 			//if(AMonitor->clerkLineCount[myLine] != 0){
-				std::cout << "Application Clerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
-						" from Customer " << AMonitor->clientSSNs[myLine].front() << "." << std::endl;
+				// std::cout << "Application Clerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
+				//		" from Customer " << AMonitor->clientSSNs[myLine].front() << "." << std::endl;
 				AMonitor->clientSSNs[myLine].pop();				
 				//AMonitor->clerkLineCount[myLine]--;
-				std::cout << "" << AMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
+				// std::cout << "" << AMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
 			//}//end of if empty line
-			std::cout << "appClerk: " << myLine << " signalling clerkLine lock " << std::endl;
+			// std::cout << "appClerk: " << myLine << " signalling clerkLine lock " << std::endl;
 			AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]); 
-			std::cout << "appClerk: " << myLine << " waiting on clerkLine lock " << std::endl;
+			// std::cout << "appClerk: " << myLine << " waiting on clerkLine lock " << std::endl;
 			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]); 
-			std::cout << "appClerk: " << myLine << " releasing clerkLine lock " << std::endl;
+			// std::cout << "appClerk: " << myLine << " releasing clerkLine lock " << std::endl;
 			AMonitor->clerkLineLocks[myLine]->Release();
 		
 		}
@@ -1156,9 +1159,9 @@ public:
 		while(true)
 		{
 			
-			std::cout << "pictureClerk: " << myLine << " getting picMonitor lock " << std::endl;
+			// std::cout << "pictureClerk: " << myLine << " getting picMonitor lock " << std::endl;
 			PMonitor->PMonitorLock->Acquire();
-			std::cout << "pictureClerk: " << myLine << " getting clerkLineLock lock " << std::endl;
+			// std::cout << "pictureClerk: " << myLine << " getting clerkLineLock lock " << std::endl;
 			PMonitor->clerkLineLocks[myLine]->Acquire();
 
 			if(PMonitor->clerkBribeLineCount[myLine] > 0)
@@ -1168,33 +1171,33 @@ public:
 			}
 			else if(PMonitor->clerkLineCount[myLine] > 0)
 			{       //if bribe line is empty
-				std::cout << "pictureClerk: " << myLine << " signalling picMonitor lock " << std::endl;
+				// std::cout << "pictureClerk: " << myLine << " signalling picMonitor lock " << std::endl;
 				PMonitor->clerkLineCV[myLine]->Signal(PMonitor->clerkLineLocks[myLine]); 
 				PMonitor->clerkState[myLine] = 1;
 			}
 			else{
 				PMonitor->clerkState[myLine] = 2; // go on break
 			}
-			std::cout << "pictureClerk: " << myLine << " releasing clerkLine Lock after else" << std::endl;
+			// std::cout << "pictureClerk: " << myLine << " releasing clerkLine Lock after else" << std::endl;
 			PMonitor->clerkLineLocks[myLine]->Release();  
-			std::cout << "pictureClerk: " << myLine << " releasing picMonitor lock " << std::endl;
+			// std::cout << "pictureClerk: " << myLine << " releasing picMonitor lock " << std::endl;
 			PMonitor->PMonitorLock->Release();
 			//wait for customer data
-			std::cout << "pictureClerk: " << myLine << " waiting on clerkLine lock for customer data" << std::endl;
+			// std::cout << "pictureClerk: " << myLine << " waiting on clerkLine lock for customer data" << std::endl;
 			PMonitor->clerkLineCV[myLine]->Wait(PMonitor->clerkLineLocks[myLine]); 
 
 			//if(PMonitor->clerkLineCount[myLine] != 0){
-				std::cout << "Picture Clerk " << myLine << " has received id " << PMonitor->clientSSNs[myLine].front() <<
-						" from Customer " << PMonitor->clientSSNs[myLine].front() << "." << std::endl;
+				// std::cout << "Picture Clerk " << myLine << " has received id " << PMonitor->clientSSNs[myLine].front() <<
+				//		" from Customer " << PMonitor->clientSSNs[myLine].front() << "." << std::endl;
 				PMonitor->clientSSNs[myLine].pop();				
 				//PMonitor->clerkLineCount[myLine]--;
-				std::cout << "" << PMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
+				// std::cout << "" << PMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
 			//}//end of if empty line
-			std::cout << "pictureClerk: " << myLine << " signalling clerkLine lock " << std::endl;
+			// std::cout << "pictureClerk: " << myLine << " signalling clerkLine lock " << std::endl;
 			PMonitor->clerkLineCV[myLine]->Signal(PMonitor->clerkLineLocks[myLine]); 
-			std::cout << "pictureClerk: " << myLine << " waiting on clerkLine lock " << std::endl;
+			// std::cout << "pictureClerk: " << myLine << " waiting on clerkLine lock " << std::endl;
 			PMonitor->clerkLineCV[myLine]->Wait(PMonitor->clerkLineLocks[myLine]); 
-			std::cout << "pictureClerk: " << myLine << " releasing clerkLine lock " << std::endl;
+			// std::cout << "pictureClerk: " << myLine << " releasing clerkLine lock " << std::endl;
 			PMonitor->clerkLineLocks[myLine]->Release();
 		}//end of while
 		
