@@ -86,10 +86,10 @@ Class Senator
   The following methods: moveUpInLine(), which will allow a senator with greater than or equal to 700 dollars to change their bribed variable to true for the following line that they are in, and result in a net loss of 600 dollars for the senator, setAppAccepted()- a method allowing the bool applicationAccepted to be set, setPictureTaken()- a method allowing the bool pictureTaken to be set, and the bool methods isAppAccepted(), isPictureTaken(), and alreadyBribed() which returns the booleans set in the Senator class.
 
 IV. Implementation
-+Files modified
++ Files modified
 synch.h, synch.cc: lock and condition code
 threadtest.cc: implementation code for Passport office and testing
-+Data structures added
++ Data structures added
 Struct ApplicationMonitor (in threadtest.cc) accepts numApplicationClerks and numCustomers as arguments and sets conditions and locks for the normal lines and bribe lines.
 Struct PictureMonitor (in threadtest.cc) accepts numPictureClerks and numCustomers as arguments and sets conditions and locks for the normal lines and bribe lines.
 Struct PassportMonitor (in threadtest.cc) accepts numPassportClerks and numCustomers as arguments and sets conditions and locks for the normal lines and bribe lines.
@@ -102,8 +102,17 @@ Class PassportClerk (in threadtest.cc) contains int clerkState, int lineCount, i
 Class Cashier (in threadtest.cc) contains int clerkState, int lineCount, int bribeLineCount, int clerkMoney, and int myLine and the getters and setters for these variables.
 Class Manager (in threadtest.cc) contains ints representing each clerk's money amount, and the total money and getters and setters for these variables.
 Class Senator (in threadtest.cc) contains int money, int ssn, and the booleans applicationAccepted, pictureTaken, bribed, and missingReqs and the public getters and setters for these variables.
-+Data structures modified
++ Data structures modified
 Lock class (in synch.cc, synch.h) implemented constructor, destructor, and member functions.
 Condition class (in synch.cc, synch.h) implemented constructor, destructor, and member functions.
++ Functions added
+int getSmallestLine() in threadtest.cc, goes through all of the clerks of a certain type and returns the smallest line for each type of a certain clerk.
+void giveSSN(int line, int ssn) in threadtest.cc pushes the ssn variable into the line that it belongs in the list of clientSSNs.
+void giveReqs(int line, int completed) in threadtest.cc pushes the int completed into the line that it belongs in the list of clientReqs.
+void giveCertifications(int line, bool certified) in threadtest.cc pushes the boolean certified into the line that it belongs in the list of customerCertifications.
+void joinApplicationLine() in threadtest.cc allows the client to get the AppMonitor lock and later to release it.
+void joinPictureLine() in threadtest.cc allows the client to get the PictureMonitor lock and later to release it.
+void joinPassportLine() in threadtest.cc allows the client to get the PassportMonitor lock and later to release it.
+void joinCashierLine() in threadtest.cc allows the client to get the CashierMonitor lock and later to release it.
 
 
