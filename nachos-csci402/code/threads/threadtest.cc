@@ -19,8 +19,8 @@
 	How to share/communicate data between customer/clerk? 
 	 - customers should be created with index as a member variable // need to add
 	 - create a global vector of the class 	//need to add
-	 	- when customer acquires lock from clerk, customer passes clerk their index	with a function
-	 		- store index in a vector // should be same size as lineCount
+		- when customer acquires lock from clerk, customer passes clerk their index	with a function
+			- store index in a vector // should be same size as lineCount
 		
 
 */
@@ -63,30 +63,11 @@ std::vector<Client *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR.
 // struct PictureMonitor;
 // struct PassportMonitor;
 
-//***MANAGER CODE****
-//Lock* addToClerksOnBreak = new Lock("Add another clerk to the break queue");
-//
-
-//Struct ManagerMonitor {
-//	std::vector<Lock*> clerksOnBreakLock;
-//	std::vector<Condition*> clerkOnBreakCV;
-//	ManagerMonitor(int numClerksOnBreak);
-//	
-//	ManagerMonitor(int numClerksOnBreak) {
-//	clerksOnBreakLock.reserve(numClerksOnBreak);
-//	clerksOnBreakCV.reserve(numClerksOnBreak);
-//	for (int i=0; i<numClerksOnBreak; i++){
-//		clerksOnBreakLock.push_back(new Lock("Manager Monitor Lock" + i));
-//		clerksOnBreakCV.push_back(new Condition("Manager Monitor Lock" + i));
-//	}
-//	
-//}
-//};
-
 
 struct ApplicationMonitor {
 
 	Lock* AMonitorLock;
+	//Condition* LineNotEmpty;
 
 	int numAClerks;
 	Lock** clerkLineLocks;					// move to be global variable
@@ -101,7 +82,8 @@ struct ApplicationMonitor {
 
 	ApplicationMonitor(int numApplicationClerks, int numCustomers)
 	{
-		AMonitorLock = new Lock("Monitor Lock");
+		AMonitorLock = new Lock("Application Monitor Lock");
+		//LineNoteEmpty = new Condition("Monitor Condition");
 
 		numAClerks = numApplicationClerks;
 		clerkLineLocks = new Lock*[numAClerks];
@@ -119,7 +101,7 @@ struct ApplicationMonitor {
 		{			
 			clerkLineCV[i] = new Condition("");
 			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("ClerkLineLock");
+			clerkLineLocks[i] = new Lock("clerkLineLocks");
 			clerkLineCount[i] = 0;
 			clerkBribeLineCount[i] = 0;
 			clerkState[i] = 0;
@@ -186,7 +168,7 @@ struct PictureMonitor {
 		{			
 			clerkLineCV[i] = new Condition("");
 			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("ClerkLineLock");
+			clerkLineLocks[i] = new Lock("clerkLineLocks");
 			clerkLineCount[i] = 0;
 			clerkBribeLineCount[i] = 0;
 			clerkState[i] = 0;
@@ -222,7 +204,7 @@ struct PictureMonitor {
 
 struct PassportMonitor {
 
-	Lock* PPMonitorLock;
+	Lock* MonitorLock;
 
 	int numClerks;
 	Lock** clerkLineLocks;					// move to be global variable
@@ -237,7 +219,7 @@ struct PassportMonitor {
 
 	PassportMonitor(int numPassportClerks, int numCustomers)
 	{
-		PPMonitorLock = new Lock("Monitor Lock");
+		MonitorLock = new Lock("Monitor Lock");
 
 		numClerks = numPassportClerks;
 		clerkLineLocks = new Lock*[numClerks];
@@ -255,7 +237,7 @@ struct PassportMonitor {
 		{			
 			clerkLineCV[i] = new Condition("");
 			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("ClerkLineLock");
+			clerkLineLocks[i] = new Lock("clerkLineLocks");
 			clerkLineCount[i] = 0;
 			clerkBribeLineCount[i] = 0;
 			clerkState[i] = 0;
@@ -329,12 +311,12 @@ int senatorID = 0;
 void
 SimpleThread(int which)
 {
-    int num;
-    
-    for (num = 0; num < 5; num++) {
+	int num;
+	
+	for (num = 0; num < 5; num++) {
 	printf("*** thread %d looped %d times\n", which, num);
-        currentThread->Yield();
-    }
+		currentThread->Yield();
+	}
 }
 
 //----------------------------------------------------------------------
@@ -346,12 +328,12 @@ SimpleThread(int which)
 void
 ThreadTest()
 {
-    DEBUG('t', "Entering SimpleTest");
+	DEBUG('t', "Entering SimpleTest");
 
-    Thread *t = new Thread("forked thread");
+	Thread *t = new Thread("forked thread");
 
-    t->Fork(SimpleThread, 1);
-    SimpleThread(0);
+	t->Fork(SimpleThread, 1);
+	SimpleThread(0);
 }
 
 
@@ -372,13 +354,13 @@ ThreadTest()
 // Test 1 - see TestSuite() for details
 // --------------------------------------------------
 Semaphore t1_s1("t1_s1",0);       // To make sure t1_t1 acquires the
-                                  // lock before t1_t2
+								  // lock before t1_t2
 Semaphore t1_s2("t1_s2",0);       // To make sure t1_t2 Is waiting on the 
-                                  // lock before t1_t3 releases it
+								  // lock before t1_t3 releases it
 Semaphore t1_s3("t1_s3",0);       // To make sure t1_t1 does not release the
-                                  // lock before t1_t3 tries to acquire it
+								  // lock before t1_t3 tries to acquire it
 Semaphore t1_done("t1_done",0);   // So that TestSuite knows when Test 1 is
-                                  // done
+								  // done
 Lock t1_l1("t1_l1");		  // the lock tested in Test 1
 
 // --------------------------------------------------
@@ -386,18 +368,18 @@ Lock t1_l1("t1_l1");		  // the lock tested in Test 1
 //     This is the rightful lock owner
 // --------------------------------------------------
 void t1_t1() {
-    t1_l1.Acquire();
-    t1_s1.V();  // Allow t1_t2 to try to Acquire Lock
+	t1_l1.Acquire("");
+	t1_s1.V();  // Allow t1_t2 to try to Acquire Lock
  
-    printf ("%s: Acquired Lock %s, waiting for t3\n",currentThread->getName(),
-	    t1_l1.getName());
-    t1_s3.P();
-    printf ("%s: working in CS\n",currentThread->getName());
-    for (int i = 0; i < 1000000; i++) ;
-    printf ("%s: Releasing Lock %s\n",currentThread->getName(),
-	    t1_l1.getName());
-    t1_l1.Release();
-    t1_done.V();
+	printf ("%s: Acquired Lock %s, waiting for t3\n",currentThread->getName(),
+		t1_l1.getName());
+	t1_s3.P();
+	printf ("%s: working in CS\n",currentThread->getName());
+	for (int i = 0; i < 1000000; i++) ;
+	printf ("%s: Releasing Lock %s\n",currentThread->getName(),
+		t1_l1.getName());
+	t1_l1.Release("");
+	t1_done.V();
 }
 
 // --------------------------------------------------
@@ -406,21 +388,21 @@ void t1_t1() {
 // --------------------------------------------------
 void t1_t2() {
 
-    t1_s1.P();	// Wait until t1 has the lock
-    t1_s2.V();  // Let t3 try to acquire the lock
+	t1_s1.P();	// Wait until t1 has the lock
+	t1_s2.V();  // Let t3 try to acquire the lock
 
-    printf("%s: trying to acquire lock %s\n",currentThread->getName(),
-	    t1_l1.getName());
-    t1_l1.Acquire();
+	printf("%s: trying to acquire lock %s\n",currentThread->getName(),
+		t1_l1.getName());
+	t1_l1.Acquire("");
 
-    printf ("%s: Acquired Lock %s, working in CS\n",currentThread->getName(),
-	    t1_l1.getName());
-    for (int i = 0; i < 10; i++)
+	printf ("%s: Acquired Lock %s, working in CS\n",currentThread->getName(),
+		t1_l1.getName());
+	for (int i = 0; i < 10; i++)
 	;
-    printf ("%s: Releasing Lock %s\n",currentThread->getName(),
-	    t1_l1.getName());
-    t1_l1.Release();
-    t1_done.V();
+	printf ("%s: Releasing Lock %s\n",currentThread->getName(),
+		t1_l1.getName());
+	t1_l1.Release("");
+	t1_done.V();
 }
 
 // --------------------------------------------------
@@ -429,14 +411,14 @@ void t1_t2() {
 // --------------------------------------------------
 void t1_t3() {
 
-    t1_s2.P();	// Wait until t2 is ready to try to acquire the lock
+	t1_s2.P();	// Wait until t2 is ready to try to acquire the lock
 
-    t1_s3.V();	// Let t1 do it's stuff
-    for ( int i = 0; i < 3; i++ ) {
+	t1_s3.V();	// Let t1 do it's stuff
+	for ( int i = 0; i < 3; i++ ) {
 	printf("%s: Trying to release Lock %s\n",currentThread->getName(),
-	       t1_l1.getName());
-	t1_l1.Release();
-    }
+		   t1_l1.getName());
+	t1_l1.Release("");
+	}
 }
 
 // --------------------------------------------------
@@ -446,22 +428,22 @@ Lock t2_l1("t2_l1");		// For mutual exclusion
 Condition t2_c1("t2_c1");	// The condition variable to test
 Semaphore t2_s1("t2_s1",0);	// To ensure the Signal comes before the wait
 Semaphore t2_done("t2_done",0);     // So that TestSuite knows when Test 2 is
-                                  // done
+								  // done
 
 // --------------------------------------------------
 // t2_t1() -- test 2 thread 1
 //     This thread will signal a variable with nothing waiting
 // --------------------------------------------------
 void t2_t1() {
-    t2_l1.Acquire();
-    printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
+	t2_l1.Acquire("");
+	printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
 	   t2_l1.getName(), t2_c1.getName());
-    t2_c1.Signal(&t2_l1);
-    printf("%s: Releasing Lock %s\n",currentThread->getName(),
+	t2_c1.Signal("", &t2_l1);
+	printf("%s: Releasing Lock %s\n",currentThread->getName(),
 	   t2_l1.getName());
-    t2_l1.Release();
-    t2_s1.V();	// release t2_t2
-    t2_done.V();
+	t2_l1.Release("");
+	t2_s1.V();	// release t2_t2
+	t2_done.V();
 }
 
 // --------------------------------------------------
@@ -469,14 +451,14 @@ void t2_t1() {
 //     This thread will wait on a pre-signalled variable
 // --------------------------------------------------
 void t2_t2() {
-    t2_s1.P();	// Wait for t2_t1 to be done with the lock
-    t2_l1.Acquire();
-    printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
+	t2_s1.P();	// Wait for t2_t1 to be done with the lock
+	t2_l1.Acquire("");
+	printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
 	   t2_l1.getName(), t2_c1.getName());
-    t2_c1.Wait(&t2_l1);
-    printf("%s: Releasing Lock %s\n",currentThread->getName(),
+	t2_c1.Wait("", &t2_l1);
+	printf("%s: Releasing Lock %s\n",currentThread->getName(),
 	   t2_l1.getName());
-    t2_l1.Release();
+	t2_l1.Release("");
 }
 // --------------------------------------------------
 // Test 3 - see TestSuite() for details
@@ -485,7 +467,7 @@ Lock t3_l1("t3_l1");		// For mutual exclusion
 Condition t3_c1("t3_c1");	// The condition variable to test
 Semaphore t3_s1("t3_s1",0);	// To ensure the Signal comes before the wait
 Semaphore t3_done("t3_done",0); // So that TestSuite knows when Test 3 is
-                                // done
+								// done
 
 // --------------------------------------------------
 // t3_waiter()
@@ -493,14 +475,14 @@ Semaphore t3_done("t3_done",0); // So that TestSuite knows when Test 3 is
 //     one t3_waiter will be released
 // --------------------------------------------------
 void t3_waiter() {
-    t3_l1.Acquire();
-    t3_s1.V();		// Let the signaller know we're ready to wait
-    printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
+	t3_l1.Acquire("");
+	t3_s1.V();		// Let the signaller know we're ready to wait
+	printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
 	   t3_l1.getName(), t3_c1.getName());
-    t3_c1.Wait(&t3_l1);
-    printf("%s: freed from %s\n",currentThread->getName(), t3_c1.getName());
-    t3_l1.Release();
-    t3_done.V();
+	t3_c1.Wait("", &t3_l1);
+	printf("%s: freed from %s\n",currentThread->getName(), t3_c1.getName());
+	t3_l1.Release("");
+	t3_done.V();
 }
 
 
@@ -511,17 +493,17 @@ void t3_waiter() {
 // --------------------------------------------------
 void t3_signaller() {
 
-    // Don't signal until someone's waiting
-    
-    for ( int i = 0; i < 5 ; i++ ) 
+	// Don't signal until someone's waiting
+	
+	for ( int i = 0; i < 5 ; i++ ) 
 	t3_s1.P();
-    t3_l1.Acquire();
-    printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
+	t3_l1.Acquire("");
+	printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
 	   t3_l1.getName(), t3_c1.getName());
-    t3_c1.Signal(&t3_l1);
-    printf("%s: Releasing %s\n",currentThread->getName(), t3_l1.getName());
-    t3_l1.Release();
-    t3_done.V();
+	t3_c1.Signal("", &t3_l1);
+	printf("%s: Releasing %s\n",currentThread->getName(), t3_l1.getName());
+	t3_l1.Release("");
+	t3_done.V();
 }
  
 // --------------------------------------------------
@@ -531,7 +513,7 @@ Lock t4_l1("t4_l1");		// For mutual exclusion
 Condition t4_c1("t4_c1");	// The condition variable to test
 Semaphore t4_s1("t4_s1",0);	// To ensure the Signal comes before the wait
 Semaphore t4_done("t4_done",0); // So that TestSuite knows when Test 4 is
-                                // done
+								// done
 
 // --------------------------------------------------
 // t4_waiter()
@@ -539,14 +521,14 @@ Semaphore t4_done("t4_done",0); // So that TestSuite knows when Test 4 is
 //     t4_waiters will be released
 // --------------------------------------------------
 void t4_waiter() {
-    t4_l1.Acquire();
-    t4_s1.V();		// Let the signaller know we're ready to wait
-    printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
+	t4_l1.Acquire("");
+	t4_s1.V();		// Let the signaller know we're ready to wait
+	printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
 	   t4_l1.getName(), t4_c1.getName());
-    t4_c1.Wait(&t4_l1);
-    printf("%s: freed from %s\n",currentThread->getName(), t4_c1.getName());
-    t4_l1.Release();
-    t4_done.V();
+	t4_c1.Wait("", &t4_l1);
+	printf("%s: freed from %s\n",currentThread->getName(), t4_c1.getName());
+	t4_l1.Release("");
+	t4_done.V();
 }
 
 
@@ -557,17 +539,17 @@ void t4_waiter() {
 // --------------------------------------------------
 void t4_signaller() {
 
-    // Don't broadcast until someone's waiting
-    
-    for ( int i = 0; i < 5 ; i++ ) 
+	// Don't broadcast until someone's waiting
+	
+	for ( int i = 0; i < 5 ; i++ ) 
 	t4_s1.P();
-    t4_l1.Acquire();
-    printf("%s: Lock %s acquired, broadcasting %s\n",currentThread->getName(),
+	t4_l1.Acquire("");
+	printf("%s: Lock %s acquired, broadcasting %s\n",currentThread->getName(),
 	   t4_l1.getName(), t4_c1.getName());
-    t4_c1.Broadcast(&t4_l1);
-    printf("%s: Releasing %s\n",currentThread->getName(), t4_l1.getName());
-    t4_l1.Release();
-    t4_done.V();
+	t4_c1.Broadcast(&t4_l1);
+	printf("%s: Releasing %s\n",currentThread->getName(), t4_l1.getName());
+	t4_l1.Release("");
+	t4_done.V();
 }
 // --------------------------------------------------
 // Test 5 - see TestSuite() for details
@@ -576,21 +558,21 @@ Lock t5_l1("t5_l1");		// For mutual exclusion
 Lock t5_l2("t5_l2");		// Second lock for the bad behavior
 Condition t5_c1("t5_c1");	// The condition variable to test
 Semaphore t5_s1("t5_s1",0);	// To make sure t5_t2 acquires the lock after
-                                // t5_t1
+								// t5_t1
 
 // --------------------------------------------------
 // t5_t1() -- test 5 thread 1
 //     This thread will wait on a condition under t5_l1
 // --------------------------------------------------
 void t5_t1() {
-    t5_l1.Acquire();
-    t5_s1.V();	// release t5_t2
-    printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
+	t5_l1.Acquire("");
+	t5_s1.V();	// release t5_t2
+	printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
 	   t5_l1.getName(), t5_c1.getName());
-    t5_c1.Wait(&t5_l1);
-    printf("%s: Releasing Lock %s\n",currentThread->getName(),
+	t5_c1.Wait("", &t5_l1);
+	printf("%s: Releasing Lock %s\n",currentThread->getName(),
 	   t5_l1.getName());
-    t5_l1.Release();
+	t5_l1.Release("");
 }
 
 // --------------------------------------------------
@@ -599,18 +581,18 @@ void t5_t1() {
 //     a Fatal error
 // --------------------------------------------------
 void t5_t2() {
-    t5_s1.P();	// Wait for t5_t1 to get into the monitor
-    t5_l1.Acquire();
-    t5_l2.Acquire();
-    printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
+	t5_s1.P();	// Wait for t5_t1 to get into the monitor
+	t5_l1.Acquire("");
+	t5_l2.Acquire("");
+	printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
 	   t5_l2.getName(), t5_c1.getName());
-    t5_c1.Signal(&t5_l2);
-    printf("%s: Releasing Lock %s\n",currentThread->getName(),
+	t5_c1.Signal("", &t5_l2);
+	printf("%s: Releasing Lock %s\n",currentThread->getName(),
 	   t5_l2.getName());
-    t5_l2.Release();
-    printf("%s: Releasing Lock %s\n",currentThread->getName(),
+	t5_l2.Release("");
+	printf("%s: Releasing Lock %s\n",currentThread->getName(),
 	   t5_l1.getName());
-    t5_l1.Release();
+	t5_l1.Release("");
 }
 
 // --------------------------------------------------
@@ -634,85 +616,85 @@ void t5_t2() {
 //     Fatal errors terminate the thread in question.
 // --------------------------------------------------
 void TestSuite() {
-    Thread *t;
-    char *name;
-    int i;
-    
-    // Test 1
+	Thread *t;
+	char *name;
+	int i;
+	
+	// Test 1
 
-    printf("Starting Test 1\n");
+	printf("Starting Test 1\n");
 
-    t = new Thread("t1_t1");
-    t->Fork((VoidFunctionPtr)t1_t1,0);
+	t = new Thread("t1_t1");
+	t->Fork((VoidFunctionPtr)t1_t1,0);
 
-    t = new Thread("t1_t2");
-    t->Fork((VoidFunctionPtr)t1_t2,0);
+	t = new Thread("t1_t2");
+	t->Fork((VoidFunctionPtr)t1_t2,0);
 
-    t = new Thread("t1_t3");
-    t->Fork((VoidFunctionPtr)t1_t3,0);
+	t = new Thread("t1_t3");
+	t->Fork((VoidFunctionPtr)t1_t3,0);
 
-    // Wait for Test 1 to complete
-    for (  i = 0; i < 2; i++ )
+	// Wait for Test 1 to complete
+	for (  i = 0; i < 2; i++ )
 	t1_done.P();
 
-    // Test 2
+	// Test 2
 
-    printf("Starting Test 2.  Note that it is an error if thread t2_t2\n");
-    printf("completes\n");
+	printf("Starting Test 2.  Note that it is an error if thread t2_t2\n");
+	printf("completes\n");
 
-    t = new Thread("t2_t1");	
-    t->Fork((VoidFunctionPtr)t2_t1,0);
+	t = new Thread("t2_t1");	
+	t->Fork((VoidFunctionPtr)t2_t1,0);
 
-    t = new Thread("t2_t2");
-    t->Fork((VoidFunctionPtr)t2_t2,0);
+	t = new Thread("t2_t2");
+	t->Fork((VoidFunctionPtr)t2_t2,0);
 
-    // Wait for Test 2 to complete
-    t2_done.P();
+	// Wait for Test 2 to complete
+	t2_done.P();
 
-    // Test 3
+	// Test 3
 
-    printf("Starting Test 3\n");
+	printf("Starting Test 3\n");
 
-    for (  i = 0 ; i < 5 ; i++ ) {
+	for (  i = 0 ; i < 5 ; i++ ) {
 	name = new char [20];
 	sprintf(name,"t3_waiter%d",i);
 	t = new Thread(name);
 	t->Fork((VoidFunctionPtr)t3_waiter,0);
-    }
-    t = new Thread("t3_signaller");
-    t->Fork((VoidFunctionPtr)t3_signaller,0);
+	}
+	t = new Thread("t3_signaller");
+	t->Fork((VoidFunctionPtr)t3_signaller,0);
 
-    // Wait for Test 3 to complete
-    for (  i = 0; i < 2; i++ )
+	// Wait for Test 3 to complete
+	for (  i = 0; i < 2; i++ )
 	t3_done.P();
 
-    // Test 4
+	// Test 4
 
-    printf("Starting Test 4\n");
+	printf("Starting Test 4\n");
 
-    for (  i = 0 ; i < 5 ; i++ ) {
+	for (  i = 0 ; i < 5 ; i++ ) {
 	name = new char [20];
 	sprintf(name,"t4_waiter%d",i);
 	t = new Thread(name);
 	t->Fork((VoidFunctionPtr)t4_waiter,0);
-    }
-    t = new Thread("t4_signaller");
-    t->Fork((VoidFunctionPtr)t4_signaller,0);
+	}
+	t = new Thread("t4_signaller");
+	t->Fork((VoidFunctionPtr)t4_signaller,0);
 
-    // Wait for Test 4 to complete
-    for (  i = 0; i < 6; i++ )
+	// Wait for Test 4 to complete
+	for (  i = 0; i < 6; i++ )
 	t4_done.P();
 
-    // Test 5
+	// Test 5
 
-    printf("Starting Test 5.  Note that it is an error if thread t5_t1\n");
-    printf("completes\n");
+	printf("Starting Test 5.  Note that it is an error if thread t5_t1\n");
+	printf("completes\n");
 
-    t = new Thread("t5_t1");
-    t->Fork((VoidFunctionPtr)t5_t1,0);
+	t = new Thread("t5_t1");
+	t->Fork((VoidFunctionPtr)t5_t1,0);
 
-    t = new Thread("t5_t2");
-    t->Fork((VoidFunctionPtr)t5_t2,0);
+	t = new Thread("t5_t2");
+	t->Fork((VoidFunctionPtr)t5_t2,0);
 
 }
 #endif
@@ -753,7 +735,7 @@ struct CashierMonitor
 		{			
 			clerkLineCV[i] = new Condition("");
 			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("ClerkLineLock");
+			clerkLineLocks[i] = new Lock("clerkLineLocks");
 			clerkLineCount[i] = 0;
 			clerkBribeLineCount[i] = 0;
 			clerkState[i] = 0;
@@ -799,178 +781,194 @@ private:
 	int money;
 	int id;
 	int ssn;
-    int selfIndex;
+	int selfIndex;
 	bool applicationAccepted;
 	bool pictureTaken;
 	bool bribed; 	//reset after each line
-	bool missingReqs;
+	bool certified;
+	bool done;
 public:
 	Client(int num, int startMoney){
 
 		id = num;
 		ssn = num;
 		money = startMoney;
-        selfIndex = num; //defines position in the customer vector
+		selfIndex = num; //defines position in the customer vector
 		std::cout << "ssn: " << ssn << "  startMoney: " << startMoney << std::endl;
 
 		applicationAccepted = false;
 		pictureTaken = false;
 		bribed = false;
-		missingReqs = false;
+		certified = false;
+		done = false;
 
-		//need to randomize	
+		//randomize	
+		/*while(!done)
+		{
+			int randomLine = rand() % 4;
+			switch(randomLine)
+			{
+				case 0:
+					if(!applicationAccepted)
+					{
+						std::cout << "JOINING APPLICATION LINE-- ID: " << id << std::endl;
+						joinApplicationLine();
+					}
+				break;
+				case 1:
+					if(!pictureTaken)
+					{
+						std::cout << "JOINING APPLICATION LINE-- ID: " << id << std::endl;
+						joinPictureLine();
+					}
+				break;
+				case 2:
+					if(!certified)
+					{
+						std::cout << "JOINING APPLICATION LINE-- ID: " << id << std::endl;
+						joinPassportLine();
+					}
+				break;
+				case 3:
+					joinCashierLine();
+				break;
+			}
+		}*/
+
+		//run in order
 		joinApplicationLine();
-		std::cout << "xxxxxxxxxxxxxCustomer: " << id <<" joining picture line" << std::endl;
+		std::cout << "REACHED, JOINING PICTURE LINE-- ID: " << id << std::endl;
 		joinPictureLine();
-		std::cout << "=======REACHED, JOINGING PASSPORT LINE-- ID: " << id << std::endl;
-
-		//joinPassportLine();
-		missingReqs = false;
-		std::cout << "\nCUSTOMER: " << id << " HAS GONE THROUGH ALL LINES" << std:: endl << std::endl;
-		//joinCashierLine();
-
+		std::cout << "REACHED, JOINING PASSPORT LINE-- ID: " << id << std::endl;
+		joinPassportLine();
+		std::cout << "REACHED, JOINING CASHIER LINE-- ID: " << id << std::endl;
+		joinCashierLine();
+		
+		
+		std::cout << "MADE IT TO THE FUCKING END! -- ID: " << id << std::endl;
 	}//end of client constructor
 
 	~Client(){
-        //Adding code to reindex customers vector after deleting a client
+		//Adding code to reindex customers vector after deleting a client
 
 	}//end of client deconstructor
 
 	void joinApplicationLine()
 	{
-		//std::cout << "customer: " << id << " getting appMonitor lock " << std::endl;
-		AMonitor->AMonitorLock->Acquire();
-		int whichLine = AMonitor->getSmallestLine();
-		AMonitor->giveSSN(whichLine, ssn);
-		if(AMonitor->clerkState[whichLine] == 1){
-			AMonitor->clerkLineCount[whichLine] += 1;
-			AMonitor->clerkLineCV[whichLine]->Wait(AMonitor->AMonitorLock);
-			AMonitor->clerkLineCount[whichLine] -= 1;
-		}	
-		AMonitor->clerkState[whichLine] = 1;
-		//std::cout << "customer: " << id << " releasing appMonitor lock " << std::endl;
-		AMonitor->AMonitorLock->Release();
+		AMonitor->AMonitorLock->Acquire("Customer");
+		int myLine = AMonitor->getSmallestLine();
+		AMonitor->giveSSN(myLine, ssn);
 
+		if(rand()%20)
+		{
 
-		// std::cout << "customer: " << id << " getting appMonitor lock " << std::endl;
-		// AMonitor->AMonitorLock->Acquire();
-		//std::cout << "customer: " << id << " getting clerkLineLock lock " << std::endl;
-		AMonitor->clerkLineLocks[whichLine]->Acquire();
+		}
 
-		//AMonitor->giveSSN(whichLine, ssn);
-		//std::cout << "\nCustomer " << id << "has lock to Application Clerk\n " << whichLine << std::endl;
-		//std::cout << "customer: " << id << " signalling clerkLineLock lock " << std::endl;
-		AMonitor->clerkLineCV[whichLine]->Signal(AMonitor->clerkLineLocks[whichLine]);
-		//std::cout << "customer: " << id << " waiting on clerkLineLock lock " << std::endl;
-		AMonitor->clerkLineCV[whichLine]->Wait(AMonitor->clerkLineLocks[whichLine]);
+		if(AMonitor->clerkState[myLine] == 1)
+		{
+			std::cout << "\nCustomer " << id << " has gotten in regular line for Application Clerk " << myLine << "." << std::endl;
+			AMonitor->clerkLineCount[myLine]++;
+			AMonitor->clerkLineCV[myLine]->Wait("Customer", AMonitor->AMonitorLock);
+			AMonitor->clerkLineCount[myLine]--;
+		}
+
+		AMonitor->clerkState[myLine] = 1;
+		AMonitor->AMonitorLock->Release("Customer");
+
+		AMonitor->clerkLineLocks[myLine]->Acquire("Customer");
+
+		std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Application Clerk\n " << myLine << std::endl;
+
+		AMonitor->clerkLineCV[myLine]->Signal("Customer", AMonitor->clerkLineLocks[myLine]);
+
+		AMonitor->clerkLineCV[myLine]->Wait("Customer", AMonitor->clerkLineLocks[myLine]);
 		applicationAccepted = true;
-		//std::cout << "customer: " << id << " signalling clerkLineLock lock " << std::endl;
-		AMonitor->clerkLineCV[whichLine]->Signal(AMonitor->clerkLineLocks[whichLine]);
-		//std::cout << "customer: " << id << " releasing clerkLineLock lock " << std::endl;
-		AMonitor->clerkLineLocks[whichLine]->Release();
-		//std::cout << "customer: " << id << " releasing applMonitor lock " << std::endl;
-		//AMonitor->AMonitorLock->Release();
-		//std::cout << "\n\n\nCustomer: " << id << " is out of application line\n\n" << std::endl;
+		AMonitor->clerkLineCV[myLine]->Signal("Customer", AMonitor->clerkLineLocks[myLine]);
+		AMonitor->clerkLineLocks[myLine]->Release("Customer");
 	}	
 
 	void joinPictureLine()
 	{
-		std::cout << "customer: " << id << " getting picMonitor lock " << std::endl;
-		PMonitor->PMonitorLock->Acquire();
-		int whichLine = PMonitor->getSmallestLine();
-		PMonitor->giveSSN(whichLine, ssn);
-		if(PMonitor->clerkState[whichLine] == 1){
-			PMonitor->clerkLineCount[whichLine] += 1;
-			PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->PMonitorLock);
-			PMonitor->clerkLineCount[whichLine] -= 1;
-		}	
-		PMonitor->clerkState[whichLine] = 1;
-		std::cout << "customer: " << id << " releasing picMonitor lock " << std::endl;
-		PMonitor->PMonitorLock->Release();
+		PMonitor->PMonitorLock->Acquire("Customer");
+		int myLine = PMonitor->getSmallestLine();
+		PMonitor->giveSSN(myLine, ssn);
 
+		if(PMonitor->clerkState[myLine] == 1)
+		{
+			std::cout << "\nCustomer " << id << " has gotten in regular line for Picture Clerk " << myLine << "." << std::endl;
+			PMonitor->clerkLineCount[myLine]++;
+			PMonitor->clerkLineCV[myLine]->Wait("Customer", PMonitor->PMonitorLock);
+			PMonitor->clerkLineCount[myLine]--;
+		}
 
-		// std::cout << "customer: " << id << " getting picMonitor lock " << std::endl;
-		// PMonitor->PMonitorLock->Acquire();
-		std::cout << "customer: " << id << " getting clerkLineLock lock " << std::endl;
-		PMonitor->clerkLineLocks[whichLine]->Acquire();
+		PMonitor->clerkState[myLine] = 1;
+		PMonitor->PMonitorLock->Release("Customer");
 
-		//PMonitor->giveSSN(whichLine, ssn);
-		std::cout << "\nCustomer " << id << "has lock to picture Clerk\n " << whichLine << std::endl;
-		std::cout << "customer: " << id << " signalling clerkLineLock lock " << std::endl;
-		PMonitor->clerkLineCV[whichLine]->Signal(PMonitor->clerkLineLocks[whichLine]);
-		std::cout << "customer: " << id << " waiting on clerkLineLock lock " << std::endl;
-		PMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);
-		applicationAccepted = true;
-		std::cout << "customer: " << id << " signalling clerkLineLock lock " << std::endl;
-		PMonitor->clerkLineCV[whichLine]->Signal(PMonitor->clerkLineLocks[whichLine]);
-		std::cout << "customer: " << id << " releasing clerkLineLock lock " << std::endl;
-		PMonitor->clerkLineLocks[whichLine]->Release();
-		std::cout << "customer: " << id << " releasing picMonitor lock " << std::endl;
-		//PMonitor->AMonitorLock->Release();
-		std::cout << "\n\n\nCustomer: " << id << " is out of picture line\n\n" << std::endl;
+		PMonitor->clerkLineLocks[myLine]->Acquire("Customer");
+
+		std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Picture Clerk\n " << myLine << std::endl;
+
+		PMonitor->clerkLineCV[myLine]->Signal("Customer", PMonitor->clerkLineLocks[myLine]);
+
+		PMonitor->clerkLineCV[myLine]->Wait("Customer", PMonitor->clerkLineLocks[myLine]);
+		pictureTaken = true;
+		PMonitor->clerkLineCV[myLine]->Signal("Customer", PMonitor->clerkLineLocks[myLine]);
+		PMonitor->clerkLineLocks[myLine]->Release("Customer");
 
 	}
 
-    void joinPassportLine() {
-        PPMonitor->PPMonitorLock->Acquire();
-        int whichLine = PPMonitor->getSmallestLine();
-        PPMonitor->clerkLineCount[whichLine] += 1;
-        PPMonitor->clerkLineLocks[whichLine]->Acquire();
-        
-        PPMonitor->giveSSN(whichLine, ssn);
-        int completed = 0;
-        if(applicationAccepted)
-        {
-            completed++;
-        }
-        if(pictureTaken)
-        {
-            completed++;
-        }
+	void joinPassportLine() {
+		
 
-        PPMonitor->giveReqs(whichLine, completed);
-        std::cout << "Customer " << id << " has gotten in regular line for Passport Clerk " << whichLine << "." << std::endl;
-        std::cout << "Customer " << id << " has given id " << id << " to Passport Clerk " << whichLine << std::endl;
-        PPMonitor->clerkLineCV[whichLine]->Signal(PPMonitor->clerkLineLocks[whichLine]);
-        PPMonitor->clerkLineCV[whichLine]->Wait(PPMonitor->clerkLineLocks[whichLine]);
-        PPMonitor->clerkLineCV[whichLine]->Signal(PPMonitor->clerkLineLocks[whichLine]);
-        if(missingReqs){
-        	if(!applicationAccepted){
-        		joinApplicationLine();
-        	}
-        	if(!pictureTaken){
-        		joinPictureLine();
-        	}
-        	joinPassportLine();	
-        }//end of if need to get additional reqs
-        PPMonitor->clerkLineLocks[whichLine]->Release();
-        PPMonitor->PPMonitorLock->Release();
-        std::cout << "customer: " << id << " is out of passport line" << std::endl;
-    }
+		PPMonitor->MonitorLock->Acquire("Customer");
+		int myLine = PPMonitor->getSmallestLine();
+		PPMonitor->giveSSN(myLine, ssn);
+		PPMonitor->giveReqs(myLine, ssn);
+
+		if(PPMonitor->clerkState[myLine] == 1)
+		{
+			std::cout << "\nCustomer " << id << " has gotten in regular line for Picture Clerk " << myLine << "." << std::endl;
+			PPMonitor->clerkLineCount[myLine]++;
+			PPMonitor->clerkLineCV[myLine]->Wait("Customer", PPMonitor->MonitorLock);
+			PPMonitor->clerkLineCount[myLine]--;
+		}
+
+		PPMonitor->clerkState[myLine] = 1;
+		PPMonitor->MonitorLock->Release("Customer");
+		PPMonitor->clerkLineLocks[myLine]->Acquire("Customer");
+		std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Picture Clerk\n " << myLine << std::endl;
+		PPMonitor->clerkLineCV[myLine]->Signal("Customer", PPMonitor->clerkLineLocks[myLine]);
+		PPMonitor->clerkLineCV[myLine]->Wait("Customer", PPMonitor->clerkLineLocks[myLine]);
+		certified = true;
+		PPMonitor->clerkLineCV[myLine]->Signal("Customer", PPMonitor->clerkLineLocks[myLine]);
+		PPMonitor->clerkLineLocks[myLine]->Release("Customer");
+	}
 
 
 	void joinCashierLine()
 	{
-		CMonitor->MonitorLock->Acquire();
-        int whichLine = CMonitor->getSmallestLine();
-		std::cout << whichLine << std::endl;
-		CMonitor->clerkLineCount[whichLine] += 1;
-		CMonitor->giveSSN(whichLine, ssn);
-		CMonitor->giveCertification(whichLine, true);
-		std::cout << "Customer " << id << " has gotten in regular line for Cashier Clerk " << whichLine << "." << std::endl;
-		CMonitor->clerkLineLocks[whichLine]->Acquire();
-        CMonitor->MonitorLock->Release();
-        CMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);
-        std::cout << "Customer " << id << " has given SSN " << ssn << " to Cashier Clerk " << whichLine << std::endl;
-        CMonitor->clerkLineCV[whichLine]->Signal(PMonitor->clerkLineLocks[whichLine]);
-        CMonitor->clerkLineCV[whichLine]->Wait(PMonitor->clerkLineLocks[whichLine]);
-		pictureTaken = true;
-        CMonitor->clerkLineLocks[whichLine]->Release();
+		CMonitor->MonitorLock->Acquire("Customer");
+		int myLine = CMonitor->getSmallestLine();
+		CMonitor->giveSSN(myLine, ssn);
+
+		if(CMonitor->clerkState[myLine] == 1)
+		{
+			std::cout << "\nCustomer " << id << " has gotten in regular line for Cashier " << myLine << "." << std::endl;
+			CMonitor->clerkLineCount[myLine]++;
+			CMonitor->clerkLineCV[myLine]->Wait("Customer", CMonitor->MonitorLock);
+			CMonitor->clerkLineCount[myLine]--;
+		}
+		CMonitor->clerkState[myLine] = 1;
+		CMonitor->MonitorLock->Release("Customer");
+		CMonitor->clerkLineLocks[myLine]->Acquire("Customer");
+		std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Cashier\n " << myLine << std::endl;
+		CMonitor->clerkLineCV[myLine]->Signal("Customer", CMonitor->clerkLineLocks[myLine]);
+		CMonitor->clerkLineCV[myLine]->Wait("Customer", CMonitor->clerkLineLocks[myLine]);
+		done = true;
+		CMonitor->clerkLineCV[myLine]->Signal("Customer", CMonitor->clerkLineLocks[myLine]);
+		CMonitor->clerkLineLocks[myLine]->Release("Customer");
 	}
 
-	void reqsNotMet(bool b){
-		missingReqs = b;
-	}
 
 	void moveUpInLine(){
 		if(money >= 600){
@@ -987,9 +985,9 @@ public:
 		pictureTaken = b;
 	}
 
-    int getselfIndex () {
-        return selfIndex;
-    }
+	int getselfIndex () {
+		return selfIndex;
+	}
 
 
 	bool isAppAccepted(){
@@ -1024,55 +1022,50 @@ public:
 		clerkMoney = 0;
 		myLine = n;
 
+		run();
 	}//end of constructor
 
 	~ApplicationClerk(){
 
 	}//endo of deconstructor
 
-	void run(){		
+	void run()
+	{		
 		while(true)
 		{
-			// std::cout << "appClerk: " << myLine << " getting appMonitor lock " << std::endl;
-			AMonitor->AMonitorLock->Acquire();
-			// std::cout << "appClerk: " << myLine << " getting clerkLineLock lock " << std::endl;
-			// AMonitor->clerkLineLocks[myLine]->Acquire();
-
+			AMonitor->AMonitorLock->Acquire("Application Clerk");
 			if(AMonitor->clerkBribeLineCount[myLine] > 0)
 			{
-				//AMonitor->clerkBribeLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]);
-				//AMonitor->clerkState[myLine] = 1;
-			}
-			else if(AMonitor->clerkLineCount[myLine] > 0)
-			{       //if bribe line is empty
-				// std::cout << "appClerk: " << myLine << " signalling appMonitor lock " << std::endl;
-				AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]); 
+				std::cout << "\nApplication Clerk"  << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				AMonitor->clerkBribeLineCV[myLine]->Signal("Application Clerk", AMonitor->AMonitorLock);
 				AMonitor->clerkState[myLine] = 1;
 			}
-			else{
-				AMonitor->clerkState[myLine] = 2; // go on break
+			else if(AMonitor->clerkLineCount[myLine] > 0)
+			{
+				AMonitor->clerkLineCV[myLine]->Signal("Application Clerk", AMonitor->AMonitorLock);
+				std::cout << "\nApplication Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				AMonitor->clerkState[myLine] = 1;
 			}
-			 // std::cout << "appClerk: " << myLine << " getting clerkLine Lock after else" << std::endl;
-			 AMonitor->clerkLineLocks[myLine]->Acquire();  
-			// std::cout << "appClerk: " << myLine << " releasing appMonitor lock " << std::endl;
-			AMonitor->AMonitorLock->Release();
-			//wait for customer data
-			// std::cout << "appClerk: " << myLine << " waiting on clerkLine lock for customer data" << std::endl;
-			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]); 
+			else
+			{
+				AMonitor->clerkState[myLine] = 2;
+			}
 
-			//if(AMonitor->clerkLineCount[myLine] != 0){
-				// std::cout << "Application Clerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
-				//		" from Customer " << AMonitor->clientSSNs[myLine].front() << "." << std::endl;
-				AMonitor->clientSSNs[myLine].pop();				
-				//AMonitor->clerkLineCount[myLine]--;
-				// std::cout << "" << AMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
-			//}//end of if empty line
-			// std::cout << "appClerk: " << myLine << " signalling clerkLine lock " << std::endl;
-			AMonitor->clerkLineCV[myLine]->Signal(AMonitor->clerkLineLocks[myLine]); 
-			// std::cout << "appClerk: " << myLine << " waiting on clerkLine lock " << std::endl;
-			AMonitor->clerkLineCV[myLine]->Wait(AMonitor->clerkLineLocks[myLine]); 
-			// std::cout << "appClerk: " << myLine << " releasing clerkLine lock " << std::endl;
-			AMonitor->clerkLineLocks[myLine]->Release();
+			AMonitor->clerkLineLocks[myLine]->Acquire("Application Clerk");
+			AMonitor->AMonitorLock->Release("Application Clerk");
+
+			AMonitor->clerkLineCV[myLine]->Wait("Application Clerk", AMonitor->clerkLineLocks[myLine]);
+
+			
+			AMonitor->clerkLineCV[myLine]->Signal("Application Clerk", AMonitor->clerkLineLocks[myLine]);
+			std::cout << "\nApplication Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+			
+			
+			AMonitor->clerkLineCV[myLine]->Wait("Application Clerk", AMonitor->clerkLineLocks[myLine]);
+			std::cout << "\nApplication Clerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
+						" from Customer " << AMonitor->clientSSNs[myLine].front() << "." << std::endl;
+			
+			AMonitor->clerkLineLocks[myLine]->Release("Application Clerk");			
 		
 		}
 		
@@ -1088,8 +1081,8 @@ public:
 	}//end of setting clerkState
 
 	void setselfIndex (int i) {
-        myLine = i;
-    } //Setter for self-index
+		myLine = i;
+	} //Setter for self-index
 
 	int getLineCount()
 	{
@@ -1157,48 +1150,37 @@ public:
 
 	void run(){	
 		while(true)
-		{
-			
-			// std::cout << "pictureClerk: " << myLine << " getting picMonitor lock " << std::endl;
-			PMonitor->PMonitorLock->Acquire();
-			// std::cout << "pictureClerk: " << myLine << " getting clerkLineLock lock " << std::endl;
-			PMonitor->clerkLineLocks[myLine]->Acquire();
-
+		{			
+			PMonitor->PMonitorLock->Acquire("Picture Clerk");
 			if(PMonitor->clerkBribeLineCount[myLine] > 0)
 			{
-				//PMonitor->clerkBribeLineCV[myLine]->Signal(PMonitor->clerkLineLocks[myLine]);
-				//PMonitor->clerkState[myLine] = 1;
-			}
-			else if(PMonitor->clerkLineCount[myLine] > 0)
-			{       //if bribe line is empty
-				// std::cout << "pictureClerk: " << myLine << " signalling picMonitor lock " << std::endl;
-				PMonitor->clerkLineCV[myLine]->Signal(PMonitor->clerkLineLocks[myLine]); 
+				std::cout << "\nPicture Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				PMonitor->clerkBribeLineCV[myLine]->Signal("Picture Clerk", PMonitor->PMonitorLock);
 				PMonitor->clerkState[myLine] = 1;
 			}
-			else{
-				PMonitor->clerkState[myLine] = 2; // go on break
+			else if(PMonitor->clerkLineCount[myLine] > 0)
+			{
+				PMonitor->clerkLineCV[myLine]->Signal("Picture Clerk", PMonitor->PMonitorLock);
+				std::cout << "\nPictureClerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				PMonitor->clerkState[myLine] = 1;
 			}
-			// std::cout << "pictureClerk: " << myLine << " releasing clerkLine Lock after else" << std::endl;
-			PMonitor->clerkLineLocks[myLine]->Release();  
-			// std::cout << "pictureClerk: " << myLine << " releasing picMonitor lock " << std::endl;
-			PMonitor->PMonitorLock->Release();
-			//wait for customer data
-			// std::cout << "pictureClerk: " << myLine << " waiting on clerkLine lock for customer data" << std::endl;
-			PMonitor->clerkLineCV[myLine]->Wait(PMonitor->clerkLineLocks[myLine]); 
+			else
+			{
+				PMonitor->clerkState[myLine] = 2;
+			}
 
-			//if(PMonitor->clerkLineCount[myLine] != 0){
-				// std::cout << "Picture Clerk " << myLine << " has received id " << PMonitor->clientSSNs[myLine].front() <<
-				//		" from Customer " << PMonitor->clientSSNs[myLine].front() << "." << std::endl;
-				PMonitor->clientSSNs[myLine].pop();				
-				//PMonitor->clerkLineCount[myLine]--;
-				// std::cout << "" << PMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
-			//}//end of if empty line
-			// std::cout << "pictureClerk: " << myLine << " signalling clerkLine lock " << std::endl;
-			PMonitor->clerkLineCV[myLine]->Signal(PMonitor->clerkLineLocks[myLine]); 
-			// std::cout << "pictureClerk: " << myLine << " waiting on clerkLine lock " << std::endl;
-			PMonitor->clerkLineCV[myLine]->Wait(PMonitor->clerkLineLocks[myLine]); 
-			// std::cout << "pictureClerk: " << myLine << " releasing clerkLine lock " << std::endl;
-			PMonitor->clerkLineLocks[myLine]->Release();
+			PMonitor->clerkLineLocks[myLine]->Acquire("Picture Clerk");
+			PMonitor->PMonitorLock->Release("Picture Clerk");
+
+			PMonitor->clerkLineCV[myLine]->Wait("Picture Clerk", PMonitor->clerkLineLocks[myLine]);
+
+			PMonitor->clerkLineCV[myLine]->Signal("Picture Clerk", PMonitor->clerkLineLocks[myLine]);			
+			std::cout << "\nPicture Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+			
+			PMonitor->clerkLineCV[myLine]->Wait("Picture Clerk", PMonitor->clerkLineLocks[myLine]);
+			std::cout << "\nPicture Clerk " << myLine << " has received SSN " << PMonitor->clientSSNs[myLine].front() <<
+						" from Customer " << PMonitor->clientSSNs[myLine].front() << "." << std::endl;
+			PMonitor->clerkLineLocks[myLine]->Release("Picture Clerk");	
 		}//end of while
 		
 	}
@@ -1213,8 +1195,8 @@ public:
 	}//end of setting clerkState
 
 	void setselfIndex (int i) {
-        myLine = i;
-    } //Setter for self-index
+		myLine = i;
+	} //Setter for self-index
 
 	int getLineCount()
 	{
@@ -1282,30 +1264,49 @@ public:
 	{	
 		while(true)
 		{
-			PPMonitor->PPMonitorLock->Acquire();
-			std::cout << "\n\naquiring clerkLineLocks[myLine]  from PPMonitor in PassportClerk run()." << std::endl;
-			std::cout << "myLine: " << myLine << std::endl << std::endl;
-			PPMonitor->clerkLineLocks[myLine]->Acquire();
-
+			PPMonitor->MonitorLock->Acquire("Passport Clerk");
 			if(PPMonitor->clerkBribeLineCount[myLine] > 0)
 			{
-				//PPMonitor->clerkBribeLineCV[myLine]->Signal(PPMonitor->clerkLineLocks[myLine]);
-				//PPMonitor->clerkState[myLine] = 1;
-			}
-			else if(PPMonitor->clerkLineCount[myLine] > 0)
-			{       //if bribe line is empty
-
-				PPMonitor->clerkLineCV[myLine]->Signal(PPMonitor->clerkLineLocks[myLine]); 
+				std::cout << "\nPassport Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				PPMonitor->clerkBribeLineCV[myLine]->Signal("Passport Clerk", PPMonitor->MonitorLock);
 				PPMonitor->clerkState[myLine] = 1;
 			}
-			else{
-				PPMonitor->clerkState[myLine] = 2; // on break
+			else if(PPMonitor->clerkLineCount[myLine] > 0)
+			{
+				PPMonitor->clerkLineCV[myLine]->Signal("Passport Clerk", PPMonitor->MonitorLock);
+				std::cout << "\nPassport Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				PPMonitor->clerkState[myLine] = 1;
 			}
-			PPMonitor->clerkLineLocks[myLine]->Acquire();  
-			PPMonitor->PPMonitorLock->Release();
-			PPMonitor->clerkLineCV[myLine]->Wait(PPMonitor->clerkLineLocks[myLine]); 
+			else
+			{
+				PPMonitor->clerkState[myLine] = 2;
+			}
 
-			if(PPMonitor->clerkLineCount[myLine] != 0){
+			PPMonitor->clerkLineLocks[myLine]->Acquire("Passport Clerk");
+			PPMonitor->MonitorLock->Release("Passport Clerk");
+
+			PPMonitor->clerkLineCV[myLine]->Wait("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
+
+			PPMonitor->clerkLineCV[myLine]->Signal("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
+			std::cout << "\nPassport  Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+			
+			PPMonitor->clerkLineCV[myLine]->Wait("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
+
+			if(PPMonitor->customerReqs[myLine].front() != 2)
+			{
+				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << PPMonitor->customerSSNs[myLine].front() << " does not have both their application and picture completed." << std::endl;
+			}
+			else
+			{
+				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << PPMonitor->customerSSNs[myLine].front() << " has both their application and picture completed." << std::endl;				
+				std::cout << "\nPassport  Clerk " << myLine << " has received SSN " << PPMonitor->clientSSNs[myLine].front() <<
+						" from Customer " << PPMonitor->clientSSNs[myLine].front() << "." << std::endl;
+				std::cout << "Passport Clerk " << myLine << " has recorded Customer " << PPMonitor->customerSSNs[myLine].front() << " passport information." << std::endl;
+			}
+
+			PPMonitor->clerkLineLocks[myLine]->Release("Passport  Clerk");	
+
+			/*if(PPMonitor->clerkLineCount[myLine] != 0){
 				std::cout << "Passport Clerk " << myLine << " has received id: " << PPMonitor->clientSSNs[myLine].front() <<
 						" from Customer " << PPMonitor->clientSSNs[myLine].front() << "." << std::endl;
 				std::cout << "Passport Clerk " << myLine << " has received reqs: " << PPMonitor->clientReqs[myLine].front() <<
@@ -1324,9 +1325,9 @@ public:
 				PPMonitor->clerkLineCount[myLine]--;
 				std::cout << "" << PPMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
 			}//end of if empty line
-			PPMonitor->clerkLineCV[myLine]->Signal(PPMonitor->clerkLineLocks[myLine]); 
-			PPMonitor->clerkLineCV[myLine]->Wait(PPMonitor->clerkLineLocks[myLine]); 
-			PPMonitor->clerkLineLocks[myLine]->Release();
+			PPMonitor->clerkLineCV[myLine]->Signal("", PPMonitor->clerkLineLocks[myLine]); 
+			PPMonitor->clerkLineCV[myLine]->Wait("", PPMonitor->clerkLineLocks[myLine]); 
+			PPMonitor->clerkLineLocks[myLine]->Release("");*/
 		
 		}//end of while
 	}
@@ -1402,8 +1403,40 @@ public:
 	}//end of deconstructor
 
 	void run(){	
-		while(true){
+		
+		while(true)
+		{
+			CMonitor->MonitorLock->Acquire("Cashier");			
+			if(CMonitor->clerkBribeLineCount[myLine] > 0)
+			{
+				std::cout << "\nCashier " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				CMonitor->clerkBribeLineCV[myLine]->Signal("Cashier", CMonitor->MonitorLock);
+				CMonitor->clerkState[myLine] = 1;
+			}
+			if(CMonitor->clerkLineCount[myLine] > 0)
+			{
+				std::cout << "\nCashier " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				CMonitor->clerkLineCV[myLine]->Signal("Cashier", CMonitor->MonitorLock);
+				CMonitor->clerkState[myLine] = 1;
+			}
+			else
+			{
+				CMonitor->clerkState[myLine] = 2;
+			}
 
+			CMonitor->clerkLineLocks[myLine]->Acquire("Cashier");
+			CMonitor->MonitorLock->Release("Cashier");
+
+			CMonitor->clerkLineCV[myLine]->Wait("Cashier", CMonitor->clerkLineLocks[myLine]);
+
+			CMonitor->clerkLineCV[myLine]->Signal("Cashier", CMonitor->clerkLineLocks[myLine]);
+			std::cout << "\nCashier " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+			
+			CMonitor->clerkLineCV[myLine]->Wait("Cashier", CMonitor->clerkLineLocks[myLine]);
+			std::cout << "\nCashier " << myLine << " has received SSN " << CMonitor->clientSSNs[myLine].front() <<
+						" from Customer " << CMonitor->clientSSNs[myLine].front() << "." << std::endl;
+
+			CMonitor->clerkLineLocks[myLine]->Release("Cashier");	
 		}//end of while
 		
 	}//end of run
@@ -1482,7 +1515,7 @@ public:
 	void wakeupClerks(){
 
 	}//end of waking up clerks
-    
+	
 	void updateTotalMoney(){
 		pClerkMoney = 0;
 		aClerkMoney = 0;
@@ -1503,35 +1536,35 @@ public:
 		totalMoney = pClerkMoney + aClerkMoney + ppClerkMoney + cClerkMoney;
 	}//end of updating total money 
 
-    int getaClerkMoney() {
-        updateTotalMoney();
-        std::cout << "Manager has counted a total of $" << aClerkMoney << " for ApplicationClerks" << std::endl;
-        return aClerkMoney;
-    }
-    
-    int getpClerkMoney() {
-        updateTotalMoney();
-        std::cout << "Manager has counted a total of $" << pClerkMoney << " for PictureClerks" << std::endl;
-        return pClerkMoney;
-    }
-    
-    int getppClerkMoney() {
-        updateTotalMoney();
-        std::cout << "Manager has counted a total of $" << ppClerkMoney << " for PassportClerks" << std::endl;
-        return ppClerkMoney;
-    }
-    
-    int getcClerkMoney() {
-        updateTotalMoney();
-        std::cout << "Manager has counted a total of $" << cClerkMoney << " for Cashiers" << std::endl;
-        return cClerkMoney;
-    }
-    
-    int gettotalMoney() {
-        updateTotalMoney();
-        std::cout << "Manager has counted a total of $" << totalMoney << " for the passport office" << std::endl;
-        return totalMoney;
-    } //End of getters for different clerk money
+	int getaClerkMoney() {
+		updateTotalMoney();
+		std::cout << "Manager has counted a total of $" << aClerkMoney << " for ApplicationClerks" << std::endl;
+		return aClerkMoney;
+	}
+	
+	int getpClerkMoney() {
+		updateTotalMoney();
+		std::cout << "Manager has counted a total of $" << pClerkMoney << " for PictureClerks" << std::endl;
+		return pClerkMoney;
+	}
+	
+	int getppClerkMoney() {
+		updateTotalMoney();
+		std::cout << "Manager has counted a total of $" << ppClerkMoney << " for PassportClerks" << std::endl;
+		return ppClerkMoney;
+	}
+	
+	int getcClerkMoney() {
+		updateTotalMoney();
+		std::cout << "Manager has counted a total of $" << cClerkMoney << " for Cashiers" << std::endl;
+		return cClerkMoney;
+	}
+	
+	int gettotalMoney() {
+		updateTotalMoney();
+		std::cout << "Manager has counted a total of $" << totalMoney << " for the passport office" << std::endl;
+		return totalMoney;
+	} //End of getters for different clerk money
 
 }; //end of manager class
 
@@ -1589,51 +1622,49 @@ void createCustomer(){
 	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
 	ssnCount++;
 	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);	 
-    customers.push_back(c);
+	customers.push_back(c);
 }//end of making customer
 
 void createApplicationClerk(){
-    ApplicationClerk *ac = new ApplicationClerk(applicationClerkID);
-    applicationClerkID++;
-    aClerks.push_back(ac);
-    std::cout << " << CREATED ApplicationClerk " << std::endl;
-    ac->run();
+	ApplicationClerk *ac = new ApplicationClerk(applicationClerkID);
+	applicationClerkID++;
+	aClerks.push_back(ac);
+
 }//end of making application clerk
 
 void createPassportClerk(){
-    PassportClerk *ppc = new PassportClerk(passportClerkID);
-    passportClerkID++;
-    ppClerks.push_back(ppc);
-    ppc->run();
+	PassportClerk *ppc = new PassportClerk(passportClerkID);
+	passportClerkID++;
+	ppClerks.push_back(ppc);
 }//end of making PassportClerk
 
 
 void createPictureClerk(){
-    PictureClerk *pc = new PictureClerk(pictureClerkID);
-    pictureClerkID++;
-    pClerks.push_back(pc);
-    pc->run();
+	PictureClerk *pc = new PictureClerk(pictureClerkID);
+	pictureClerkID++;
+	pClerks.push_back(pc);
+
 
 }//end of making picture clerk
 
 
 void createCashier()
 {
-    Cashier *cashier = new Cashier(cClerks.size());
-    cClerks.push_back(cashier);
+	Cashier *cashier = new Cashier(cClerks.size());
+	cClerks.push_back(cashier);
 	cashier->run();
 }//end of making cashier clerk
 
 void makeManager(){
-    Manager *m = new Manager();
+	Manager *m = new Manager();
 
 }//end of making manager
 
 void makeSenator(){
-    int rdmMoneyIndex = rand()%4;
-    std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
-    senatorID++;
-    Senator *s = new Senator(senatorID, clientStartMoney[rdmMoneyIndex]);
+	int rdmMoneyIndex = rand()%4;
+	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
+	senatorID++;
+	Senator *s = new Senator(senatorID, clientStartMoney[rdmMoneyIndex]);
 
 }//end of making senator
 
@@ -1653,7 +1684,7 @@ void Problem2(){
 		std::cin >> num_of_people;  
 		//num_of_people = checkInput(input, 20, 50);
 		if(!std::cin.fail()){
-			if(num_of_people >= 20 && num_of_people <= 50){
+			if(num_of_people >= 1 && num_of_people <= 50){
 				customer_thread_num = num_of_people;
 				acceptInput = true;
 			}
@@ -1731,22 +1762,22 @@ void Problem2(){
 		}
 	}//end of while
 
-     acceptInput = false;
-    while(!acceptInput){
-        std::cout << "Menu :: How many Senators? (1 - 10)" << std::endl;
-        std::cout << "Input: " << std::endl;
-        std::cin >> num_of_people;  
-        //num_of_people = checkInput(input, 1, 5);
-        if(!std::cin.fail()){
-            if(num_of_people >= 1 && num_of_people <= 10){
-                senator_thread_num = num_of_people;
-                acceptInput = true;
-            }//end of if
-        }//end of if    
-        else{
-            std::cout << " >> Error!  Input not accepted.  " << std::endl;
-        }
-    }//end of while
+	 acceptInput = false;
+	while(!acceptInput){
+		std::cout << "Menu :: How many Senators? (1 - 10)" << std::endl;
+		std::cout << "Input: " << std::endl;
+		std::cin >> num_of_people;  
+		//num_of_people = checkInput(input, 1, 5);
+		if(!std::cin.fail()){
+			if(num_of_people >= 1 && num_of_people <= 10){
+				senator_thread_num = num_of_people;
+				acceptInput = true;
+			}//end of if
+		}//end of if    
+		else{
+			std::cout << " >> Error!  Input not accepted.  " << std::endl;
+		}
+	}//end of while
 
 	AMonitor = new ApplicationMonitor(applicationClerk_thread_num, customer_thread_num);
 	PMonitor = new PictureMonitor(pictureClerk_thread_num, customer_thread_num);
@@ -1763,18 +1794,18 @@ void Problem2(){
 		t->Fork((VoidFunctionPtr)createApplicationClerk, i+1);
 	}//end of creating application clerk threads
 
-	 std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
-    for(int i = 0; i < pictureClerk_thread_num; i++){
-        Thread *t = new Thread("picture clerk thread");
-        t->Fork((VoidFunctionPtr)createPictureClerk, i+1);
-    }//end of creating picture clerk threads
 
-    // std::cout << "reached.  PassportClerk_thread_num: " << passportClerk_thread_num << std::endl; 
-    // for(int i = 0; i < passportClerk_thread_num; i++){
-    //     Thread *t = new Thread("passport clerk thread");
-    //     t->Fork((VoidFunctionPtr)createPassportClerk, i+1);
-    // }//end of creating passPort clerk threads
+	std::cout << "reached.  PassportClerk_thread_num: " << passportClerk_thread_num << std::endl; 
+	for(int i = 0; i < passportClerk_thread_num; i++){
+		Thread *t = new Thread("passport clerk thread");
+		t->Fork((VoidFunctionPtr)createPassportClerk, i+1);
+	}//end of creating passPort clerk threads
 
+	std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
+	for(int i = 0; i < pictureClerk_thread_num; i++){
+		Thread *t = new Thread("picture clerk thread");
+		t->Fork((VoidFunctionPtr)createPictureClerk, i+1);
+	}//end of creating picture clerk threads
 
 	// std::cout << "reached.  cashier_thread_num: " << cashier_thread_num << std::endl; 
  //    for(int i = 0; i < cashier_thread_num; i++){
@@ -1794,11 +1825,11 @@ void Problem2(){
  //        t->Fork((VoidFunctionPtr)makeSenator, i+1);
  //    }  //end of creating senator threads
 
-    std::cout << "reached.  customer_thread_num: " << customer_thread_num << std::endl; 
+	std::cout << "reached.  customer_thread_num: " << customer_thread_num << std::endl; 
 	for(int i = 0; i < customer_thread_num; i++){
 		Thread *t = new Thread("customer thread");			
 		t->Fork((VoidFunctionPtr)createCustomer, i+1);
 		
 	}//end of creating client threads
-	return;
+
 }//end of problem 2
