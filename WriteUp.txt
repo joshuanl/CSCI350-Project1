@@ -137,34 +137,59 @@ How to test
 Run the following command:
 nachos-P2
 We will perform the following tests:
-1. A menu will print in the command line, from which we can select one of the test cases:
-Test:
+1. You should be able to enter the number of clients and all different types of clerks and senators in the command prompt and verify that the number you entered is the number that the simulation produced.
+Test: Run the simulation and interract with the input. You can follow the instructions and choose the allowable values of each type of thread, or verify that error-capture is working correctly.
 Expected Output:
+View a menu that allows you to enter through command line the number of customers, clerks, and senators.
 2. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
-Test:
+Test: Run the simulation and verify that the each customer you created is joining the shortest line. Now, create 2 customers and verify that they do not both join the same shortest line at the same time based on the output.
 Expected Output:
+Customer [identifier] has gotten in regular line for ApplicationClerk [identifier].
+Customer [identifier] has gotten in regular line for PictureClerk [identifier].
+Customer [identifier] has gotten in regular line for PassportClerk [identifier].
+Customer [identifier] has gotten in regular line for Cashier [identifier].
 3. Managers only read one from one Clerk's total money received, at a time.
-Test:
+Test: Run the simulation, and observe the nature of the output. Due to the way that the money system is coded, it is not possible for the managers to read from more than one clerk's total money received at a time.
 Expected Output:
-4. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area
-Test:
+Manager has counted a total of $[amount of money] for ApplicationClerks
+Manager has counted a total of $[amount of money] for PictureClerks
+Manager has counted a total of $[amount of money] for PassportClerks
+Manager has counted a total of $[amount of money] for Cashiers
+4. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area.
+Test:Create customers in the simulation, and verify that they have gone through each state prior to receiving a passport from the cashier. Once you view the message that the cashier has given the customer with the identifier their passport, watch for a message from the same customer that they are leaving the passport office. Only after that message is printed can the cashier become available for a new customer.
 Expected Output:
+Cashier [identifier] has provided Customer[identifier] their completed passport
+Cashier [identifier] has provided Customer[identifier] their completed passport
+Customer [identifier] is leaving the Passport Office.
+Cashier [identifier] has signalled a Customer to come to their counter.
 5. Clerks go on break when they have no one waiting in their line
-Test:
+Test: Create intentionally fewer customers, like 1-2. Watch the clerks who are currently not interacting with the customers to verify whether or not the clerks should go on break. 
 Expected Output:
+XXClerk [identifier] is going on break
 6. Managers get Clerks off their break when lines get too long
-Test:
+Test: Verify that when a clerk is on break, if there are 3 or more people in the line, that the manager correctly identifies the clerk tied to the line and wakes the clerk from sleep.
 Expected Output:
+XXClerk [identifier] is going on break
+Customer [identifier] has gotten in regular line for XXClerk [identifier]
+Customer [identifier] has gotten in regular line for XXClerk [identifier]
+Customer [identifier] has gotten in regular line for XXClerk [identifier]
+Customer [identifier] has gotten in regular line for XXClerk [identifier]
+Manager has woken up a XXClerk
+XXClerk [identifier] is coming off break
 7. Total sales never suffers from a race condition
-Test:
-Expected Output:
+Test: Run the simulation, verify that there are no race conditions. Due to the nature of the money system, there should not be.
+Expected Output: N/A
 8. The behavior of Customers is proper when Senators arrive. This is before, during, and after.
-Test:
-Expected Output:
+Test: Run the simulation, add a senator. Verify that customers are acting normally prior to the senator, that they leave the building when the senator arrives, and when he leaves the customers return back to normal.
+Expected Output (One of many possible examples):
+Cashier [identifier] has signalled a Customer to come to their counter.
+Customer [identifier] has given Cashier [identifier] $100.
+Senator [identifier] has gotten in regular line for ApplicationClerk [identifier].
+Customer [identifier] is going outside the Passport Office because their is a Senator present.
 
 VI. Discussion
 Experiment Expectation (What is supposed to happen)
-1. A menu will print in the command line, from which we can select one of the test cases:
+1. You should be able to enter the number of clients and all different types of clerks and senators in the command prompt and verify that the number you entered is the number that the simulation produced.
 2. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
 3. Managers only read one from one Clerk's total money received, at a time.
 4. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area
