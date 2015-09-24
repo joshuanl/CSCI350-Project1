@@ -128,5 +128,59 @@ void Lock::Acquire() in synch.cc acquires the lock if possible and sets the owne
 void Lock::Release() in synch.cc releases the lock if possible, sets the owner thread to null, and sets the lock state to available.
 Condition::Condition(char* debugName) in synch.cc is the constructor and initializes the debugName, waitingLock, and queue.
 Condition::~Condition() in synch.cc is the condition destructor.
-void Condition::Wait(Lock* conditionLock) disables interrupts, waits for the condition, adds the current thread to the queue, releases the lock, puts the current thread to sleep, acquires the conditionLock, and then re-enables interrupt. 
+void Condition::Wait(Lock* conditionLock) disables interrupts, waits for the condition, adds the current thread to the queue, releases the lock, puts the current thread to sleep, acquires the conditionLock, and then re-enables interrupts. 
+void Condition::Signal(Lock* conditionLock) signals for one thread to wake up, it disables interrupts, removes one thread from the queue and schedules it, sets the waiting lock to null, and then re-enables interrupts.
+void Condition::Broadcast(Lock* conditionLock) runs the Condition::Signal on all of the threads to wake them all up.
 
+V. Testing
+How to test
+Run the following command:
+nachos-P2
+We will perform the following tests:
+1. A menu will print in the command line, from which we can select one of the test cases:
+Test:
+Expected Output:
+2. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
+Test:
+Expected Output:
+3. Managers only read one from one Clerk's total money received, at a time.
+Test:
+Expected Output:
+4. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area
+Test:
+Expected Output:
+5. Clerks go on break when they have no one waiting in their line
+Test:
+Expected Output:
+6. Managers get Clerks off their break when lines get too long
+Test:
+Expected Output:
+7. Total sales never suffers from a race condition
+Test:
+Expected Output:
+8. The behavior of Customers is proper when Senators arrive. This is before, during, and after.
+Test:
+Expected Output:
+
+VI. Discussion
+Experiment Expectation (What is supposed to happen)
+1. A menu will print in the command line, from which we can select one of the test cases:
+2. Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
+3. Managers only read one from one Clerk's total money received, at a time.
+4. Customers do not leave until they are given their passport by the Cashier. The Cashier does not start on another customer until they know that the last Customer has left their area
+5. Clerks go on break when they have no one waiting in their line
+6. Managers get Clerks off their break when lines get too long
+7. Total sales never suffers from a race condition
+8. The behavior of Customers is proper when Senators arrive. This is before, during, and after.
+
+Experiment Result (What actually happened)
+1.
+2.
+3.
+4.
+5.
+6.
+7.
+8.
+
+VII. Miscellanous
