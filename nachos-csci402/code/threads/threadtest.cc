@@ -63,6 +63,26 @@ std::vector<Client *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR.
 // struct PictureMonitor;
 // struct PassportMonitor;
 
+//***MANAGER CODE****
+//Lock* addToClerksOnBreak = new Lock("Add another clerk to the break queue");
+//
+
+//Struct ManagerMonitor {
+//	std::vector<Lock*> clerksOnBreakLock;
+//	std::vector<Condition*> clerkOnBreakCV;
+//	ManagerMonitor(int numClerksOnBreak);
+//	
+//	ManagerMonitor(int numClerksOnBreak) {
+//	clerksOnBreakLock.reserve(numClerksOnBreak);
+//	clerksOnBreakCV.reserve(numClerksOnBreak);
+//	for (int i=0; i<numClerksOnBreak; i++){
+//		clerksOnBreakLock.push_back(new Lock("Manager Monitor Lock" + i));
+//		clerksOnBreakCV.push_back(new Condition("Manager Monitor Lock" + i));
+//	}
+//	
+//}
+//};
+
 
 struct ApplicationMonitor {
 
