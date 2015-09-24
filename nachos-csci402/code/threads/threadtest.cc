@@ -59,9 +59,6 @@ std::vector<Cashier *> cClerks;
 std::vector<Client *> customers; //DO NOT POP CUSTOMERS FROM THIS VECTOR. 
 //OTHERWISE WE WILL HAVE TO REINDEX THE CUSTOMERS AND THAT IS A BIG PAIN 	
 
-// struct ApplicationMonitor;
-// struct PictureMonitor;
-// struct PassportMonitor;
 
 
 struct ApplicationMonitor {
@@ -79,6 +76,7 @@ struct ApplicationMonitor {
 	int* clerkState;	//0: available     1: busy    2: on break
 
 	std::queue<int>* clientSSNs;
+	std::queue<int>* bribeClientSSNs;
 
 	ApplicationMonitor(int numApplicationClerks, int numCustomers)
 	{
@@ -95,7 +93,7 @@ struct ApplicationMonitor {
 		clerkState = new int[numAClerks];
 
 		clientSSNs = new std::queue<int>[numCustomers];
-		
+		bribeClientSSNs = new std::queue<int>[numCustomers];
 
 		for(int i = 0; i < numAClerks; i++)
 		{			
@@ -148,6 +146,7 @@ struct PictureMonitor {
 	int* clerkBribeLineCount;
 	int* clerkState;	//0: available     1: busy    2: on break
 	std::queue<int>* clientSSNs;
+	std::queue<int>* bribeClientSSNs;
 
 	PictureMonitor(int numPictureClerks, int numCustomers)
 	{
@@ -163,6 +162,7 @@ struct PictureMonitor {
 		clerkState = new int[numPClerks];
 
 		clientSSNs = new std::queue<int>[numCustomers];
+		bribeClientSSNs = new std::queue<int>[numCustomers];
 
 		for(int i = 0; i < numPClerks; i++)
 		{			
@@ -215,7 +215,9 @@ struct PassportMonitor {
 	int* clerkBribeLineCount;
 	int* clerkState;	//0: available     1: busy    2: on break
 	std::queue<int>* clientSSNs;
-	std::queue<int>* clientReqs; //0: neither picture nor application, 1: 1 of the two, 2: both
+	std::queue<int>* bribeClientSSNs;
+	std::queue<bool>* clientReqs; //0: neither picture nor application, 1: 1 of the two, 2: both
+	std::queue<bool>* bribeClientReqs;
 
 	PassportMonitor(int numPassportClerks, int numCustomers)
 	{
@@ -230,8 +232,10 @@ struct PassportMonitor {
 		clerkBribeLineCount = new int[numClerks];
 		clerkState = new int[numClerks];
 
-		clientSSNs = new std::queue<int>[numCustomers];
-		clientReqs = new std::queue<int>[numCustomers];
+		clientSSNs = new std::queue<int>[numCustomers];		
+		bribeClientSSNs = new std::queue<int>[numCustomers];
+		clientReqs = new std::queue<bool>[numCustomers];
+		bribeClientReqs = new std::queue<bool>[numCustomers];
 
 		for(int i = 0; i < numClerks; i++)
 		{			
@@ -269,9 +273,86 @@ struct PassportMonitor {
 		clientSSNs[line].push(ssn);
 	}
 
-	void giveReqs(int line, int completed)
+	void giveReqs(int line, bool completed)
 	{
 		clientReqs[line].push(completed);
+	}
+
+};
+
+struct CashierMonitor 
+{
+	Lock* MonitorLock;
+
+	int numClerks;
+	Lock** clerkLineLocks;					// move to be global variable
+	Condition** clerkLineCV;
+	Condition** clerkBribeLineCV;
+
+	int* clerkLineCount;
+	int* clerkBribeLineCount;
+	int* clerkState;	//0: available     1: busy    2: on break
+	std::queue<int>* clientSSNs;
+	std::queue<int>* bribeClientSSNs;
+	std::queue<bool>* customerCertifications; 
+	std::queue<bool>* bribeCustomerCertifications; 
+
+	CashierMonitor(int numPassportClerks, int numCustomers)
+	{
+		MonitorLock = new Lock("Monitor Lock");
+
+		numClerks = numPassportClerks;
+		clerkLineLocks = new Lock*[numClerks];
+		clerkLineCV = new Condition*[numClerks];
+		clerkBribeLineCV = new Condition*[numClerks];
+		
+		clerkLineCount = new int[numClerks];
+		clerkBribeLineCount = new int[numClerks];
+		clerkState = new int[numClerks];
+
+		clientSSNs = new std::queue<int>[numCustomers];
+		bribeClientSSNs = new std::queue<int>[numCustomers];
+		bribeCustomerCertifications = new std::queue<bool>[numCustomers];
+
+		for(int i = 0; i < numClerks; i++)
+		{			
+			clerkLineCV[i] = new Condition("");
+			clerkBribeLineCV[i] = new Condition("");
+			clerkLineLocks[i] = new Lock("clerkLineLocks");
+			clerkLineCount[i] = 0;
+			clerkBribeLineCount[i] = 0;
+			clerkState[i] = 0;
+		}
+	}//end of constructor
+
+	~CashierMonitor(){
+
+	}//end of destructor	
+
+	int getSmallestLine()
+	{
+		int smallest = 50;
+		int smallestIndex = 0;
+		for(int i = 0; i < numClerks; i++)
+		{
+			//std::cout << clerkLineCount[i] << std::endl;
+			if(clerkLineCount[i] < smallest)
+			{
+				smallest = clerkLineCount[i];
+				smallestIndex = i;
+			}
+		}
+		return smallestIndex;
+	}
+
+	void giveSSN(int line, int ssn)
+	{
+		clientSSNs[line].push(ssn);
+	}
+
+	void giveCertification(int line, bool certified)
+	{
+		customerCertifications[line].push(certified);
 	}
 
 };
@@ -700,79 +781,7 @@ void TestSuite() {
 #endif
 
 
-struct CashierMonitor 
-{
-	Lock* MonitorLock;
 
-	int numClerks;
-	Lock** clerkLineLocks;					// move to be global variable
-	Condition** clerkLineCV;
-	Condition** clerkBribeLineCV;
-
-	int* clerkLineCount;
-	int* clerkBribeLineCount;
-	int* clerkState;	//0: available     1: busy    2: on break
-	std::queue<int>* clientSSNs;
-	std::queue<bool>* customerCertifications; //0: neither picture nor application, 1: 1 of the two, 2: both
-
-	CashierMonitor(int numPassportClerks, int numCustomers)
-	{
-		MonitorLock = new Lock("Monitor Lock");
-
-		numClerks = numPassportClerks;
-		clerkLineLocks = new Lock*[numClerks];
-		clerkLineCV = new Condition*[numClerks];
-		clerkBribeLineCV = new Condition*[numClerks];
-		
-		clerkLineCount = new int[numClerks];
-		clerkBribeLineCount = new int[numClerks];
-		clerkState = new int[numClerks];
-
-		clientSSNs = new std::queue<int>[numCustomers];
-		customerCertifications = new std::queue<bool>[numCustomers];
-
-		for(int i = 0; i < numClerks; i++)
-		{			
-			clerkLineCV[i] = new Condition("");
-			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("clerkLineLocks");
-			clerkLineCount[i] = 0;
-			clerkBribeLineCount[i] = 0;
-			clerkState[i] = 0;
-		}
-	}//end of constructor
-
-	~CashierMonitor(){
-
-	}//end of destructor	
-
-	int getSmallestLine()
-	{
-		int smallest = 50;
-		int smallestIndex = 0;
-		for(int i = 0; i < numClerks; i++)
-		{
-			//std::cout << clerkLineCount[i] << std::endl;
-			if(clerkLineCount[i] < smallest)
-			{
-				smallest = clerkLineCount[i];
-				smallestIndex = i;
-			}
-		}
-		return smallestIndex;
-	}
-
-	void giveSSN(int line, int ssn)
-	{
-		clientSSNs[line].push(ssn);
-	}
-
-	void giveCertification(int line, bool certified)
-	{
-		customerCertifications[line].push(certified);
-	}
-
-};
 
 
 class Client {
@@ -866,12 +875,32 @@ public:
 
 		if(AMonitor->clerkState[myLine] == 1)
 		{
-			std::cout << "\nCustomer " << id << " has gotten in regular line for Application Clerk " << myLine << "." << std::endl;
-			AMonitor->clerkLineCount[myLine]++;
-			AMonitor->giveSSN(myLine, ssn);
+			if(bribed)
+			{
+				AMonitor->clerkBribeLineCount[myLine]++;
+				AMonitor->bribeClientSSNs[myLine].push(ssn);
+				std::cout << "\nCustomer " << id << " has gotten in bribe line for Application Clerk " << myLine << "." << std::endl;
+			}
+			else
+			{
+				AMonitor->clerkLineCount[myLine]++;
+				AMonitor->giveSSN(myLine, ssn);
+				std::cout << "\nCustomer " << id << " has gotten in regular line for Application Clerk " << myLine << "." << std::endl;
+			}
+			
 			AMonitor->clerkLineCV[myLine]->Wait("Customer", AMonitor->AMonitorLock);
-			AMonitor->clerkLineCount[myLine]--;
-			AMonitor->clientSSNs[myLine].pop();
+
+			if(bribed)
+			{
+				AMonitor->clerkBribeLineCount[myLine]--;
+				AMonitor->clientSSNs[myLine].pop();	
+			}
+			else
+			{
+				AMonitor->clerkLineCount[myLine]--;				
+				AMonitor->clientSSNs[myLine].pop();	
+			}
+		
 		}
 
 		AMonitor->clerkState[myLine] = 1;
@@ -885,6 +914,8 @@ public:
 
 		AMonitor->clerkLineCV[myLine]->Wait("Customer", AMonitor->clerkLineLocks[myLine]);
 		applicationAccepted = true;
+		AMonitor->clerkLineCount[myLine]--;
+		AMonitor->clientSSNs[myLine].pop();
 		AMonitor->clerkLineCV[myLine]->Signal("Customer", AMonitor->clerkLineLocks[myLine]);
 		AMonitor->clerkLineLocks[myLine]->Release("Customer");
 	}	
@@ -897,12 +928,31 @@ public:
 
 		if(PMonitor->clerkState[myLine] == 1)
 		{
-			std::cout << "\nCustomer " << id << " has gotten in regular line for Picture Clerk " << myLine << "." << std::endl;
-			PMonitor->clerkLineCount[myLine]++;
-			PMonitor->giveSSN(myLine, ssn);
+			if(bribed)
+			{
+				PMonitor->clerkBribeLineCount[myLine]++;
+				PMonitor->bribeClientSSNs[myLine].push(ssn);
+				std::cout << "\nCustomer " << id << " has gotten in bribe line for Picture Clerk " << myLine << "." << std::endl;
+			}
+			else
+			{
+				PMonitor->clerkLineCount[myLine]++;
+				PMonitor->giveSSN(myLine, ssn);
+				std::cout << "\nCustomer " << id << " has gotten in regular line for Picture Clerk " << myLine << "." << std::endl;
+			}
+			
 			PMonitor->clerkLineCV[myLine]->Wait("Customer", PMonitor->PMonitorLock);
-			PMonitor->clerkLineCount[myLine]--;
-			PMonitor->clientSSNs[myLine].pop();
+
+			if(bribed)
+			{
+				PMonitor->clerkBribeLineCount[myLine]--;
+				PMonitor->bribeClientSSNs[myLine].pop();	
+			}
+			else
+			{
+				PMonitor->clerkLineCount[myLine]--;				
+				PMonitor->clientSSNs[myLine].pop();	
+			}
 		}
 
 		PMonitor->clerkState[myLine] = 1;
@@ -912,10 +962,16 @@ public:
 
 		std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Picture Clerk\n " << myLine << std::endl;
 
+		//int likePicture = 0;
+		//while(likePicture == 0)
 		PMonitor->clerkLineCV[myLine]->Signal("Customer", PMonitor->clerkLineLocks[myLine]);
 
 		PMonitor->clerkLineCV[myLine]->Wait("Customer", PMonitor->clerkLineLocks[myLine]);
-		pictureTaken = true;
+		int likePicture = rand()%2;
+		if(likePicture == 1)
+		{
+			pictureTaken = true;
+		}
 		PMonitor->clerkLineCV[myLine]->Signal("Customer", PMonitor->clerkLineLocks[myLine]);
 		PMonitor->clerkLineLocks[myLine]->Release("Customer");
 
@@ -930,13 +986,35 @@ public:
 
 		if(PPMonitor->clerkState[myLine] == 1)
 		{
-			std::cout << "\nCustomer " << id << " has gotten in regular line for Picture Clerk " << myLine << "." << std::endl;
-			PPMonitor->clerkLineCount[myLine]++;
-			PPMonitor->giveSSN(myLine, ssn);
-			PPMonitor->giveReqs(myLine, ssn);
+			if(bribed)
+			{
+				PPMonitor->clerkBribeLineCount[myLine]++;
+				PPMonitor->bribeClientSSNs[myLine].push(ssn);
+				PPMonitor->bribeClientReqs[myLine].push(applicationAccepted && pictureTaken);
+				std::cout << "\nCustomer " << id << " has gotten in bribe line for Passport Clerk " << myLine << "." << std::endl;
+			}
+			else
+			{
+				PPMonitor->clerkLineCount[myLine]++;
+				PPMonitor->giveSSN(myLine, ssn);
+				PPMonitor->giveReqs(myLine, applicationAccepted && pictureTaken);
+				std::cout << "\nCustomer " << id << " has gotten in regular line for Passport Clerk " << myLine << "." << std::endl;
+			}
+			
 			PPMonitor->clerkLineCV[myLine]->Wait("Customer", PPMonitor->MonitorLock);
-			PPMonitor->clerkLineCount[myLine]--;
-			PPMonitor->clientSSNs[myLine].pop();
+
+			if(bribed)
+			{
+				PPMonitor->clerkBribeLineCount[myLine]--;
+				PPMonitor->bribeClientSSNs[myLine].pop();	
+				PPMonitor->bribeClientReqs[myLine].pop();	
+			}
+			else
+			{
+				PPMonitor->clerkLineCount[myLine]--;				
+				PPMonitor->clientSSNs[myLine].pop();	
+				PPMonitor->clientReqs[myLine].pop();	
+			}
 		}
 
 		PPMonitor->clerkState[myLine] = 1;
@@ -959,6 +1037,7 @@ public:
 				currentThread->Yield();
 			}
 		}
+		
 
 		PPMonitor->clerkLineCV[myLine]->Signal("Customer", PPMonitor->clerkLineLocks[myLine]);
 		PPMonitor->clerkLineLocks[myLine]->Release("Customer");
@@ -972,20 +1051,58 @@ public:
 
 		if(CMonitor->clerkState[myLine] == 1)
 		{
-			std::cout << "\nCustomer " << id << " has gotten in regular line for Cashier " << myLine << "." << std::endl;
-			CMonitor->clerkLineCount[myLine]++;
-			CMonitor->giveSSN(myLine, ssn);
+			if(bribed)
+			{
+				CMonitor->clerkBribeLineCount[myLine]++;
+				CMonitor->bribeClientSSNs[myLine].push(ssn);
+				CMonitor->bribeCustomerCertifications[myLine].push(certified);
+				std::cout << "\nCustomer " << id << " has gotten in bribe line for Cashier " << myLine << "." << std::endl;
+			}
+			else
+			{
+				CMonitor->clerkLineCount[myLine]++;
+				CMonitor->giveSSN(myLine, ssn);
+				CMonitor->giveCertification(myLine, certified);
+				std::cout << "\nCustomer " << id << " has gotten in bribe line for Cashier " << myLine << "." << std::endl;
+			}
+			
 			CMonitor->clerkLineCV[myLine]->Wait("Customer", CMonitor->MonitorLock);
-			CMonitor->clerkLineCount[myLine]--;
-			CMonitor->clientSSNs[myLine].pop();
+
+			if(bribed)
+			{
+				CMonitor->clerkBribeLineCount[myLine]--;
+				CMonitor->bribeClientSSNs[myLine].pop();	
+				CMonitor->bribeCustomerCertifications[myLine].pop();
+			}
+			else
+			{
+				CMonitor->clerkLineCount[myLine]--;				
+				CMonitor->clientSSNs[myLine].pop();	
+				CMonitor->customerCertifications[myLine].pop();
+			}
 		}
 		CMonitor->clerkState[myLine] = 1;
 		CMonitor->MonitorLock->Release("Customer");
 		CMonitor->clerkLineLocks[myLine]->Acquire("Customer");
 		std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Cashier\n " << myLine << std::endl;
 		CMonitor->clerkLineCV[myLine]->Signal("Customer", CMonitor->clerkLineLocks[myLine]);
+		
+
 		CMonitor->clerkLineCV[myLine]->Wait("Customer", CMonitor->clerkLineLocks[myLine]);
-		done = true;
+		std::cout << "\nCustomer " << id << " has given Cashier " << myLine << " $100." << std::endl;
+		if(!certified)
+		{
+			std::cout << "\nCustomer " << id << " has gone to Cashier " << myLine << " too soon. They are going to the back of the line." << std::endl;
+			int yieldCalls = 100 + rand() % 900;
+			for(int i = 0; i < yieldCalls; i++)
+			{
+				currentThread->Yield();
+			}
+		}
+		else
+		{
+			done = true;
+		}
 		CMonitor->clerkLineCV[myLine]->Signal("Customer", CMonitor->clerkLineLocks[myLine]);
 		CMonitor->clerkLineLocks[myLine]->Release("Customer");
 	}
@@ -1055,14 +1172,17 @@ public:
 		while(true)
 		{
 			AMonitor->AMonitorLock->Acquire("Application Clerk");
+			int frontSSN;
 			if(AMonitor->clerkBribeLineCount[myLine] > 0)
 			{
+				frontSSN = AMonitor->bribeClientSSNs[myLine].front();
 				std::cout << "\nApplication Clerk"  << myLine << " has signalled a Customer to come to their counter." << std::endl;
 				AMonitor->clerkBribeLineCV[myLine]->Signal("Application Clerk", AMonitor->AMonitorLock);
 				AMonitor->clerkState[myLine] = 1;
 			}
 			else if(AMonitor->clerkLineCount[myLine] > 0)
 			{
+				frontSSN = AMonitor->clientSSNs[myLine].front();
 				AMonitor->clerkLineCV[myLine]->Signal("Application Clerk", AMonitor->AMonitorLock);
 				std::cout << "\nApplication Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 				AMonitor->clerkState[myLine] = 1;
@@ -1084,8 +1204,8 @@ public:
 			
 			
 			AMonitor->clerkLineCV[myLine]->Wait("Application Clerk", AMonitor->clerkLineLocks[myLine]);
-			std::cout << "\nApplication Clerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
-						" from Customer " << AMonitor->clientSSNs[myLine].front() << "." << std::endl;
+			std::cout << "\nApplication Clerk " << myLine << " has received SSN " << frontSSN  <<
+						" from Customer " << frontSSN << "." << std::endl;
 			
 			AMonitor->clerkLineLocks[myLine]->Release("Application Clerk");			
 		
@@ -1174,14 +1294,17 @@ public:
 		while(true)
 		{			
 			PMonitor->PMonitorLock->Acquire("Picture Clerk");
+			int frontSSN;
 			if(PMonitor->clerkBribeLineCount[myLine] > 0)
 			{
+				frontSSN = PMonitor->bribeClientSSNs[myLine].front();
 				std::cout << "\nPicture Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 				PMonitor->clerkBribeLineCV[myLine]->Signal("Picture Clerk", PMonitor->PMonitorLock);
 				PMonitor->clerkState[myLine] = 1;
 			}
 			else if(PMonitor->clerkLineCount[myLine] > 0)
 			{
+				frontSSN = PMonitor->clientSSNs[myLine].front();
 				PMonitor->clerkLineCV[myLine]->Signal("Picture Clerk", PMonitor->PMonitorLock);
 				std::cout << "\nPictureClerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 				PMonitor->clerkState[myLine] = 1;
@@ -1201,8 +1324,8 @@ public:
 			std::cout << "\nPicture Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 			
 			PMonitor->clerkLineCV[myLine]->Wait("Picture Clerk", PMonitor->clerkLineLocks[myLine]);
-			std::cout << "\nPicture Clerk " << myLine << " has received SSN " << PMonitor->clientSSNs[myLine].front() <<
-						" from Customer " << PMonitor->clientSSNs[myLine].front() << "." << std::endl;
+			std::cout << "\nPicture Clerk " << myLine << " has received SSN " << frontSSN <<
+						" from Customer " << frontSSN << "." << std::endl;
 			PMonitor->clerkLineLocks[myLine]->Release("Picture Clerk");	
 		}//end of while
 		
@@ -1288,14 +1411,22 @@ public:
 		while(true)
 		{
 			PPMonitor->MonitorLock->Acquire("Passport Clerk");
+
+			int frontSSN;
+			bool bribed = false;
 			if(PPMonitor->clerkBribeLineCount[myLine] > 0)
 			{
+				frontSSN = PPMonitor->bribeClientSSNs[myLine].front();				
+				bribed = true;
 				std::cout << "\nPassport Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 				PPMonitor->clerkBribeLineCV[myLine]->Signal("Passport Clerk", PPMonitor->MonitorLock);
 				PPMonitor->clerkState[myLine] = 1;
+				
 			}
 			else if(PPMonitor->clerkLineCount[myLine] > 0)
 			{
+				frontSSN = PPMonitor->clientSSNs[myLine].front();				
+				bribed = false;
 				PPMonitor->clerkLineCV[myLine]->Signal("Passport Clerk", PPMonitor->MonitorLock);
 				std::cout << "\nPassport Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 				PPMonitor->clerkState[myLine] = 1;
@@ -1316,43 +1447,21 @@ public:
 			
 			PPMonitor->clerkLineCV[myLine]->Wait("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
 
-			if(PPMonitor->clientReqs[myLine].front() != 2)
+			if((!PPMonitor->clientReqs[myLine].front() && !bribed) || (!PPMonitor->bribeClientReqs[myLine].front() && bribed))
 			{
-				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << PPMonitor->clientSSNs[myLine].front() << " does not have both their application and picture completed." << std::endl;
+				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << frontSSN << " does not have both their application and picture completed." << std::endl;
 
 			}
 			else
 			{
-				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << PPMonitor->clientSSNs[myLine].front() << " has both their application and picture completed." << std::endl;				
-				std::cout << "\nPassport  Clerk " << myLine << " has received SSN " << PPMonitor->clientSSNs[myLine].front() <<
-						" from Customer " << PPMonitor->clientSSNs[myLine].front() << "." << std::endl;
-				std::cout << "Passport Clerk " << myLine << " has recorded Customer " << PPMonitor->clientSSNs[myLine].front() << " passport information." << std::endl;
+				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << frontSSN << " has both their application and picture completed." << std::endl;				
+				std::cout << "\nPassport  Clerk " << myLine << " has received SSN " << frontSSN <<
+						" from Customer " << frontSSN << "." << std::endl;
+				std::cout << "Passport Clerk " << myLine << " has recorded Customer " << frontSSN<< " passport information." << std::endl;
 			}
 
 			PPMonitor->clerkLineLocks[myLine]->Release("Passport  Clerk");	
 
-			/*if(PPMonitor->clerkLineCount[myLine] != 0){
-				std::cout << "Passport Clerk " << myLine << " has received id: " << PPMonitor->clientSSNs[myLine].front() <<
-						" from Customer " << PPMonitor->clientSSNs[myLine].front() << "." << std::endl;
-				std::cout << "Passport Clerk " << myLine << " has received reqs: " << PPMonitor->clientReqs[myLine].front() <<
-						" from Customer " << PPMonitor->clientSSNs[myLine].front() << "." << std::endl;
- 
-				// if(PPMonitor->clientReqs[myLine].front() != 2){
-				// 	int waitTime = rand()%1000+100;
-				// 	for(int i=0; i < waitTime; i++){
-				// 		currentThread->Yield();
-				// 	}//end of wait punishment
-				// 	customers[PPMonitor->clientSSNs[myLine].front()]->reqsNotMet(true);
-				// }//end of if client does not have both reqs
-				customers[PPMonitor->clientSSNs[myLine].front()]->reqsNotMet(false);
-				PPMonitor->clientReqs[myLine].pop();
-				PPMonitor->clientSSNs[myLine].pop();				
-				PPMonitor->clerkLineCount[myLine]--;
-				std::cout << "" << PPMonitor->clerkLineCount[myLine] << " customers left in line " << myLine << std::endl;
-			}//end of if empty line
-			PPMonitor->clerkLineCV[myLine]->Signal("", PPMonitor->clerkLineLocks[myLine]); 
-			PPMonitor->clerkLineCV[myLine]->Wait("", PPMonitor->clerkLineLocks[myLine]); 
-			PPMonitor->clerkLineLocks[myLine]->Release("");*/
 		
 		}//end of while
 	}
@@ -1431,15 +1540,21 @@ public:
 		
 		while(true)
 		{
-			CMonitor->MonitorLock->Acquire("Cashier");			
+			CMonitor->MonitorLock->Acquire("Cashier");
+			int frontSSN;
+			bool bribed = false;
 			if(CMonitor->clerkBribeLineCount[myLine] > 0)
 			{
+				frontSSN = CMonitor->bribeClientSSNs[myLine].front();
+				bribed = true;
 				std::cout << "\nCashier " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 				CMonitor->clerkBribeLineCV[myLine]->Signal("Cashier", CMonitor->MonitorLock);
 				CMonitor->clerkState[myLine] = 1;
 			}
 			if(CMonitor->clerkLineCount[myLine] > 0)
 			{
+				frontSSN = CMonitor->clientSSNs[myLine].front();				
+				bribed = false;
 				std::cout << "\nCashier " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 				CMonitor->clerkLineCV[myLine]->Signal("Cashier", CMonitor->MonitorLock);
 				CMonitor->clerkState[myLine] = 1;
@@ -1458,9 +1573,22 @@ public:
 			CMonitor->clerkLineCV[myLine]->Signal("Cashier", CMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nCashier " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 			
+			
+
 			CMonitor->clerkLineCV[myLine]->Wait("Cashier", CMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nCashier " << myLine << " has received SSN " << CMonitor->clientSSNs[myLine].front() <<
 						" from Customer " << CMonitor->clientSSNs[myLine].front() << "." << std::endl;
+
+			if((CMonitor->customerCertifications[myLine].front() && !bribed) || (CMonitor->bribeCustomerCertifications[myLine].front() && bribed) )
+			{				
+				std::cout << "\nCashier " << myLine << " has verified that Customer " << frontSSN << " has been certified by a Passport Clerk." << std::endl;
+				std::cout << "\nCashier " << myLine << " has received the $100 from Customer " << frontSSN << " after certification." << std::endl;
+				std::cout << "\nCashier " << myLine << " has provided Customer " << frontSSN  << " their completed passport." << std::endl;				
+			}
+			else
+			{
+				std::cout << "\nCashier " << myLine << " has received the $100 from Customer " << frontSSN  << "before certification. They are to go to the back of the line." << std::endl;
+			}
 
 			CMonitor->clerkLineLocks[myLine]->Release("Cashier");	
 		}//end of while
