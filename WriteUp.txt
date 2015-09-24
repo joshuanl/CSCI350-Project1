@@ -114,5 +114,19 @@ void joinApplicationLine() in threadtest.cc allows the client to get the AppMoni
 void joinPictureLine() in threadtest.cc allows the client to get the PictureMonitor lock and later to release it.
 void joinPassportLine() in threadtest.cc allows the client to get the PassportMonitor lock and later to release it.
 void joinCashierLine() in threadtest.cc allows the client to get the CashierMonitor lock and later to release it.
-
+void createCustomer() in threadtest.cc sets a random money number, creates a new customer with a random money number, and adds the customer to the customers list.
+void createApplicationClerk() in threadtest.cc creates a new application clerk and pushes it to the application clerk list.
+void createPictureClerk() in threadtest.cc creates a new picture clerk and pushes it to the picture clerk list.
+void createPassportClerk() in threadtest.cc creates a new passport clerk and pushes it to the passport clerk list.
+void createCashier() in threadtest.cc creates a new cashier and pushes it to the cashiers list.
+void createManager() in threadtest.cc creates a single new manager.
+void createSenator() in threadtest.cc sets a random money number, creates a new senator with a random money number, and adds the senator to the senators list.
+void problem2() in threadtest.cc initiates the menu for setting numbers for the number of customers, clerks, and senators. It accepts customer inputs, and creates threads based on the number of customer inputs.
+Lock::Lock(char* debugName) in synch.cc is the lock constructor, it initializes the name, state (available), and the owner (null).
+Lock::~Lock() in synch.cc is the lock destructor.
+void Lock::Acquire() in synch.cc acquires the lock if possible and sets the owner thread to the current thread.
+void Lock::Release() in synch.cc releases the lock if possible, sets the owner thread to null, and sets the lock state to available.
+Condition::Condition(char* debugName) in synch.cc is the constructor and initializes the debugName, waitingLock, and queue.
+Condition::~Condition() in synch.cc is the condition destructor.
+void Condition::Wait(Lock* conditionLock) disables interrupts, waits for the condition, adds the current thread to the queue, releases the lock, puts the current thread to sleep, acquires the conditionLock, and then re-enables interrupt. 
 
