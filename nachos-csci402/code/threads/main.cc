@@ -53,20 +53,16 @@
 #include "utility.h"
 #include "system.h"
 
-#include <iostream>
-
-
+//#ifdef THREADS
+//extern void ;
+//#endif
 
 // External functions used by this file
 
-extern void ThreadTest(void), Copy(char *unixFile, char *nachosFile);
+extern void TestSuite(void), Problem2(void), ThreadTest(void), Copy(char *unixFile, char *nachosFile);
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
-
-#ifdef THREADS
-extern void Problem2(void), TestSuite(void);
-#endif
 
 //----------------------------------------------------------------------
 // main
@@ -87,27 +83,31 @@ main(int argc, char **argv)
 {
     int argCount;			// the number of arguments 
 					// for a particular command
-    //ThreadTest();
 
     DEBUG('t', "Entering main");
     (void) Initialize(argc, argv);
     
+//#ifdef THREADS
+    //ThreadTest();
+//#endif
 
-
-// #ifdef THREADS
-//     //ThreadTest();
-// #endif
-
-    for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
+	for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
 	argCount = 1;
         if (!strcmp(*argv, "-z"))               // print copyright
             printf (copyright);
-#ifdef THREADS
+
+	#ifdef THREADS
         if (!strcmp(*argv, "-T"))               // Test Suite
             TestSuite();
         if (!strcmp(*argv, "-P2"))               // Problem 2
             Problem2();
-#endif //THREADS    
+#endif //THREADS
+
+	
+
+	
+
+    
 #ifdef USER_PROGRAM
         if (!strcmp(*argv, "-x")) {        	// run a user program
 	    ASSERT(argc > 1);

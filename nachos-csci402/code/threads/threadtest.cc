@@ -1116,6 +1116,9 @@ public:
 	{		
 		while(true)
 		{
+			//clerk accesses monitor and checks his lines 
+			//if empty, he goes on break
+			//if there are people he's busy and interacts with clients
 			AMonitor->AMonitorLock->Acquire("Application Clerk");
 			if(AMonitor->clerkBribeLineCount[myLine] > 0)
 			{
@@ -1137,18 +1140,18 @@ public:
 
 			AMonitor->clerkLineLocks[myLine]->Acquire("Application Clerk");
 			AMonitor->AMonitorLock->Release("Application Clerk");
-
+			//waits for customer to do their job
 			AMonitor->clerkLineCV[myLine]->Wait("Application Clerk", AMonitor->clerkLineLocks[myLine]);
-
+			//after clerk is signaled by the client, clerk does his job and signals the client that he is done
 			
 			AMonitor->clerkLineCV[myLine]->Signal("Application Clerk", AMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nApplication Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 			
-			
+			//clerk then waits for the client to respond back to clerk doing his task
 			AMonitor->clerkLineCV[myLine]->Wait("Application Clerk", AMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nApplication Clerk " << myLine << " has received SSN " << AMonitor->clientSSNs[myLine].front() <<
 						" from Customer " << AMonitor->clientSSNs[myLine].front() << "." << std::endl;
-			
+			//clerk is signalled that the client has left his line and clerk reaches this line of code
 			AMonitor->clerkLineLocks[myLine]->Release("Application Clerk");			
 		
 		}
@@ -1235,6 +1238,9 @@ public:
 	void run(){	
 		while(true)
 		{			
+			//clerk accesses monitor and checks his lines 
+			//if empty, he goes on break
+			//if there are people he's busy and interacts with clients
 			PMonitor->PMonitorLock->Acquire("Picture Clerk");
 			if(PMonitor->clerkBribeLineCount[myLine] > 0)
 			{
@@ -1256,15 +1262,17 @@ public:
 
 			PMonitor->clerkLineLocks[myLine]->Acquire("Picture Clerk");
 			PMonitor->PMonitorLock->Release("Picture Clerk");
-
+			//waits for customer to do their job
 			PMonitor->clerkLineCV[myLine]->Wait("Picture Clerk", PMonitor->clerkLineLocks[myLine]);
-
+			//after clerk is signaled by the client, clerk does his job and signals the client that he is done
 			PMonitor->clerkLineCV[myLine]->Signal("Picture Clerk", PMonitor->clerkLineLocks[myLine]);			
 			std::cout << "\nPicture Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 			
+			//clerk then waits for the client to respond back to clerk doing his task
 			PMonitor->clerkLineCV[myLine]->Wait("Picture Clerk", PMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nPicture Clerk " << myLine << " has received SSN " << PMonitor->clientSSNs[myLine].front() <<
 						" from Customer " << PMonitor->clientSSNs[myLine].front() << "." << std::endl;
+			//clerk is signalled that the client has left his line and clerk reaches this line of code
 			PMonitor->clerkLineLocks[myLine]->Release("Picture Clerk");	
 		}//end of while
 		
@@ -1349,6 +1357,9 @@ public:
 	{	
 		while(true)
 		{
+			//clerk accesses monitor and checks his lines 
+			//if empty, he goes on break
+			//if there are people he's busy and interacts with clients
 			PPMonitor->MonitorLock->Acquire("Passport Clerk");
 			if(PPMonitor->clerkBribeLineCount[myLine] > 0)
 			{
@@ -1370,14 +1381,16 @@ public:
 
 			PPMonitor->clerkLineLocks[myLine]->Acquire("Passport Clerk");
 			PPMonitor->MonitorLock->Release("Passport Clerk");
-
+			//waits for customer to do their job
 			PPMonitor->clerkLineCV[myLine]->Wait("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
-
+			//after clerk is signaled by the client, clerk does his job and signals the client that he is done
 			PPMonitor->clerkLineCV[myLine]->Signal("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nPassport  Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
-			
+			//clerk then waits for the client to respond back to clerk doing his task
 			PPMonitor->clerkLineCV[myLine]->Wait("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
-
+			//clerk is signalled that the client has left his line and clerk reaches this line of code
+			
+			//clerk checks if next client has both required documents 
 			if(PPMonitor->clientReqs[myLine].front() != 2)
 			{
 				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << PPMonitor->clientSSNs[myLine].front() << " does not have both their application and picture completed." << std::endl;
@@ -1471,6 +1484,9 @@ public:
 		
 		while(true)
 		{
+			//clerk accesses monitor and checks his lines 
+			//if empty, he goes on break
+			//if there are people he's busy and interacts with clients
 			CMonitor->MonitorLock->Acquire("Cashier");			
 			if(CMonitor->clerkBribeLineCount[myLine] > 0)
 			{
@@ -1492,18 +1508,19 @@ public:
 
 			CMonitor->clerkLineLocks[myLine]->Acquire("Cashier");
 			CMonitor->MonitorLock->Release("Cashier");
-
+			//waits for customer to do their job
 			CMonitor->clerkLineCV[myLine]->Wait("Cashier", CMonitor->clerkLineLocks[myLine]);
-
+			//after clerk is signaled by the client, clerk does his job and signals the client that he is done
 			CMonitor->clerkLineCV[myLine]->Signal("Cashier", CMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nCashier " << myLine << " has signalled a Customer to come to their counter." << std::endl;
 			
 			
-
+			//clerk then waits for the client to respond back to clerk doing his task
 			CMonitor->clerkLineCV[myLine]->Wait("Cashier", CMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nCashier " << myLine << " has received SSN " << CMonitor->clientSSNs[myLine].front() <<
 						" from Customer " << CMonitor->clientSSNs[myLine].front() << "." << std::endl;
-
+			//clerk is signalled that the client has left his line and clerk reaches this line of code
+			//clerk checks if next client has been certified  
 			if(CMonitor->customerCertifications[myLine].front())
 			{				
 				std::cout << "\nCashier " << myLine << " has verified that Customer " << CMonitor->clientSSNs[myLine].front() << " has been certified by a Passport Clerk." << std::endl;
