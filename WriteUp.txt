@@ -133,9 +133,11 @@ void Condition::Signal(Lock* conditionLock) signals for one thread to wake up, i
 void Condition::Broadcast(Lock* conditionLock) runs the Condition::Signal on all of the threads to wake them all up.
 
 V. Testing
-+ How to test
+How to test
 Run the following command:
 nachos
 A menu will print in the command line, from which we can select one of the test cases.
 
+VI. Discussion
 
+VII. Miscellanous
