@@ -857,7 +857,7 @@ public:
 	{
 		AMonitor->AMonitorLock->Acquire("Customer");
 		int myLine = AMonitor->getSmallestLine();
-		AMonitor->giveSSN(myLine, ssn);
+		
 
 		if(rand()%20)
 		{
@@ -868,8 +868,10 @@ public:
 		{
 			std::cout << "\nCustomer " << id << " has gotten in regular line for Application Clerk " << myLine << "." << std::endl;
 			AMonitor->clerkLineCount[myLine]++;
+			AMonitor->giveSSN(myLine, ssn);
 			AMonitor->clerkLineCV[myLine]->Wait("Customer", AMonitor->AMonitorLock);
 			AMonitor->clerkLineCount[myLine]--;
+			AMonitor->clientSSNs[myLine]->pop();
 		}
 
 		AMonitor->clerkState[myLine] = 1;
@@ -891,14 +893,16 @@ public:
 	{
 		PMonitor->PMonitorLock->Acquire("Customer");
 		int myLine = PMonitor->getSmallestLine();
-		PMonitor->giveSSN(myLine, ssn);
+		
 
 		if(PMonitor->clerkState[myLine] == 1)
 		{
 			std::cout << "\nCustomer " << id << " has gotten in regular line for Picture Clerk " << myLine << "." << std::endl;
 			PMonitor->clerkLineCount[myLine]++;
+			PMonitor->giveSSN(myLine, ssn);
 			PMonitor->clerkLineCV[myLine]->Wait("Customer", PMonitor->PMonitorLock);
 			PMonitor->clerkLineCount[myLine]--;
+			PMonitor->clientSSNs[myLine]->pop();
 		}
 
 		PMonitor->clerkState[myLine] = 1;
@@ -922,15 +926,17 @@ public:
 
 		PPMonitor->MonitorLock->Acquire("Customer");
 		int myLine = PPMonitor->getSmallestLine();
-		PPMonitor->giveSSN(myLine, ssn);
-		PPMonitor->giveReqs(myLine, ssn);
+		
 
 		if(PPMonitor->clerkState[myLine] == 1)
 		{
 			std::cout << "\nCustomer " << id << " has gotten in regular line for Picture Clerk " << myLine << "." << std::endl;
 			PPMonitor->clerkLineCount[myLine]++;
+			PPMonitor->giveSSN(myLine, ssn);
+			PPMonitor->giveReqs(myLine, ssn);
 			PPMonitor->clerkLineCV[myLine]->Wait("Customer", PPMonitor->MonitorLock);
 			PPMonitor->clerkLineCount[myLine]--;
+			PPMonitor->clientSSNs[myLine]->pop();
 		}
 
 		PPMonitor->clerkState[myLine] = 1;
@@ -939,7 +945,21 @@ public:
 		std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Picture Clerk\n " << myLine << std::endl;
 		PPMonitor->clerkLineCV[myLine]->Signal("Customer", PPMonitor->clerkLineLocks[myLine]);
 		PPMonitor->clerkLineCV[myLine]->Wait("Customer", PPMonitor->clerkLineLocks[myLine]);
-		certified = true;
+
+		if(applicationAccepted && pictureTaken)
+		{
+			certified = true;
+		}
+		else
+		{
+			std::cout << "\nCustomer " << id << " has gone to Passport Clerk " << myLIne << " too soon. They are going to the back of the line." << std::endl;
+			int yieldCalls = 100 + rand % 900;
+			for(int i = 0; i < yieldCalls; i++)
+			{
+				currentThread->Yield();
+			}
+		}
+
 		PPMonitor->clerkLineCV[myLine]->Signal("Customer", PPMonitor->clerkLineLocks[myLine]);
 		PPMonitor->clerkLineLocks[myLine]->Release("Customer");
 	}
@@ -949,14 +969,15 @@ public:
 	{
 		CMonitor->MonitorLock->Acquire("Customer");
 		int myLine = CMonitor->getSmallestLine();
-		CMonitor->giveSSN(myLine, ssn);
 
 		if(CMonitor->clerkState[myLine] == 1)
 		{
 			std::cout << "\nCustomer " << id << " has gotten in regular line for Cashier " << myLine << "." << std::endl;
 			CMonitor->clerkLineCount[myLine]++;
+			CMonitor->giveSSN(myLine, ssn);
 			CMonitor->clerkLineCV[myLine]->Wait("Customer", CMonitor->MonitorLock);
 			CMonitor->clerkLineCount[myLine]--;
+			CMonitor->clientSSNs[myLine]->pop();
 		}
 		CMonitor->clerkState[myLine] = 1;
 		CMonitor->MonitorLock->Release("Customer");
@@ -1049,6 +1070,7 @@ public:
 			else
 			{
 				AMonitor->clerkState[myLine] = 2;
+				std::cout << "\nApplication Clerk " << myLine << " is going on break. " << std::endl;
 			}
 
 			AMonitor->clerkLineLocks[myLine]->Acquire("Application Clerk");
@@ -1167,6 +1189,7 @@ public:
 			else
 			{
 				PMonitor->clerkState[myLine] = 2;
+				std::cout << "\nPicture  Clerk " << myLine << " is going on break. " << std::endl;
 			}
 
 			PMonitor->clerkLineLocks[myLine]->Acquire("Picture Clerk");
@@ -1280,6 +1303,7 @@ public:
 			else
 			{
 				PPMonitor->clerkState[myLine] = 2;
+				std::cout << "\nPassport  Clerk " << myLine << " is going on break. " << std::endl;
 			}
 
 			PPMonitor->clerkLineLocks[myLine]->Acquire("Passport Clerk");
@@ -1295,6 +1319,7 @@ public:
 			if(PPMonitor->customerReqs[myLine].front() != 2)
 			{
 				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << PPMonitor->customerSSNs[myLine].front() << " does not have both their application and picture completed." << std::endl;
+
 			}
 			else
 			{
@@ -1422,6 +1447,7 @@ public:
 			else
 			{
 				CMonitor->clerkState[myLine] = 2;
+				std::cout << "\nCashier " << myLine << " is going on break. " << std::endl;
 			}
 
 			CMonitor->clerkLineLocks[myLine]->Acquire("Cashier");
