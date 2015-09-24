@@ -115,20 +115,19 @@ Lock::~Lock() {
 void Lock::Acquire() {
     IntStatus old = interrupt->SetLevel(IntOff);    //first set interrupts off
     
-    if(owner == NULL){
-        if(!BUSY){                                  //if not busy then available
-            BUSY = true;
-            owner = currentThread;
-        }
-        else{                                     //lock is acquired by someone else so put currentthread to sleep
-            lockWaitQueue.push_back(currentThread);
-            currentThread->Sleep();
-        }
-    } //end of if owner is NULL
-    if(owner == currentThread){
+     if(owner == currentThread){
        (void) interrupt->SetLevel(old);
        return;
     }//end of if current thread is already lock owner
+    
+    if(!BUSY){                                  //if not busy then available
+        BUSY = true;
+        owner = currentThread;
+    }
+    else{                                     //lock is acquired by someone else so put currentthread to sleep
+        lockWaitQueue.push_back(currentThread);
+        currentThread->Sleep();
+    }
    
     (void) interrupt->SetLevel(old);
     return;
