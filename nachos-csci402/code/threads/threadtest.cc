@@ -1528,34 +1528,6 @@ public:
 };//end of senator clas
 
 
-
-class CashierMonitor {
-private:
-	Lock *clerkLineLock;
-	//Condition clerkLineCV[5];
-	//Condition clerkBribeLineCV[5];
-
-	int clerkLineCount[5];
-	int clerkBribeLineCount[5];
-	int clerkState[5];	//0: available     1: busy    2: on break
-
-public:
-	CashierMonitor(){
-
-	}//end of constructor
-
-	~CashierMonitor(){
-
-	}//end of deconstructor
-
-	Lock* getLock(){
-		return clerkLineLock;
-	}//end of getting lock
-};
-
-
-
-
 void createCustomer(){
 	int rdmMoneyIndex = rand()%4;
 	ssnCount++; //Important: ssnCount has to be incremented before run is called. I recommend doing that with other calls below, too.
@@ -1565,7 +1537,8 @@ void createCustomer(){
     customers.push_back(c);
 }//end of making customer
 
-void createApplicationClerk(){
+void createApplicationClerk()
+{
     ApplicationClerk *ac = new ApplicationClerk();
     ac->setselfIndex(customers.size());
     aClerks.push_back(ac);
