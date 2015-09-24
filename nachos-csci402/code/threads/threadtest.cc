@@ -1715,6 +1715,11 @@ public:
 };//end of senator clas
 
 
+//the create customer/client functions create pointers of the client/clerk and adds them to global vector
+//each client and clerk are given an unique ID within their group, so application clerks can have the IDs
+// 1, 2, 3, 4, 5
+//And passPortClerk could have the save IDs because they're a different group
+
 void createCustomer(){
 	int rdmMoneyIndex = rand()%4;
 	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
@@ -1767,15 +1772,17 @@ void makeSenator(){
 }//end of making senator
 
 
+
+//this is called when nachos is started with -P2 argument
 void Problem2(){
-	//srand(time(NULL));
 
 
 	bool acceptInput = false;
 	int num_of_people = 0;
 	//create menu here to figure out how many threads of each
 	std::cout << "reached" << std::endl;
-
+	//while loop with boolean used to continue asking user for input until a valid input is submitted
+	//users can simulate with 20-50 clients and 1-5 of each type of clerks
 	while(!acceptInput){
 		std::cout << "Menu :: How many customers? (20 - 50)" << std::endl;
 		std::cout << "Input: " << std::endl;
@@ -1877,14 +1884,13 @@ void Problem2(){
 		}
 	}//end of while
 
+	//monitors are created before creating threads
 	AMonitor = new ApplicationMonitor(applicationClerk_thread_num, customer_thread_num);
 	PMonitor = new PictureMonitor(pictureClerk_thread_num, customer_thread_num);
 	PPMonitor = new PassportMonitor(passportClerk_thread_num, customer_thread_num);
 	CMonitor = new CashierMonitor(cashier_thread_num, customer_thread_num);
 
-	//create for loop for each and fork
-	//create 
-	
+	//create for loop for each client/clerk and fork their functions so that they are on their own thread
 
 	std::cout << "reached.  applicationClerk_thread_num: " << applicationClerk_thread_num << std::endl; 
 	for(int i = 0; i < applicationClerk_thread_num; i++){
@@ -1923,6 +1929,8 @@ void Problem2(){
  //        t->Fork((VoidFunctionPtr)makeSenator, i+1);
  //    }  //end of creating senator threads
 
+
+	//clients are created last so that they dont try to access a clerk that has not been created yet
 	std::cout << "reached.  customer_thread_num: " << customer_thread_num << std::endl; 
 	for(int i = 0; i < customer_thread_num; i++){
 		Thread *t = new Thread("customer thread");			
