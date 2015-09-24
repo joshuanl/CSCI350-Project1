@@ -1,17 +1,17 @@
-# CSCI350-Project1
+CSCI350-Project1
 Title: Writeup for Project 1 Fall 2015
 Date: 09/19/2015
 
-## I. Requirements
+I. Requirements
 Part I: We are to implement locks and condition variables. We have the option to either user Semaphores or a more primitive method such as Thread::Sleep in the implementation. The implementation should address issues such as the lock not holding and other possibilities that violate the rule of mutual exclusion. The implementation must enforce the concept that only the thread that acquired the lock may release the lock. We are to ignore the instructions that if a thread is to do something illegal, that we must terminate Nachos. Make sure that the code is commented, and test the code running the test_code.cc.
 
 Part 2: We are to create a simulation of the U.S. Passport Office that utilizes different threads for all of the staff and customers in the simulation. The simulation includes the following people and resources:
-* Customer
-* Application Clerk
-* Picture Clerk
-* Passport Clerk
-* Cashier
-* Manager
+Customer
+Application Clerk
+Picture Clerk
+Passport Clerk
+Cashier
+Manager
 
 Each one of these people is responsible for a distinct set of actions and interactions with one another. Likewise, we are to keep track of items such as sales, and the sales from each clerk. The particular actions that we are to test include:
 * Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
@@ -84,3 +84,6 @@ Part 2: A description of Classes added and Methods.
 * Class Senator
    * The following variables: the int money representing how much money the senator has and int ssn to represent the social security number and senator identifier. The class contains two booleans to represent the stages of going through the passport office: pictureTaken to indicate whether the senator has successfully interacted with the Picture Clerk and received a photo, and applicationAccepted to denote whether or not the senator's application has been accepted after interacting with the Application clerk. There is an additional Boolean, bribed, that keeps track of whether the senator has currently bribed during this line, or not. The bribe boolean is reset with each line that the senator is in. 
   * The following methods: moveUpInLine(), which will allow a senator with greater than or equal to 700 dollars to change their bribed variable to true for the following line that they are in, and result in a net loss of 600 dollars for the senator, setAppAccepted()- a method allowing the bool applicationAccepted to be set, setPictureTaken()- a method allowing the bool pictureTaken to be set, and the bool methods isAppAccepted(), isPictureTaken(), and alreadyBribed() which returns the booleans set in the Senator class.
+
+## IV. Implementation
+* Files modified: synch.cc, synch.h, threadtest.cc, main.cc
