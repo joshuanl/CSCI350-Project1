@@ -1702,24 +1702,25 @@ public:
 	} //End of getters for different clerk money
 
 	void run(){
-		//manager first acesses monitor to look at clerk information
-		std::cout<< "Manager is making rounds to wake up clerks" << std::endl;
-		wakeupClerks();
-		std::cout << "Manager is going around getting money from clerks" << std::endl;
-		updateTotalMoney();
+		while(true){
+			//manager first acesses monitor to look at clerk information
+			std::cout<< "Manager is making rounds to wake up clerks" << std::endl;
+			wakeupClerks();
+			std::cout << "Manager is going around getting money from clerks" << std::endl;
+			updateTotalMoney();
 
-		std::cout << "Manager has counted a total of $" << aClerkMoney << " for ApplicationClerks" << std::endl;
-		std::cout << "Manager has counted a total of $" << pClerkMoney << " for PictureClerks" << std::endl;
-		std::cout << "Manager has counted a total of $" << ppClerkMoney << " for PassportClerks" << std::endl;
-		std::cout << "Manager has counted a total of $" << cClerkMoney << " for Cashiers" << std::endl;
-		std::cout << "Manager has counted a total of $" << totalMoney << " for the passport office" << std::endl;
+			std::cout << "Manager has counted a total of $" << aClerkMoney << " for ApplicationClerks" << std::endl;
+			std::cout << "Manager has counted a total of $" << pClerkMoney << " for PictureClerks" << std::endl;
+			std::cout << "Manager has counted a total of $" << ppClerkMoney << " for PassportClerks" << std::endl;
+			std::cout << "Manager has counted a total of $" << cClerkMoney << " for Cashiers" << std::endl;
+			std::cout << "Manager has counted a total of $" << totalMoney << " for the passport office" << std::endl;
 
-		//simulating that manager does not patrol clerks constantly, every second, so a random delay is added
-		// randomDelay = rand()%20;
-		// for(int i=0; i < randomDelay; i++){
-		// 	currentThread->Yield();
-		// }//end of delay
-
+			//simulating that manager does not patrol clerks constantly, every second, so a random delay is added
+			randomDelay = rand()%20;
+			for(int i=0; i < randomDelay; i++){
+				currentThread->Yield();
+			}//end of delay
+		}//end of while
 	}//end of run
 }; //end of manager class
 
