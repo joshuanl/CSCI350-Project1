@@ -20,7 +20,6 @@
 #include "copyright.h"
 #include "thread.h"
 #include "list.h"
-#include <vector>
 
 // The following class defines a "semaphore" whose value is a non-negative
 // integer.  The semaphore has only two operations P() and V():
@@ -70,8 +69,8 @@ class Lock {
     ~Lock();				// deallocate lock
     char* getName() { return name; }	// debugging assist
 
-    void Acquire(); // these are the only operations on a lock
-    void Release(); // they are both *atomic*
+    void Acquire(char* debugName); // these are the only operations on a lock
+    void Release(char* debugName); // they are both *atomic*
 
     bool isHeldByCurrentThread();	// true if the current thread
 					// holds this lock.  Useful for
@@ -80,14 +79,14 @@ class Lock {
 
   private:
     char* name;				// for debugging
+	bool acquired;
+	Thread* owner;
+	List* queue;
     // plus some other stuff you'll need to define
-    Thread *owner;
-    bool BUSY;
-    std::vector<Thread*> lockWaitQueue;
 };
 
 // The following class defines a "condition variable".  A condition
-// variable does not have a value, but threads may be vectord, waiting
+// variable does not have a value, but threads may be queued, waiting
 // on the variable.  These are only operations on a condition variable: 
 //
 //	Wait() -- release the lock, relinquish the CPU until signaled, 
@@ -125,18 +124,18 @@ class Condition {
     ~Condition();			// deallocate the condition
     char* getName() { return (name); }
     
-    void Wait(Lock *conditionLock); 	// these are the 3 operations on 
+    void Wait(char* debugName, Lock *conditionLock) ; 	// these are the 3 operations on 
 					// condition variables; releasing the 
 					// lock and going to sleep are 
 					// *atomic* in Wait()
-    void Signal(Lock *conditionLock);   // conditionLock must be held by
+    void Signal(char* debugName, Lock *conditionLock);   // conditionLock must be held by
     void Broadcast(Lock *conditionLock);// the currentThread for all of 
 					// these operations
 
   private:
     char* name;
+	List* waitQueue;
+	Lock* waitingLock;
     // plus some other stuff you'll need to define
-    std::vector<Thread*> cvWaitQueue;
-    Lock *waitingLock;
 };
 #endif // SYNCH_H
