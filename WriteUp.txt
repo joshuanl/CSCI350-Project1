@@ -85,5 +85,25 @@ Class Senator
    The following variables: the int money representing how much money the senator has and int ssn to represent the social security number and senator identifier. The class contains two booleans to represent the stages of going through the passport office: pictureTaken to indicate whether the senator has successfully interacted with the Picture Clerk and received a photo, and applicationAccepted to denote whether or not the senator's application has been accepted after interacting with the Application clerk. There is an additional Boolean, bribed, that keeps track of whether the senator has currently bribed during this line, or not. The bribe boolean is reset with each line that the senator is in. 
   The following methods: moveUpInLine(), which will allow a senator with greater than or equal to 700 dollars to change their bribed variable to true for the following line that they are in, and result in a net loss of 600 dollars for the senator, setAppAccepted()- a method allowing the bool applicationAccepted to be set, setPictureTaken()- a method allowing the bool pictureTaken to be set, and the bool methods isAppAccepted(), isPictureTaken(), and alreadyBribed() which returns the booleans set in the Senator class.
 
-## IV. Implementation
-* Files modified: synch.cc, synch.h, threadtest.cc, main.cc
+IV. Implementation
++Files modified
+synch.h, synch.cc: lock and condition code
+threadtest.cc: implementation code for Passport office and testing
++Data structures added
+Struct ApplicationMonitor (in threadtest.cc) accepts numApplicationClerks and numCustomers as arguments and sets conditions and locks for the normal lines and bribe lines.
+Struct PictureMonitor (in threadtest.cc) accepts numPictureClerks and numCustomers as arguments and sets conditions and locks for the normal lines and bribe lines.
+Struct PassportMonitor (in threadtest.cc) accepts numPassportClerks and numCustomers as arguments and sets conditions and locks for the normal lines and bribe lines.
+Struct CashierMonitor (in threadtest.cc) accepts numCashiers and numCustomers as arguments and sets conditions and locks for the normal lines and bribe lines.
+Struct ManagerMonitor (in threadtest.cc) accepts numClerksOnBreak as arguments and sets conditions and locks for clerks on break.
+Class Client (in threadtest.cc) contains int money, int ssn, and the booleans applicationAccepted, pictureTaken, bribed, and missingReqs and the public getters and setters for these variables.
+Class ApplicationClerk (in threadtest.cc) contains int clerkState, int lineCount, int bribeLineCount, int clerkMoney, and int myLine and the getters and setters for these variables.
+Class PictureClerk (in threadtest.cc) contains int clerkState, int lineCount, int bribeLineCount, int clerkMoney, and int myLine and the getters and setters for these variables.
+Class PassportClerk (in threadtest.cc) contains int clerkState, int lineCount, int bribeLineCount, int clerkMoney, and int myLine and the getters and setters for these variables.
+Class Cashier (in threadtest.cc) contains int clerkState, int lineCount, int bribeLineCount, int clerkMoney, and int myLine and the getters and setters for these variables.
+Class Manager (in threadtest.cc) contains ints representing each clerk's money amount, and the total money and getters and setters for these variables.
+Class Senator (in threadtest.cc) contains int money, int ssn, and the booleans applicationAccepted, pictureTaken, bribed, and missingReqs and the public getters and setters for these variables.
++Data structures modified
+Lock class (in synch.cc, synch.h) implemented constructor, destructor, and member functions.
+Condition class (in synch.cc, synch.h) implemented constructor, destructor, and member functions.
+
+
