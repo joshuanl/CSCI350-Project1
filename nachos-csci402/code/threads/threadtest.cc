@@ -871,7 +871,7 @@ public:
 			AMonitor->giveSSN(myLine, ssn);
 			AMonitor->clerkLineCV[myLine]->Wait("Customer", AMonitor->AMonitorLock);
 			AMonitor->clerkLineCount[myLine]--;
-			AMonitor->clientSSNs[myLine]->pop();
+			AMonitor->clientSSNs[myLine].pop();
 		}
 
 		AMonitor->clerkState[myLine] = 1;
@@ -902,7 +902,7 @@ public:
 			PMonitor->giveSSN(myLine, ssn);
 			PMonitor->clerkLineCV[myLine]->Wait("Customer", PMonitor->PMonitorLock);
 			PMonitor->clerkLineCount[myLine]--;
-			PMonitor->clientSSNs[myLine]->pop();
+			PMonitor->clientSSNs[myLine].pop();
 		}
 
 		PMonitor->clerkState[myLine] = 1;
@@ -936,7 +936,7 @@ public:
 			PPMonitor->giveReqs(myLine, ssn);
 			PPMonitor->clerkLineCV[myLine]->Wait("Customer", PPMonitor->MonitorLock);
 			PPMonitor->clerkLineCount[myLine]--;
-			PPMonitor->clientSSNs[myLine]->pop();
+			PPMonitor->clientSSNs[myLine].pop();
 		}
 
 		PPMonitor->clerkState[myLine] = 1;
@@ -952,8 +952,8 @@ public:
 		}
 		else
 		{
-			std::cout << "\nCustomer " << id << " has gone to Passport Clerk " << myLIne << " too soon. They are going to the back of the line." << std::endl;
-			int yieldCalls = 100 + rand % 900;
+			std::cout << "\nCustomer " << id << " has gone to Passport Clerk " << myLine << " too soon. They are going to the back of the line." << std::endl;
+			int yieldCalls = 100 + rand() % 900;
 			for(int i = 0; i < yieldCalls; i++)
 			{
 				currentThread->Yield();
@@ -977,7 +977,7 @@ public:
 			CMonitor->giveSSN(myLine, ssn);
 			CMonitor->clerkLineCV[myLine]->Wait("Customer", CMonitor->MonitorLock);
 			CMonitor->clerkLineCount[myLine]--;
-			CMonitor->clientSSNs[myLine]->pop();
+			CMonitor->clientSSNs[myLine].pop();
 		}
 		CMonitor->clerkState[myLine] = 1;
 		CMonitor->MonitorLock->Release("Customer");
@@ -1316,17 +1316,17 @@ public:
 			
 			PPMonitor->clerkLineCV[myLine]->Wait("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
 
-			if(PPMonitor->customerReqs[myLine].front() != 2)
+			if(PPMonitor->clientReqs[myLine].front() != 2)
 			{
-				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << PPMonitor->customerSSNs[myLine].front() << " does not have both their application and picture completed." << std::endl;
+				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << PPMonitor->clientSSNs[myLine].front() << " does not have both their application and picture completed." << std::endl;
 
 			}
 			else
 			{
-				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << PPMonitor->customerSSNs[myLine].front() << " has both their application and picture completed." << std::endl;				
+				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << PPMonitor->clientSSNs[myLine].front() << " has both their application and picture completed." << std::endl;				
 				std::cout << "\nPassport  Clerk " << myLine << " has received SSN " << PPMonitor->clientSSNs[myLine].front() <<
 						" from Customer " << PPMonitor->clientSSNs[myLine].front() << "." << std::endl;
-				std::cout << "Passport Clerk " << myLine << " has recorded Customer " << PPMonitor->customerSSNs[myLine].front() << " passport information." << std::endl;
+				std::cout << "Passport Clerk " << myLine << " has recorded Customer " << PPMonitor->clientSSNs[myLine].front() << " passport information." << std::endl;
 			}
 
 			PPMonitor->clerkLineLocks[myLine]->Release("Passport  Clerk");	
