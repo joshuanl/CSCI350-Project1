@@ -811,6 +811,13 @@ public:
 		certified = false;
 		done = false;
 
+		
+
+		if(rand() % 20 && money >= 600)
+		{
+			bribed = true;
+		}
+
 		//randomize	
 		/*while(!done)
 		{
@@ -867,12 +874,6 @@ public:
 		AMonitor->AMonitorLock->Acquire("Customer");
 		int myLine = AMonitor->getSmallestLine();
 		
-
-		if(rand()%20)
-		{
-
-		}
-
 		if(AMonitor->clerkState[myLine] == 1)
 		{
 			if(bribed)
@@ -1176,7 +1177,7 @@ public:
 			if(AMonitor->clerkBribeLineCount[myLine] > 0)
 			{
 				frontSSN = AMonitor->bribeClientSSNs[myLine].front();
-				std::cout << "\nApplication Clerk"  << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				std::cout << "\nApplication Clerk"  << myLine << " has received $500 from Customer " << frontSSN << "." << std::endl;
 				AMonitor->clerkBribeLineCV[myLine]->Signal("Application Clerk", AMonitor->AMonitorLock);
 				AMonitor->clerkState[myLine] = 1;
 			}
@@ -1197,15 +1198,16 @@ public:
 			AMonitor->AMonitorLock->Release("Application Clerk");
 
 			AMonitor->clerkLineCV[myLine]->Wait("Application Clerk", AMonitor->clerkLineLocks[myLine]);
-
+			std::cout << "\nApplication Clerk " << myLine << " has received SSN " << frontSSN  <<
+						" from Customer " << frontSSN << "." << std::endl;
 			
+			
+			std::cout << "\nApplication Clerk " << myLine << " has recorded a completed application for Customer " << frontSSN << "." << std::endl;
 			AMonitor->clerkLineCV[myLine]->Signal("Application Clerk", AMonitor->clerkLineLocks[myLine]);
-			std::cout << "\nApplication Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+			
 			
 			
 			AMonitor->clerkLineCV[myLine]->Wait("Application Clerk", AMonitor->clerkLineLocks[myLine]);
-			std::cout << "\nApplication Clerk " << myLine << " has received SSN " << frontSSN  <<
-						" from Customer " << frontSSN << "." << std::endl;
 			
 			AMonitor->clerkLineLocks[myLine]->Release("Application Clerk");			
 		
@@ -1298,7 +1300,7 @@ public:
 			if(PMonitor->clerkBribeLineCount[myLine] > 0)
 			{
 				frontSSN = PMonitor->bribeClientSSNs[myLine].front();
-				std::cout << "\nPicture Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				std::cout << "\nPicture Clerk " << myLine << " has received $500 from Customer " << frontSSN << "." << std::endl;
 				PMonitor->clerkBribeLineCV[myLine]->Signal("Picture Clerk", PMonitor->PMonitorLock);
 				PMonitor->clerkState[myLine] = 1;
 			}
@@ -1319,13 +1321,13 @@ public:
 			PMonitor->PMonitorLock->Release("Picture Clerk");
 
 			PMonitor->clerkLineCV[myLine]->Wait("Picture Clerk", PMonitor->clerkLineLocks[myLine]);
-
-			PMonitor->clerkLineCV[myLine]->Signal("Picture Clerk", PMonitor->clerkLineLocks[myLine]);			
-			std::cout << "\nPicture Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
-			
-			PMonitor->clerkLineCV[myLine]->Wait("Picture Clerk", PMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nPicture Clerk " << myLine << " has received SSN " << frontSSN <<
 						" from Customer " << frontSSN << "." << std::endl;
+
+			PMonitor->clerkLineCV[myLine]->Signal("Picture Clerk", PMonitor->clerkLineLocks[myLine]);			
+			
+			PMonitor->clerkLineCV[myLine]->Wait("Picture Clerk", PMonitor->clerkLineLocks[myLine]);
+			
 			PMonitor->clerkLineLocks[myLine]->Release("Picture Clerk");	
 		}//end of while
 		
@@ -1418,7 +1420,7 @@ public:
 			{
 				frontSSN = PPMonitor->bribeClientSSNs[myLine].front();				
 				bribed = true;
-				std::cout << "\nPassport Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				std::cout << "\nPassport Clerk " << myLine << " has received $500 from Customer " << frontSSN << "." << std::endl;
 				PPMonitor->clerkBribeLineCV[myLine]->Signal("Passport Clerk", PPMonitor->MonitorLock);
 				PPMonitor->clerkState[myLine] = 1;
 				
@@ -1442,11 +1444,8 @@ public:
 
 			PPMonitor->clerkLineCV[myLine]->Wait("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
 
-			PPMonitor->clerkLineCV[myLine]->Signal("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
-			std::cout << "\nPassport  Clerk " << myLine << " has signalled a Customer to come to their counter." << std::endl;
-			
-			PPMonitor->clerkLineCV[myLine]->Wait("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
-
+			std::cout << "\nPassport  Clerk " << myLine << " has received SSN " << frontSSN <<
+						" from Customer " << frontSSN << "." << std::endl;
 			if((!PPMonitor->clientReqs[myLine].front() && !bribed) || (!PPMonitor->bribeClientReqs[myLine].front() && bribed))
 			{
 				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << frontSSN << " does not have both their application and picture completed." << std::endl;
@@ -1455,10 +1454,15 @@ public:
 			else
 			{
 				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << frontSSN << " has both their application and picture completed." << std::endl;				
-				std::cout << "\nPassport  Clerk " << myLine << " has received SSN " << frontSSN <<
-						" from Customer " << frontSSN << "." << std::endl;
+				
 				std::cout << "Passport Clerk " << myLine << " has recorded Customer " << frontSSN<< " passport information." << std::endl;
 			}
+
+			PPMonitor->clerkLineCV[myLine]->Signal("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
+			
+			PPMonitor->clerkLineCV[myLine]->Wait("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
+
+			
 
 			PPMonitor->clerkLineLocks[myLine]->Release("Passport  Clerk");	
 
@@ -1547,7 +1551,7 @@ public:
 			{
 				frontSSN = CMonitor->bribeClientSSNs[myLine].front();
 				bribed = true;
-				std::cout << "\nCashier " << myLine << " has signalled a Customer to come to their counter." << std::endl;
+				std::cout << "\nCashier " << myLine << " has received $500 from Customer " << frontSSN << "." << std::endl;
 				CMonitor->clerkBribeLineCV[myLine]->Signal("Cashier", CMonitor->MonitorLock);
 				CMonitor->clerkState[myLine] = 1;
 			}
@@ -1570,15 +1574,8 @@ public:
 
 			CMonitor->clerkLineCV[myLine]->Wait("Cashier", CMonitor->clerkLineLocks[myLine]);
 
-			CMonitor->clerkLineCV[myLine]->Signal("Cashier", CMonitor->clerkLineLocks[myLine]);
-			std::cout << "\nCashier " << myLine << " has signalled a Customer to come to their counter." << std::endl;
-			
-			
-
-			CMonitor->clerkLineCV[myLine]->Wait("Cashier", CMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nCashier " << myLine << " has received SSN " << CMonitor->clientSSNs[myLine].front() <<
 						" from Customer " << CMonitor->clientSSNs[myLine].front() << "." << std::endl;
-
 			if((CMonitor->customerCertifications[myLine].front() && !bribed) || (CMonitor->bribeCustomerCertifications[myLine].front() && bribed) )
 			{				
 				std::cout << "\nCashier " << myLine << " has verified that Customer " << frontSSN << " has been certified by a Passport Clerk." << std::endl;
@@ -1589,6 +1586,14 @@ public:
 			{
 				std::cout << "\nCashier " << myLine << " has received the $100 from Customer " << frontSSN  << "before certification. They are to go to the back of the line." << std::endl;
 			}
+
+			CMonitor->clerkLineCV[myLine]->Signal("Cashier", CMonitor->clerkLineLocks[myLine]);
+			
+			
+			
+			CMonitor->clerkLineCV[myLine]->Wait("Cashier", CMonitor->clerkLineLocks[myLine]);
+
+			
 
 			CMonitor->clerkLineLocks[myLine]->Release("Cashier");	
 		}//end of while
