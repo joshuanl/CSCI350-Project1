@@ -114,7 +114,6 @@ struct ApplicationMonitor {
 	{
 		int smallest = 50;
 		int smallestIndex = -1;
-		//std::cout << "num clerks: " << numAClerks << std::endl;
 		for(int i = 0; i < numAClerks; i++)
 		{
 			if(clerkLineCount[i] < smallest)
@@ -123,7 +122,6 @@ struct ApplicationMonitor {
 				smallestIndex = i;
 			}
 		}
-		std::cout << "CHOSEN LINE " << smallestIndex << std::endl;
 		return smallestIndex;
 	}
 
@@ -188,7 +186,6 @@ struct PictureMonitor {
 		int smallestIndex = -1;
 		for(int i = 0; i < numPClerks; i++)
 		{
-			//std::cout << clerkLineCount[i] << std::endl;
 			if(clerkLineCount[i] < smallest)
 			{
 				smallest = clerkLineCount[i];
@@ -261,7 +258,6 @@ struct PassportMonitor {
 		int smallestIndex = -1;
 		for(int i = 0; i < numClerks; i++)
 		{
-			//std::cout << clerkLineCount[i] << std::endl;
 			if(clerkLineCount[i] < smallest)
 			{
 				smallest = clerkLineCount[i];
@@ -965,6 +961,14 @@ public:
 
 			PMonitor->clerkLineCV[myLine]->Wait("Customer", PMonitor->clerkLineLocks[myLine]);
 			iLikePicture = rand() % 2;
+			if(iLikePicture == 0)
+			{
+				std::cout << "\nCustomer " << id << " does not like their picture from Picture Clerk " << myLine << std::endl;
+			}
+			else
+			{
+				std::cout << "\nCustomer " << id << " does like their picture from Picture Clerk " << myLine << std::endl;
+			}
 		}
 		pictureTaken = true;
 		PMonitor->picturesTaken[myLine] = true;
@@ -1041,7 +1045,7 @@ public:
 		else
 		{
 			std::cout << "\nCustomer " << id << " has gone to Passport Clerk " << myLine << " too soon. They are going to the back of the line." << std::endl;
-			int yieldCalls = 100 + rand() % 900;
+			int yieldCalls = 100 + rand() % 901;
 			for(int i = 0; i < yieldCalls; i++)
 			{
 				currentThread->Yield();
@@ -1106,7 +1110,7 @@ public:
 		if(!certified)
 		{
 			std::cout << "\nCustomer " << id << " has gone to Cashier " << myLine << " too soon. They are going to the back of the line." << std::endl;
-			int yieldCalls = 100 + rand() % 900;
+			int yieldCalls = 100 + rand() % 901;
 			for(int i = 0; i < yieldCalls; i++)
 			{
 				currentThread->Yield();
@@ -1215,6 +1219,11 @@ public:
 			std::cout << "\nApplication Clerk " << myLine << " has received SSN " << frontSSN  <<
 						" from Customer " << frontSSN << "." << std::endl;
 			
+			int yieldCalls = 20 + rand() % 81;
+			for(int i = 0; i < yieldCalls; i++)
+			{
+				currentThread->Yield();
+			}
 			
 			std::cout << "\nApplication Clerk " << myLine << " has recorded a completed application for Customer " << frontSSN << "." << std::endl;
 			AMonitor->clerkLineCV[myLine]->Signal("Application Clerk", AMonitor->clerkLineLocks[myLine]);
@@ -1342,6 +1351,20 @@ public:
 			{
 				PMonitor->clerkLineCV[myLine]->Signal("Picture Clerk", PMonitor->clerkLineLocks[myLine]);			
 				PMonitor->clerkLineCV[myLine]->Wait("Picture Clerk", PMonitor->clerkLineLocks[myLine]);
+				if(!PMonitor->picturesTaken[myLine])
+				{
+					std::cout << "\nPicture Clerk " << myLine << " has been told that Customer " << frontSSN << " does not like their picture." << std::endl;
+				}
+				else
+				{
+					std::cout << "\nPicture Clerk " << myLine << " has been told that Customer " << frontSSN << " does like their picture." << std::endl;
+				}
+			}
+
+			int yieldCalls = 20 + rand() % 81;
+			for(int i = 0; i < yieldCalls; i++)
+			{
+				currentThread->Yield();
 			}
 			
 			PMonitor->clerkLineLocks[myLine]->Release("Picture Clerk");	
@@ -1471,6 +1494,12 @@ public:
 			{
 				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << frontSSN << " has both their application and picture completed." << std::endl;				
 				
+				int yieldCalls = 20 + rand() % 81;
+				for(int i = 0; i < yieldCalls; i++)
+				{
+					currentThread->Yield();
+				}
+
 				std::cout << "Passport Clerk " << myLine << " has recorded Customer " << frontSSN<< " passport information." << std::endl;
 			}
 
@@ -1596,6 +1625,11 @@ public:
 			{				
 				std::cout << "\nCashier " << myLine << " has verified that Customer " << frontSSN << " has been certified by a Passport Clerk." << std::endl;
 				std::cout << "\nCashier " << myLine << " has received the $100 from Customer " << frontSSN << " after certification." << std::endl;
+				int yieldCalls = 20 + rand() % 81;
+				for(int i = 0; i < yieldCalls; i++)
+				{
+					currentThread->Yield();
+				}
 				std::cout << "\nCashier " << myLine << " has provided Customer " << frontSSN  << " their completed passport." << std::endl;				
 			}
 			else
