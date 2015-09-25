@@ -792,7 +792,7 @@ public:
 		ssn = num;
 		money = startMoney;
 		selfIndex = num; //defines position in the customer vector
-		std::cout << "ssn: " << ssn << "  startMoney: " << startMoney << std::endl;
+		//std::cout << "ssn: " << ssn << "  startMoney: " << startMoney << std::endl;
 
 		applicationAccepted = false;
 		pictureTaken = false;
@@ -810,21 +810,21 @@ public:
 				case 0:
 					if(!applicationAccepted)
 					{
-						std::cout << "JOINING APPLICATION LINE-- ID: " << id << std::endl;
+						//std::cout << "JOINING APPLICATION LINE-- ID: " << id << std::endl;
 						joinApplicationLine();
 					}
 				break;
 				case 1:
 					if(!pictureTaken)
 					{
-						std::cout << "JOINING APPLICATION LINE-- ID: " << id << std::endl;
+						//std::cout << "JOINING APPLICATION LINE-- ID: " << id << std::endl;
 						joinPictureLine();
 					}
 				break;
 				case 2:
 					if(!certified)
 					{
-						std::cout << "JOINING APPLICATION LINE-- ID: " << id << std::endl;
+						//std::cout << "JOINING APPLICATION LINE-- ID: " << id << std::endl;
 						joinPassportLine();
 					}
 				break;
@@ -832,6 +832,7 @@ public:
 					joinCashierLine();
 				break;
 			}
+			std::cout << "Customer [" << id << "] is leaving the Passport Office." << std::endl;
 		}
 
 		//run in order
@@ -1101,7 +1102,7 @@ public:
 		CMonitor->clerkState[myLine] = 1;
 		CMonitor->MonitorLock->Release("Customer");
 		CMonitor->clerkLineLocks[myLine]->Acquire("Customer");
-		std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Cashier\n " << myLine << std::endl;
+		//std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Cashier\n " << myLine << std::endl;
 		CMonitor->clerkLineCV[myLine]->Signal("Customer", CMonitor->clerkLineLocks[myLine]);
 		
 
@@ -1230,6 +1231,8 @@ public:
 			{
 				AMonitor->clerkState[myLine] = 2;
 				std::cout << "\nApplication Clerk " << myLine << " is going on break. " << std::endl;
+				//AMonitor->clerkLineCV[myLine]->Wait("Application Clerk", AMonitor->clerkLineLocks[myLine]);
+				std::cout << "\nApplication Clerk " << myLine << " is coming off break. " << std::endl;
 			}
 
 			AMonitor->clerkLineLocks[myLine]->Acquire("Application Clerk");
@@ -1362,6 +1365,8 @@ public:
 			{
 				PMonitor->clerkState[myLine] = 2;
 				std::cout << "\nPicture  Clerk " << myLine << " is going on break. " << std::endl;
+				PMonitor->clerkLineCV[myLine]->Wait("Application Clerk", PMonitor->clerkLineLocks[myLine]);
+				std::cout << "\nApplication Clerk " << myLine << " is coming off break. " << std::endl;
 			}
 
 			PMonitor->clerkLineLocks[myLine]->Acquire("Picture Clerk");
@@ -1505,6 +1510,8 @@ public:
 			{
 				PPMonitor->clerkState[myLine] = 2;
 				std::cout << "\nPassport  Clerk " << myLine << " is going on break. " << std::endl;
+				//PPMonitor->clerkLineCV[myLine]->Wait("Application Clerk", PPMonitor->clerkLineLocks[myLine]);
+				std::cout << "\nApplication Clerk " << myLine << " is coming off break. " << std::endl;
 			}
 
 			PPMonitor->clerkLineLocks[myLine]->Acquire("Passport Clerk");
@@ -1647,6 +1654,8 @@ public:
 			{
 				CMonitor->clerkState[myLine] = 2;
 				std::cout << "\nCashier " << myLine << " is going on break. " << std::endl;
+				//CMonitor->clerkLineCV[myLine]->Wait("Application Clerk", CMonitor->clerkLineLocks[myLine]);
+				std::cout << "\nApplication Clerk " << myLine << " is coming off break. " << std::endl;
 			}
 
 			CMonitor->clerkLineLocks[myLine]->Acquire("Cashier");
@@ -1750,7 +1759,7 @@ public:
 		ppClerkMoney = 0;
 		cClerkMoney = 0;
 		totalMoney = 0;
-
+		run();
 	}//end of constructor
 
 	~Manager(){
@@ -1763,7 +1772,7 @@ public:
 		AMonitor->AMonitorLock->Acquire("Manager");
 		for(int i = 0; i < applicationClerk_thread_num; i++){
 			if(AMonitor->clerkLineCount[i] >= 3 && AMonitor->clerkState[i] == 2){
-				std::cout << "MANAGER WAKING UP APPLICATION CLERK FROM BREAK" << std::endl;
+				std::cout << "Manager has woken up an ApplicationClerk" << std::endl;
 				AMonitor->clerkLineCV[i]->Signal("Manager", AMonitor->clerkLineLocks[i]);
 			}//end of if clerk on break and 3 people in line
 		}//end of looping  
@@ -1772,7 +1781,7 @@ public:
 		PMonitor->PMonitorLock->Acquire("Manager");
 		for(int i = 0; i < pictureClerk_thread_num; i++){
 			if(PMonitor->clerkLineCount[i] >= 3 && PMonitor->clerkState[i] == 2){
-				std::cout << "MANAGER WAKING UP PICTURE CLERK FROM BREAK" << std::endl;
+				std::cout << "Manager has woken up a PictureClerk" << std::endl;
 				PMonitor->clerkLineCV[i]->Signal("Manager", PMonitor->clerkLineLocks[i]);
 			}//end of if clerk on break and 3 people in line
 		}//end of looping  
@@ -1781,7 +1790,7 @@ public:
 		PPMonitor->MonitorLock->Acquire("Manager");
 		for(int i = 0; i < passportClerk_thread_num; i++){
 			if(PPMonitor->clerkLineCount[i] >= 3 && PPMonitor->clerkState[i] == 2){
-				std::cout << "MANAGER WAKING UP PASSPORT CLERK FROM BREAK" << std::endl;
+				std::cout << "Manager has woken up a PassportClerk" << std::endl;
 				PPMonitor->clerkLineCV[i]->Signal("Manager", PPMonitor->clerkLineLocks[i]);
 			}//end of if clerk on break and 3 people in line
 		}//end of looping  
@@ -1790,7 +1799,7 @@ public:
 		CMonitor->MonitorLock->Acquire("Manager");
 		for(int i = 0; i < cashier_thread_num; i++){
 			if(CMonitor->clerkLineCount[i] >= 3 && CMonitor->clerkState[i] == 2){
-				std::cout << "MANAGER WAKING UP CASHIER CLERK FROM BREAK" << std::endl;
+				std::cout << "Manager has woken up a Cashier" << std::endl;
 				CMonitor->clerkLineCV[i]->Signal("Manager", CMonitor->clerkLineLocks[i]);
 			}//end of if clerk on break and 3 people in line
 		}//end of looping  
@@ -1854,9 +1863,9 @@ public:
 		int randomDelay;
 		while(true){
 			//manager first acesses monitor to look at clerk information
-			std::cout<< "Manager is making rounds to wake up clerks" << std::endl;
+			//std::cout<< "Manager is making rounds to wake up clerks" << std::endl;
 			wakeupClerks();
-			std::cout << "Manager is going around getting money from clerks" << std::endl;
+			//std::cout << "Manager is going around getting money from clerks" << std::endl;
 			updateTotalMoney();
 
 			std::cout << "Manager has counted a total of $" << aClerkMoney << " for ApplicationClerks" << std::endl;
@@ -1866,10 +1875,10 @@ public:
 			std::cout << "Manager has counted a total of $" << totalMoney << " for the passport office" << std::endl;
 
 			//simulating that manager does not patrol clerks constantly, every second, so a random delay is added
-			randomDelay = rand()%20;
-			for(int i=0; i < randomDelay; i++){
-				currentThread->Yield();
-			}//end of delay
+			// randomDelay = rand()%5;
+			// for(int i=0; i < randomDelay; i++){
+			// 	currentThread->Yield();
+			// }//end of delay
 		}//end of while
 	}
 }; //end of manager class
@@ -1964,7 +1973,7 @@ void createCashier()
 
 void makeManager(){
 	Manager *m = new Manager();
-	m->run();
+	//m->run();
 }//end of making manager
 
 void makeSenator(){
@@ -2106,7 +2115,6 @@ void Problem2(){
 		t->Fork((VoidFunctionPtr)createApplicationClerk, i+1);
 	}//end of creating application clerk threads
 
-
 	//std::cout << "reached.  PassportClerk_thread_num: " << passportClerk_thread_num << std::endl; 
 	for(int i = 0; i < passportClerk_thread_num; i++){
 		Thread *t = new Thread("passport clerk thread");
@@ -2126,10 +2134,10 @@ void Problem2(){
     }//end of creating cashier threads
 
     //std::cout <<"reached. manager_thread_num: " << manager_thread_num << std::endl;
-    for (int i=0; i<manager_thread_num; i++){
+
         Thread *t = new Thread("manager thread");
-        t->Fork((VoidFunctionPtr)makeManager, i+1);
-    }  //end of creating solo manager thread
+        t->Fork((VoidFunctionPtr)makeManager, 1);
+
 
     //std::cout <<"reached. senator_thread_num: " << senator_thread_num << std::endl;
     for (int i=0; i<senator_thread_num; i++){

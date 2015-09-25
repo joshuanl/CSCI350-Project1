@@ -127,7 +127,7 @@ void Lock::Acquire(char* debugName)
 	}
 	else if(acquired)
 	{			
-		std::cout << debugName << " waiting to acquire lock " << name << std::endl;
+		//std::cout << debugName << " waiting to acquire lock " << name << std::endl;
 		queue->Append((void*)currentThread);
 		currentThread->Sleep();	
 
@@ -135,7 +135,7 @@ void Lock::Acquire(char* debugName)
 	else
 	{
 			
-		std::cout <<  debugName <<  " acquired lock " << name << std::endl;
+		//std::cout <<  debugName <<  " acquired lock " << name << std::endl;
 		owner = currentThread;
 		acquired = true;
 		
@@ -154,11 +154,11 @@ void Lock::Release(char* debugName)
 	{
 		acquired = false;
 		owner = NULL;
-		std::cout << debugName << " released lock " << name << std::endl;
+		//std::cout << debugName << " released lock " << name << std::endl;
 	}
 	else
 	{
-		std::cout <<  debugName <<  ": Lock " << name << " is not held by current thread!" << std::endl;
+		//std::cout <<  debugName <<  ": Lock " << name << " is not held by current thread!" << std::endl;
 	}
 
 	if(!queue->IsEmpty())
@@ -192,7 +192,7 @@ Condition::~Condition()
 
 void Condition::Wait(char* debugName, Lock* conditionLock) 
 { 
-	std::cout <<  debugName <<  "Waiting on condition " << name << std::endl;
+	//std::cout <<  debugName <<  "Waiting on condition " << name << std::endl;
 	//ASSERT(FALSE); 
 	IntStatus oldLevel = interrupt->SetLevel(IntOff);
 	if(conditionLock == NULL)
@@ -233,12 +233,12 @@ void Condition::Signal(char* debugName, Lock* conditionLock)
 
 	if(waitingLock != conditionLock)
 	{
-		std::cout << "waitinglock and parameter lock do not match" << std::endl;
+		std::cout << "Waitinglock and parameter lock do not match" << std::endl;
 		(void) interrupt->SetLevel(oldLevel);
 		return;
 	}
 
-	std::cout <<  debugName << "has signaled lock " << conditionLock->getName() << " with condition " << name << std::endl;
+	//std::cout <<  debugName << "has signaled lock " << conditionLock->getName() << " with condition " << name << std::endl;
 	Thread* thread = (Thread *)waitQueue->Remove();
 	scheduler->ReadyToRun(thread);
 
