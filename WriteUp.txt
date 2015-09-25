@@ -12,6 +12,7 @@ Picture Clerk
 Passport Clerk
 Cashier
 Manager
+Senator
 
 Each one of these people is responsible for a distinct set of actions and interactions with one another. Likewise, we are to keep track of items such as sales, and the sales from each clerk. The particular actions that we are to test include:
 Customers always take the shortest line, but no 2 customers ever choose the same shortest line at the same time
@@ -24,10 +25,10 @@ The behavior of Customers is proper when Senators arrive. This is before, during
 
 The simulation is to support the following numbers of each type of person:
 
-Customers: up to 50
+Customers: 20 to 50
 Clerks and Cashier: between 1 and 5
 Manager: only 1
-Senators: up to 10
+Senators: 1 to 10
 
 II. Assumptions
 Part 1:
