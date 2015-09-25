@@ -9,26 +9,6 @@
 // All rights reserved.  See copyright.h for copyright notice and limitation 
 // of liability and disclaimer of warranty provisions.
 
-
-/*
-	Need to do:
-
-		- need to add run() for clerks 
-		- create interactions between client - application clerk first 
-	
-	How to share/communicate data between customer/clerk? 
-	 - customers should be created with index as a member variable // need to add
-	 - create a global vector of the class 	//need to add
-		- when customer acquires lock from clerk, customer passes clerk their index	with a function
-			- store index in a vector // should be same size as lineCount
-		
-
-*/
-
-
-
-
-
 #include "copyright.h"
 #include "system.h"
 #include "synch.h"
@@ -52,6 +32,7 @@ struct PassportMonitor;
 struct CashierMonitor;
 
 
+//keeping track of each clerk/client
 std::vector<ApplicationClerk *> aClerks;
 std::vector<PictureClerk *> pClerks;
 std::vector<PassportClerk *> ppClerks;
@@ -74,7 +55,7 @@ struct ApplicationMonitor {
 	int* clerkLineCount;
 	int* clerkBribeLineCount;
 	int* clerkState;	//0: available     1: busy    2: on break
-
+	//keeping track of line order
 	std::queue<int>* clientSSNs;
 	std::queue<int>* bribeClientSSNs;
 
@@ -82,7 +63,7 @@ struct ApplicationMonitor {
 	{
 		AMonitorLock = new Lock("Application Monitor Lock");
 		//LineNoteEmpty = new Condition("Monitor Condition");
-
+		//init all arrays with size of number of clerks and customers
 		numAClerks = numApplicationClerks;
 		clerkLineLocks = new Lock*[numAClerks];
 		clerkLineCV = new Condition*[numAClerks];
@@ -95,6 +76,7 @@ struct ApplicationMonitor {
 		clientSSNs = new std::queue<int>[numCustomers];
 		bribeClientSSNs = new std::queue<int>[numCustomers];
 
+		//init 2D arrays
 		for(int i = 0; i < numAClerks; i++)
 		{			
 			clerkLineCV[i] = new Condition("");
@@ -110,6 +92,7 @@ struct ApplicationMonitor {
 
 	}//end of destructor	
 
+	//loops through all the lines of each clerk and returns the index of clerk with the smallest line
 	int getSmallestLine()
 	{
 		int smallest = 50;
@@ -125,6 +108,7 @@ struct ApplicationMonitor {
 		return smallestIndex;
 	}
 
+	//client calls this and queues himself in line
 	void giveSSN(int line, int ssn)
 	{
 		clientSSNs[line].push(ssn);
@@ -143,6 +127,7 @@ struct PictureMonitor {
 	int* clerkLineCount;
 	int* clerkBribeLineCount;
 	int* clerkState;	//0: available     1: busy    2: on break
+	//keeps track of line order
 	std::queue<int>* clientSSNs;
 	std::queue<int>* bribeClientSSNs;
 	bool* picturesTaken;
@@ -150,7 +135,7 @@ struct PictureMonitor {
 	PictureMonitor(int numPictureClerks, int numCustomers)
 	{
 		PMonitorLock = new Lock("Monitor Lock");
-
+		//init variables with size of the number of clerks and clients
 		numPClerks = numPictureClerks;
 		clerkLineLocks = new Lock*[numPClerks];
 		clerkLineCV = new Condition*[numPClerks];
@@ -164,7 +149,7 @@ struct PictureMonitor {
 		bribeClientSSNs = new std::queue<int>[numCustomers];
 
 		picturesTaken = new bool[numCustomers];
-
+		//init 2D arrays
 		for(int i = 0; i < numPClerks; i++)
 		{			
 			clerkLineCV[i] = new Condition("");
@@ -179,7 +164,7 @@ struct PictureMonitor {
 	~PictureMonitor(){
 
 	}//end of destructor	
-
+	//loops through all the lines of each clerk and returns the index of clerk with the smallest line
 	int getSmallestLine()
 	{
 		int smallest = 50;
@@ -194,7 +179,7 @@ struct PictureMonitor {
 		}
 		return smallestIndex;
 	}
-
+	//client calls this and queues himself in line
 	void giveSSN(int line, int ssn)
 	{
 		clientSSNs[line].push(ssn);
@@ -214,6 +199,7 @@ struct PassportMonitor {
 	int* clerkLineCount;
 	int* clerkBribeLineCount;
 	int* clerkState;	//0: available     1: busy    2: on break
+	//keeps track of line order
 	std::queue<int>* clientSSNs;
 	std::queue<int>* bribeClientSSNs;
 	std::queue<bool>* clientReqs; //0: neither picture nor application, 1: 1 of the two, 2: both
@@ -222,7 +208,7 @@ struct PassportMonitor {
 	PassportMonitor(int numPassportClerks, int numCustomers)
 	{
 		MonitorLock = new Lock("Monitor Lock");
-
+		//init variables with size of the number of clerks and clients
 		numClerks = numPassportClerks;
 		clerkLineLocks = new Lock*[numClerks];
 		clerkLineCV = new Condition*[numClerks];
@@ -236,7 +222,7 @@ struct PassportMonitor {
 		bribeClientSSNs = new std::queue<int>[numCustomers];
 		clientReqs = new std::queue<bool>[numCustomers];
 		bribeClientReqs = new std::queue<bool>[numCustomers];
-
+		//loops through all the lines of each clerk and returns the index of clerk with the smallest line
 		for(int i = 0; i < numClerks; i++)
 		{			
 			clerkLineCV[i] = new Condition("");
@@ -251,7 +237,7 @@ struct PassportMonitor {
 	~PassportMonitor(){
 
 	}//end of destructor	
-
+	//loops through all the lines of each clerk and returns the index of clerk with the smallest line
 	int getSmallestLine()
 	{
 		int smallest = 50;
@@ -266,12 +252,12 @@ struct PassportMonitor {
 		}
 		return smallestIndex;
 	}
-
+	//client calls this and queues himself in line
 	void giveSSN(int line, int ssn)
 	{
 		clientSSNs[line].push(ssn);
 	}
-
+	//client calls this and queues himself in line
 	void giveReqs(int line, bool completed)
 	{
 		clientReqs[line].push(completed);
@@ -291,6 +277,7 @@ struct CashierMonitor
 	int* clerkLineCount;
 	int* clerkBribeLineCount;
 	int* clerkState;	//0: available     1: busy    2: on break
+	//keeps track of line order
 	std::queue<int>* clientSSNs;
 	std::queue<int>* bribeClientSSNs;
 	std::queue<bool>* customerCertifications; 
@@ -299,7 +286,7 @@ struct CashierMonitor
 	CashierMonitor(int numPassportClerks, int numCustomers)
 	{
 		MonitorLock = new Lock("Monitor Lock");
-
+		//init variables with size of the number of clerks and clients
 		numClerks = numPassportClerks;
 		clerkLineLocks = new Lock*[numClerks];
 		clerkLineCV = new Condition*[numClerks];
@@ -313,7 +300,7 @@ struct CashierMonitor
 		customerCertifications = new std::queue<bool>[numCustomers];
 		bribeClientSSNs = new std::queue<int>[numCustomers];
 		bribeCustomerCertifications = new std::queue<bool>[numCustomers];
-
+		//loops through all the lines of each clerk and returns the index of clerk with the smallest line
 		for(int i = 0; i < numClerks; i++)
 		{			
 			clerkLineCV[i] = new Condition("");
@@ -328,7 +315,7 @@ struct CashierMonitor
 	~CashierMonitor(){
 
 	}//end of destructor	
-
+	//loops through all the lines of each clerk and returns the index of clerk with the smallest line
 	int getSmallestLine()
 	{
 		int smallest = 50;
@@ -344,12 +331,12 @@ struct CashierMonitor
 		}
 		return smallestIndex;
 	}
-
+	//client calls this and queues himself in line
 	void giveSSN(int line, int ssn)
 	{
 		clientSSNs[line].push(ssn);
 	}
-
+	//client calls this and queues himself in line
 	void giveCertification(int line, bool certified)
 	{
 		customerCertifications[line].push(certified);
@@ -365,6 +352,7 @@ PictureMonitor* PMonitor;
 PassportMonitor* PPMonitor;
 CashierMonitor* CMonitor;
 
+//IDs/Thread num gives clerks/clients a unique ID -- needed for line ordering
 int customer_thread_num;
 int applicationClerk_thread_num;
 int applicationClerkID = 0;
@@ -791,6 +779,7 @@ private:
 	int id;
 	int ssn;
 	int selfIndex;
+	//bools keep track of progress in the office
 	bool applicationAccepted;
 	bool pictureTaken;
 	bool bribed; 	//reset after each line
@@ -811,14 +800,8 @@ public:
 		certified = false;
 		done = false;
 
-		
 
-		if(rand() % 20 && money >= 600)
-		{
-			bribed = true;
-		}
-
-		//randomize	
+		//randomizing place/line the client goes to.
 		while(!done)
 		{
 			int randomLine = rand() % 4;
@@ -861,7 +844,7 @@ public:
 		joinCashierLine();*/
 		
 		
-		std::cout << "MADE IT TO THE FUCKING END! -- ID: " << id << std::endl;
+		//std::cout << "MADE IT TO THE FUCKING END! -- ID: " << id << std::endl;
 	}//end of client constructor
 
 	~Client(){
@@ -869,6 +852,15 @@ public:
 
 	}//end of client deconstructor
 
+
+	//client first access the monitor to get access to clerk line information
+	//after finding the smallest line, client pushes his SSN to queue himself in line
+	//client then calls wait and waits until clerk signals him if the clerk is already busy
+	//after being signalled or there is no one in line, client gives back access to the monitor for other people
+	//client acquires the lock of the clerk, gives him his information, signals the clerk that he is done doing his job
+	//and then waits for the clerk to respond and do their job
+	//after being signalled by the clerk that their job is done, the client signals the clerk that he is leaving the line
+	//and then releases the lock for the next client in line
 	void joinApplicationLine()
 	{
 		AMonitor->AMonitorLock->Acquire("Customer");
@@ -906,6 +898,7 @@ public:
 
 		AMonitor->clerkLineCV[myLine]->Wait("Customer", AMonitor->clerkLineLocks[myLine]);
 		applicationAccepted = true;
+		//reducing the line count
 		if(bribed)
 		{
 			AMonitor->clerkBribeLineCount[myLine]--;
@@ -920,6 +913,14 @@ public:
 		AMonitor->clerkLineLocks[myLine]->Release("Customer");
 	}	
 
+	//client first access the monitor to get access to clerk line information
+	//after finding the smallest line, client pushes his SSN to queue himself in line
+	//client then calls wait and waits until clerk signals him if the clerk is already busy
+	//after being signalled or there is no one in line, client gives back access to the monitor for other people
+	//client acquires the lock of the clerk, gives him his information, signals the clerk that he is done doing his job
+	//and then waits for the clerk to respond and do their job
+	//after being signalled by the clerk that their job is done, the client signals the clerk that he is leaving the line
+	//and then releases the lock for the next client in line
 	void joinPictureLine()
 	{
 		PMonitor->PMonitorLock->Acquire("Customer");
@@ -988,7 +989,14 @@ public:
 		PMonitor->clerkLineLocks[myLine]->Release("Customer");
 
 	}
-
+	//client first access the monitor to get access to clerk line information
+	//after finding the smallest line, client pushes his SSN to queue himself in line
+	//client then calls wait and waits until clerk signals him if the clerk is already busy
+	//after being signalled or there is no one in line, client gives back access to the monitor for other people
+	//client acquires the lock of the clerk, gives him his information, signals the clerk that he is done doing his job
+	//and then waits for the clerk to respond and do their job
+	//after being signalled by the clerk that their job is done, the client signals the clerk that he is leaving the line
+	//and then releases the lock for the next client in line
 	void joinPassportLine() {
 		
 
@@ -1024,7 +1032,7 @@ public:
 		PPMonitor->clerkLineCV[myLine]->Signal("Customer", PPMonitor->clerkLineLocks[myLine]);
 		PPMonitor->clerkLineCV[myLine]->Wait("Customer", PPMonitor->clerkLineLocks[myLine]);
 
-		
+		//reducing line counts
 		if(bribed)
 		{
 			PPMonitor->clerkBribeLineCount[myLine]--;
@@ -1037,7 +1045,7 @@ public:
 			PPMonitor->clientSSNs[myLine].pop();	
 			PPMonitor->clientReqs[myLine].pop();	
 		}
-
+		//if the client didnt get his prereqs taken care of, client has to wait
 		if(applicationAccepted && pictureTaken)
 		{
 			certified = true;
@@ -1045,7 +1053,7 @@ public:
 		else
 		{
 			std::cout << "\nCustomer " << id << " has gone to Passport Clerk " << myLine << " too soon. They are going to the back of the line." << std::endl;
-			int yieldCalls = 100 + rand() % 901;
+			int yieldCalls = 100 + rand() % 999;
 			for(int i = 0; i < yieldCalls; i++)
 			{
 				currentThread->Yield();
@@ -1057,7 +1065,14 @@ public:
 		PPMonitor->clerkLineLocks[myLine]->Release("Customer");
 	}
 
-
+	//client first access the monitor to get access to clerk line information
+	//after finding the smallest line, client pushes his SSN to queue himself in line
+	//client then calls wait and waits until clerk signals him if the clerk is already busy
+	//after being signalled or there is no one in line, client gives back access to the monitor for other people
+	//client acquires the lock of the clerk, gives him his information, signals the clerk that he is done doing his job
+	//and then waits for the clerk to respond and do their job
+	//after being signalled by the clerk that their job is done, the client signals the clerk that he is leaving the line
+	//and then releases the lock for the next client in line
 	void joinCashierLine()
 	{
 		CMonitor->MonitorLock->Acquire("Customer");
@@ -1093,7 +1108,7 @@ public:
 		CMonitor->clerkLineCV[myLine]->Wait("Customer", CMonitor->clerkLineLocks[myLine]);
 		std::cout << "\nCustomer " << id << " has given Cashier " << myLine << " $100." << std::endl;
 
-		
+		//reducing line counts
 		if(bribed)
 		{
 			CMonitor->clerkBribeLineCount[myLine]--;
@@ -1106,7 +1121,7 @@ public:
 			CMonitor->clientSSNs[myLine].pop();	
 			CMonitor->customerCertifications[myLine].pop();
 		}
-
+		//if the client didnt get his prereqs taken care of, client has to wait
 		if(!certified)
 		{
 			std::cout << "\nCustomer " << id << " has gone to Cashier " << myLine << " too soon. They are going to the back of the line." << std::endl;
@@ -1186,6 +1201,11 @@ public:
 
 	}//endo of deconstructor
 
+	//clerk accesses the monitor and checks his line counts and sees whether he can go on break or not
+	//if the clerk is working, he acquires his lock, gives back access to the monitor, and waits for the client to signal him
+	//after being signaled, clerk does his job with some time factor, and then signals the client that he is done doing his job
+	//clerk waits on the client to be signalled that the client is leaving the line
+	//after being signaled, clerk releases his own lock so the next client can interact with him
 	void run()
 	{		
 		while(true)
@@ -1314,7 +1334,11 @@ public:
 	~PictureClerk(){
 
 	}//endo of deconstructor
-
+	//clerk accesses the monitor and checks his line counts and sees whether he can go on break or not
+	//if the clerk is working, he acquires his lock, gives back access to the monitor, and waits for the client to signal him
+	//after being signaled, clerk does his job with some time factor, and then signals the client that he is done doing his job
+	//clerk waits on the client to be signalled that the client is leaving the line
+	//after being signaled, clerk releases his own lock so the next client can interact with him
 	void run(){	
 		while(true)
 		{			
@@ -1347,6 +1371,7 @@ public:
 			std::cout << "\nPicture Clerk " << myLine << " has received SSN " << frontSSN <<
 						" from Customer " << frontSSN << "." << std::endl;
 
+			//client is able to not like the picture, and re does the process with the clerk
 			while(!PMonitor->picturesTaken[myLine])
 			{
 				PMonitor->clerkLineCV[myLine]->Signal("Picture Clerk", PMonitor->clerkLineLocks[myLine]);			
@@ -1446,7 +1471,11 @@ public:
 	~PassportClerk(){
 
 	}//end of deconstructor
-
+	//clerk accesses the monitor and checks his line counts and sees whether he can go on break or not
+	//if the clerk is working, he acquires his lock, gives back access to the monitor, and waits for the client to signal him
+	//after being signaled, clerk does his job with some time factor, and then signals the client that he is done doing his job
+	//clerk waits on the client to be signalled that the client is leaving the line
+	//after being signaled, clerk releases his own lock so the next client can interact with him
 	void run()
 	{	
 		while(true)
@@ -1485,6 +1514,8 @@ public:
 
 			std::cout << "\nPassport  Clerk " << myLine << " has received SSN " << frontSSN <<
 						" from Customer " << frontSSN << "." << std::endl;
+			//client needs to have been through application clerk and passport clerk to get his passport
+			//otherwise there is a wait punishment
 			if((!PPMonitor->clientReqs[myLine].front() && !bribed) || (!PPMonitor->bribeClientReqs[myLine].front() && bribed))
 			{
 				std::cout << "Passport Clerk " << myLine << " has determined that Customer " << frontSSN << " does not have both their application and picture completed." << std::endl;
@@ -1584,7 +1615,11 @@ public:
 	~Cashier(){
 
 	}//end of deconstructor
-
+	//clerk accesses the monitor and checks his line counts and sees whether he can go on break or not
+	//if the clerk is working, he acquires his lock, gives back access to the monitor, and waits for the client to signal him
+	//after being signaled, clerk does his job with some time factor, and then signals the client that he is done doing his job
+	//clerk waits on the client to be signalled that the client is leaving the line
+	//after being signaled, clerk releases his own lock so the next client can interact with him
 	void run(){	
 		
 		while(true)
@@ -1621,6 +1656,7 @@ public:
 
 			std::cout << "\nCashier " << myLine << " has received SSN " << CMonitor->clientSSNs[myLine].front() <<
 						" from Customer " << CMonitor->clientSSNs[myLine].front() << "." << std::endl;
+			//client needs to have his certification before coming to the cashier otherwise there is a wait punishment
 			if((CMonitor->customerCertifications[myLine].front() && !bribed) || (CMonitor->bribeCustomerCertifications[myLine].front() && bribed) )
 			{				
 				std::cout << "\nCashier " << myLine << " has verified that Customer " << frontSSN << " has been certified by a Passport Clerk." << std::endl;
@@ -1722,9 +1758,46 @@ public:
 	}//end of deconstructor
 
 	void wakeupClerks(){
+		//manager looks at the lines of all the clerks and looks for any line with +3 ppl
+		//if there is at least 3 people in line and clerk is on break, manager wakes them up
+		AMonitor->AMonitorLock->Acquire("Manager");
+		for(int i = 0; i < applicationClerk_thread_num; i++){
+			if(AMonitor->clerkLineCount[i] >= 3 && AMonitor->clerkState[i] == 2){
+				std::cout << "MANAGER WAKING UP APPLICATION CLERK FROM BREAK" << std::endl;
+				AMonitor->clerkLineCV[i]->Signal("Manager", AMonitor->clerkLineLocks[i]);
+			}//end of if clerk on break and 3 people in line
+		}//end of looping  
+		AMonitor->AMonitorLock->Release("Manager");
 
+		PMonitor->PMonitorLock->Acquire("Manager");
+		for(int i = 0; i < pictureClerk_thread_num; i++){
+			if(PMonitor->clerkLineCount[i] >= 3 && PMonitor->clerkState[i] == 2){
+				std::cout << "MANAGER WAKING UP PICTURE CLERK FROM BREAK" << std::endl;
+				PMonitor->clerkLineCV[i]->Signal("Manager", PMonitor->clerkLineLocks[i]);
+			}//end of if clerk on break and 3 people in line
+		}//end of looping  
+		PMonitor->PMonitorLock->Release("Manager");
+
+		PPMonitor->MonitorLock->Acquire("Manager");
+		for(int i = 0; i < passportClerk_thread_num; i++){
+			if(PPMonitor->clerkLineCount[i] >= 3 && PPMonitor->clerkState[i] == 2){
+				std::cout << "MANAGER WAKING UP PASSPORT CLERK FROM BREAK" << std::endl;
+				PPMonitor->clerkLineCV[i]->Signal("Manager", PPMonitor->clerkLineLocks[i]);
+			}//end of if clerk on break and 3 people in line
+		}//end of looping  
+		PPMonitor->MonitorLock->Release("Manager");
+
+		CMonitor->MonitorLock->Acquire("Manager");
+		for(int i = 0; i < cashier_thread_num; i++){
+			if(CMonitor->clerkLineCount[i] >= 3 && CMonitor->clerkState[i] == 2){
+				std::cout << "MANAGER WAKING UP CASHIER CLERK FROM BREAK" << std::endl;
+				CMonitor->clerkLineCV[i]->Signal("Manager", CMonitor->clerkLineLocks[i]);
+			}//end of if clerk on break and 3 people in line
+		}//end of looping  
+		CMonitor->MonitorLock->Release("Manager");
 	}//end of waking up clerks
 	
+	//loops through all the clerks and grabs their money
 	void updateTotalMoney(){
 		pClerkMoney = 0;
 		aClerkMoney = 0;
@@ -1745,6 +1818,7 @@ public:
 		totalMoney = pClerkMoney + aClerkMoney + ppClerkMoney + cClerkMoney;
 	}//end of updating total money 
 
+	//if getting the money for one clerk, updates the total money first
 	int getaClerkMoney() {
 		updateTotalMoney();
 		std::cout << "Manager has counted a total of $" << aClerkMoney << " for ApplicationClerks" << std::endl;
@@ -1775,6 +1849,29 @@ public:
 		return totalMoney;
 	} //End of getters for different clerk money
 
+
+	void run(){
+		int randomDelay;
+		while(true){
+			//manager first acesses monitor to look at clerk information
+			std::cout<< "Manager is making rounds to wake up clerks" << std::endl;
+			wakeupClerks();
+			std::cout << "Manager is going around getting money from clerks" << std::endl;
+			updateTotalMoney();
+
+			std::cout << "Manager has counted a total of $" << aClerkMoney << " for ApplicationClerks" << std::endl;
+			std::cout << "Manager has counted a total of $" << pClerkMoney << " for PictureClerks" << std::endl;
+			std::cout << "Manager has counted a total of $" << ppClerkMoney << " for PassportClerks" << std::endl;
+			std::cout << "Manager has counted a total of $" << cClerkMoney << " for Cashiers" << std::endl;
+			std::cout << "Manager has counted a total of $" << totalMoney << " for the passport office" << std::endl;
+
+			//simulating that manager does not patrol clerks constantly, every second, so a random delay is added
+			randomDelay = rand()%20;
+			for(int i=0; i < randomDelay; i++){
+				currentThread->Yield();
+			}//end of delay
+		}//end of while
+	}
 }; //end of manager class
 
 
@@ -1828,7 +1925,7 @@ public:
 
 void createCustomer(){
 	int rdmMoneyIndex = rand()%4;
-	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
+	//std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
 	ssnCount++;
 	Client *c = new Client(ssnCount, clientStartMoney[rdmMoneyIndex]);	 
 	customers.push_back(c);
@@ -1838,13 +1935,14 @@ void createApplicationClerk(){
 	ApplicationClerk *ac = new ApplicationClerk(applicationClerkID);
 	applicationClerkID++;
 	aClerks.push_back(ac);
-
+	ac->run();
 }//end of making application clerk
 
 void createPassportClerk(){
 	PassportClerk *ppc = new PassportClerk(passportClerkID);
 	passportClerkID++;
 	ppClerks.push_back(ppc);
+	ppc->run();
 }//end of making PassportClerk
 
 
@@ -1853,7 +1951,7 @@ void createPictureClerk(){
 	pictureClerkID++;
 	pClerks.push_back(pc);
 
-
+	pc->run();
 }//end of making picture clerk
 
 
@@ -1866,15 +1964,14 @@ void createCashier()
 
 void makeManager(){
 	Manager *m = new Manager();
-
+	m->run();
 }//end of making manager
 
 void makeSenator(){
 	int rdmMoneyIndex = rand()%4;
-	std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
+	//std::cout << "rdmMoneyIndex: " << rdmMoneyIndex << std::endl;
 	senatorID++;
 	Senator *s = new Senator(senatorID, clientStartMoney[rdmMoneyIndex]);
-
 }//end of making senator
 
 
@@ -1884,8 +1981,8 @@ void Problem2(){
 
 	bool acceptInput = false;
 	int num_of_people = 0;
-	//create menu here to figure out how many threads of each
-	std::cout << "reached" << std::endl;
+	//create menu here to figure out how many threads of each, while loops used to keep asking user for input
+	//if the user inputs bad input
 
 	while(!acceptInput){
 		std::cout << "Menu :: How many customers? (20 - 50)" << std::endl;
@@ -1988,53 +2085,59 @@ void Problem2(){
 		}
 	}//end of while
 
+	//initializing monitors 
 	AMonitor = new ApplicationMonitor(applicationClerk_thread_num, customer_thread_num);
 	PMonitor = new PictureMonitor(pictureClerk_thread_num, customer_thread_num);
 	PPMonitor = new PassportMonitor(passportClerk_thread_num, customer_thread_num);
 	CMonitor = new CashierMonitor(cashier_thread_num, customer_thread_num);
 
-	//create for loop for each and fork
-	//create 
-	
 
-	std::cout << "reached.  applicationClerk_thread_num: " << applicationClerk_thread_num << std::endl; 
+	std::cout << "Number of Customers =  [" << customer_thread_num << "]" << std::endl; 
+	std::cout << "Number of ApplicationClerks =  [" << applicationClerk_thread_num << "]" << std::endl; 
+	std::cout << "Number of PictureClerks =  [" << pictureClerk_thread_num << "]" << std::endl; 
+	std::cout << "Number of PassportClerksss =  [" << passportClerk_thread_num << "]" << std::endl; 
+	std::cout << "Number of Cashiers =  [" << cashier_thread_num << "]" << std::endl;
+	std::cout << "Number of Senatorsa =  [" << senator_thread_num << "]" << std::endl;
+
+	//create for loop for each clerk/client and fork their threads
+	//std::cout << "reached.  applicationClerk_thread_num: " << applicationClerk_thread_num << std::endl; 
 	for(int i = 0; i < applicationClerk_thread_num; i++){
 		Thread *t = new Thread("application clerk thread");
 		t->Fork((VoidFunctionPtr)createApplicationClerk, i+1);
 	}//end of creating application clerk threads
 
 
-	std::cout << "reached.  PassportClerk_thread_num: " << passportClerk_thread_num << std::endl; 
+	//std::cout << "reached.  PassportClerk_thread_num: " << passportClerk_thread_num << std::endl; 
 	for(int i = 0; i < passportClerk_thread_num; i++){
 		Thread *t = new Thread("passport clerk thread");
 		t->Fork((VoidFunctionPtr)createPassportClerk, i+1);
 	}//end of creating passPort clerk threads
 
-	std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
+	//std::cout << "reached.  pictureClerk_thread_num: " << pictureClerk_thread_num << std::endl; 
 	for(int i = 0; i < pictureClerk_thread_num; i++){
 		Thread *t = new Thread("picture clerk thread");
 		t->Fork((VoidFunctionPtr)createPictureClerk, i+1);
 	}//end of creating picture clerk threads
 
-	// std::cout << "reached.  cashier_thread_num: " << cashier_thread_num << std::endl; 
- //    for(int i = 0; i < cashier_thread_num; i++){
- //        Thread *t = new Thread("cashier thread");
- //        t->Fork((VoidFunctionPtr)createCashier, i+1);
- //    }//end of creating cashier threads
+	//std::cout << "reached.  cashier_thread_num: " << cashier_thread_num << std::endl; 
+    for(int i = 0; i < cashier_thread_num; i++){
+        Thread *t = new Thread("cashier thread");
+        t->Fork((VoidFunctionPtr)createCashier, i+1);
+    }//end of creating cashier threads
 
- //    std::cout <<"reached. manager_thread_num: " << manager_thread_num << std::endl;
- //    for (int i=0; i<manager_thread_num; i++){
- //        Thread *t = new Thread("manager thread");
- //        t->Fork((VoidFunctionPtr)makeManager, i+1);
- //    }  //end of creating solo manager thread
+    //std::cout <<"reached. manager_thread_num: " << manager_thread_num << std::endl;
+    for (int i=0; i<manager_thread_num; i++){
+        Thread *t = new Thread("manager thread");
+        t->Fork((VoidFunctionPtr)makeManager, i+1);
+    }  //end of creating solo manager thread
 
- //    std::cout <<"reached. senator_thread_num: " << senator_thread_num << std::endl;
- //    for (int i=0; i<senator_thread_num; i++){
- //        Thread *t = new Thread("senator thread");
- //        t->Fork((VoidFunctionPtr)makeSenator, i+1);
- //    }  //end of creating senator threads
+    //std::cout <<"reached. senator_thread_num: " << senator_thread_num << std::endl;
+    for (int i=0; i<senator_thread_num; i++){
+        Thread *t = new Thread("senator thread");
+        t->Fork((VoidFunctionPtr)makeSenator, i+1);
+    }  //end of creating senator threads
 
-	std::cout << "reached.  customer_thread_num: " << customer_thread_num << std::endl; 
+	//std::cout << "reached.  customer_thread_num: " << customer_thread_num << std::endl; 
 	for(int i = 0; i < customer_thread_num; i++){
 		Thread *t = new Thread("customer thread");			
 		t->Fork((VoidFunctionPtr)createCustomer, i+1);
