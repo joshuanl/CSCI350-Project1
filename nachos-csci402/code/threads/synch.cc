@@ -112,7 +112,7 @@ Lock::~Lock()
 	delete queue;
 }
 
-void Lock::Acquire(char* debugName) 
+void Lock::Acquire() 
 {
 
 	IntStatus oldLevel = interrupt->SetLevel(IntOff);
@@ -146,7 +146,7 @@ void Lock::Acquire(char* debugName)
 
 }
 
-void Lock::Release(char* debugName) 
+void Lock::Release() 
 {
 	IntStatus oldLevel = interrupt->SetLevel(IntOff);
 	
@@ -214,10 +214,10 @@ void Condition::Wait(char* debugName, Lock* conditionLock)
 		}
 	}
 
-	conditionLock->Release("");
+	conditionLock->Release();
 	waitQueue->Append((void*)currentThread);
 	currentThread->Sleep();
-	conditionLock->Acquire("");
+	conditionLock->Acquire();
 	(void) interrupt->SetLevel(oldLevel);
 	return;
 }

@@ -437,7 +437,7 @@ Lock t1_l1("t1_l1");		  // the lock tested in Test 1
 //     This is the rightful lock owner
 // --------------------------------------------------
 void t1_t1() {
-	t1_l1.Acquire("");
+	t1_l1.Acquire();
 	t1_s1.V();  // Allow t1_t2 to try to Acquire Lock
  
 	printf ("%s: Acquired Lock %s, waiting for t3\n",currentThread->getName(),
@@ -447,7 +447,7 @@ void t1_t1() {
 	for (int i = 0; i < 1000000; i++) ;
 	printf ("%s: Releasing Lock %s\n",currentThread->getName(),
 		t1_l1.getName());
-	t1_l1.Release("");
+	t1_l1.Release();
 	t1_done.V();
 }
 
@@ -462,7 +462,7 @@ void t1_t2() {
 
 	printf("%s: trying to acquire lock %s\n",currentThread->getName(),
 		t1_l1.getName());
-	t1_l1.Acquire("");
+	t1_l1.Acquire();
 
 	printf ("%s: Acquired Lock %s, working in CS\n",currentThread->getName(),
 		t1_l1.getName());
@@ -470,7 +470,7 @@ void t1_t2() {
 	;
 	printf ("%s: Releasing Lock %s\n",currentThread->getName(),
 		t1_l1.getName());
-	t1_l1.Release("");
+	t1_l1.Release();
 	t1_done.V();
 }
 
@@ -486,7 +486,7 @@ void t1_t3() {
 	for ( int i = 0; i < 3; i++ ) {
 	printf("%s: Trying to release Lock %s\n",currentThread->getName(),
 		   t1_l1.getName());
-	t1_l1.Release("");
+	t1_l1.Release();
 	}
 }
 
@@ -504,13 +504,13 @@ Semaphore t2_done("t2_done",0);     // So that TestSuite knows when Test 2 is
 //     This thread will signal a variable with nothing waiting
 // --------------------------------------------------
 void t2_t1() {
-	t2_l1.Acquire("");
+	t2_l1.Acquire();
 	printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
 	   t2_l1.getName(), t2_c1.getName());
 	t2_c1.Signal("", &t2_l1);
 	printf("%s: Releasing Lock %s\n",currentThread->getName(),
 	   t2_l1.getName());
-	t2_l1.Release("");
+	t2_l1.Release();
 	t2_s1.V();	// release t2_t2
 	t2_done.V();
 }
@@ -521,13 +521,13 @@ void t2_t1() {
 // --------------------------------------------------
 void t2_t2() {
 	t2_s1.P();	// Wait for t2_t1 to be done with the lock
-	t2_l1.Acquire("");
+	t2_l1.Acquire();
 	printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
 	   t2_l1.getName(), t2_c1.getName());
 	t2_c1.Wait("", &t2_l1);
 	printf("%s: Releasing Lock %s\n",currentThread->getName(),
 	   t2_l1.getName());
-	t2_l1.Release("");
+	t2_l1.Release();
 }
 // --------------------------------------------------
 // Test 3 - see TestSuite() for details
@@ -544,13 +544,13 @@ Semaphore t3_done("t3_done",0); // So that TestSuite knows when Test 3 is
 //     one t3_waiter will be released
 // --------------------------------------------------
 void t3_waiter() {
-	t3_l1.Acquire("");
+	t3_l1.Acquire();
 	t3_s1.V();		// Let the signaller know we're ready to wait
 	printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
 	   t3_l1.getName(), t3_c1.getName());
 	t3_c1.Wait("", &t3_l1);
 	printf("%s: freed from %s\n",currentThread->getName(), t3_c1.getName());
-	t3_l1.Release("");
+	t3_l1.Release();
 	t3_done.V();
 }
 
@@ -566,12 +566,12 @@ void t3_signaller() {
 	
 	for ( int i = 0; i < 5 ; i++ ) 
 	t3_s1.P();
-	t3_l1.Acquire("");
+	t3_l1.Acquire();
 	printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
 	   t3_l1.getName(), t3_c1.getName());
 	t3_c1.Signal("", &t3_l1);
 	printf("%s: Releasing %s\n",currentThread->getName(), t3_l1.getName());
-	t3_l1.Release("");
+	t3_l1.Release();
 	t3_done.V();
 }
  
@@ -590,13 +590,13 @@ Semaphore t4_done("t4_done",0); // So that TestSuite knows when Test 4 is
 //     t4_waiters will be released
 // --------------------------------------------------
 void t4_waiter() {
-	t4_l1.Acquire("");
+	t4_l1.Acquire();
 	t4_s1.V();		// Let the signaller know we're ready to wait
 	printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
 	   t4_l1.getName(), t4_c1.getName());
 	t4_c1.Wait("", &t4_l1);
 	printf("%s: freed from %s\n",currentThread->getName(), t4_c1.getName());
-	t4_l1.Release("");
+	t4_l1.Release();
 	t4_done.V();
 }
 
@@ -612,12 +612,12 @@ void t4_signaller() {
 	
 	for ( int i = 0; i < 5 ; i++ ) 
 	t4_s1.P();
-	t4_l1.Acquire("");
+	t4_l1.Acquire();
 	printf("%s: Lock %s acquired, broadcasting %s\n",currentThread->getName(),
 	   t4_l1.getName(), t4_c1.getName());
 	t4_c1.Broadcast(&t4_l1);
 	printf("%s: Releasing %s\n",currentThread->getName(), t4_l1.getName());
-	t4_l1.Release("");
+	t4_l1.Release();
 	t4_done.V();
 }
 // --------------------------------------------------
@@ -634,14 +634,14 @@ Semaphore t5_s1("t5_s1",0);	// To make sure t5_t2 acquires the lock after
 //     This thread will wait on a condition under t5_l1
 // --------------------------------------------------
 void t5_t1() {
-	t5_l1.Acquire("");
+	t5_l1.Acquire();
 	t5_s1.V();	// release t5_t2
 	printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
 	   t5_l1.getName(), t5_c1.getName());
 	t5_c1.Wait("", &t5_l1);
 	printf("%s: Releasing Lock %s\n",currentThread->getName(),
 	   t5_l1.getName());
-	t5_l1.Release("");
+	t5_l1.Release();
 }
 
 // --------------------------------------------------
@@ -651,17 +651,17 @@ void t5_t1() {
 // --------------------------------------------------
 void t5_t2() {
 	t5_s1.P();	// Wait for t5_t1 to get into the monitor
-	t5_l1.Acquire("");
-	t5_l2.Acquire("");
+	t5_l1.Acquire();
+	t5_l2.Acquire();
 	printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
 	   t5_l2.getName(), t5_c1.getName());
 	t5_c1.Signal("", &t5_l2);
 	printf("%s: Releasing Lock %s\n",currentThread->getName(),
 	   t5_l2.getName());
-	t5_l2.Release("");
+	t5_l2.Release();
 	printf("%s: Releasing Lock %s\n",currentThread->getName(),
 	   t5_l1.getName());
-	t5_l1.Release("");
+	t5_l1.Release();
 }
 
 // --------------------------------------------------
@@ -864,7 +864,7 @@ public:
 	//and then releases the lock for the next client in line
 	void joinApplicationLine()
 	{
-		AMonitor->AMonitorLock->Acquire("Customer");
+		AMonitor->AMonitorLock->Acquire();
 		int myLine = AMonitor->getSmallestLine();
 		
 		if(AMonitor->clerkState[myLine] == 1)
@@ -889,9 +889,9 @@ public:
 		}
 
 		AMonitor->clerkState[myLine] = 1;
-		AMonitor->AMonitorLock->Release("Customer");
+		AMonitor->AMonitorLock->Release();
 
-		AMonitor->clerkLineLocks[myLine]->Acquire("Customer");
+		AMonitor->clerkLineLocks[myLine]->Acquire();
 
 		std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Application Clerk\n " << myLine << std::endl;
 
@@ -911,7 +911,7 @@ public:
 			AMonitor->clientSSNs[myLine].pop();	
 		}
 		AMonitor->clerkLineCV[myLine]->Signal("Customer", AMonitor->clerkLineLocks[myLine]);
-		AMonitor->clerkLineLocks[myLine]->Release("Customer");
+		AMonitor->clerkLineLocks[myLine]->Release();
 	}	
 
 	//client first access the monitor to get access to clerk line information
@@ -924,7 +924,7 @@ public:
 	//and then releases the lock for the next client in line
 	void joinPictureLine()
 	{
-		PMonitor->PMonitorLock->Acquire("Customer");
+		PMonitor->PMonitorLock->Acquire();
 		
 		int myLine = PMonitor->getSmallestLine();
 		
@@ -949,9 +949,9 @@ public:
 		}
 
 		PMonitor->clerkState[myLine] = 1;
-		PMonitor->PMonitorLock->Release("Customer");
+		PMonitor->PMonitorLock->Release();
 
-		PMonitor->clerkLineLocks[myLine]->Acquire("Customer");
+		PMonitor->clerkLineLocks[myLine]->Acquire();
 
 		std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Picture Clerk\n " << myLine << std::endl;
 
@@ -987,7 +987,7 @@ public:
 		}
 		
 		PMonitor->clerkLineCV[myLine]->Signal("Customer", PMonitor->clerkLineLocks[myLine]);
-		PMonitor->clerkLineLocks[myLine]->Release("Customer");
+		PMonitor->clerkLineLocks[myLine]->Release();
 
 	}
 	//client first access the monitor to get access to clerk line information
@@ -1001,7 +1001,7 @@ public:
 	void joinPassportLine() {
 		
 
-		PPMonitor->MonitorLock->Acquire("Customer");
+		PPMonitor->MonitorLock->Acquire();
 		int myLine = PPMonitor->getSmallestLine();
 		
 
@@ -1027,8 +1027,8 @@ public:
 		}
 
 		PPMonitor->clerkState[myLine] = 1;
-		PPMonitor->MonitorLock->Release("Customer");
-		PPMonitor->clerkLineLocks[myLine]->Acquire("Customer");
+		PPMonitor->MonitorLock->Release();
+		PPMonitor->clerkLineLocks[myLine]->Acquire();
 		std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Picture Clerk\n " << myLine << std::endl;
 		PPMonitor->clerkLineCV[myLine]->Signal("Customer", PPMonitor->clerkLineLocks[myLine]);
 		PPMonitor->clerkLineCV[myLine]->Wait("Customer", PPMonitor->clerkLineLocks[myLine]);
@@ -1063,7 +1063,7 @@ public:
 		
 
 		PPMonitor->clerkLineCV[myLine]->Signal("Customer", PPMonitor->clerkLineLocks[myLine]);
-		PPMonitor->clerkLineLocks[myLine]->Release("Customer");
+		PPMonitor->clerkLineLocks[myLine]->Release();
 	}
 
 	//client first access the monitor to get access to clerk line information
@@ -1076,7 +1076,7 @@ public:
 	//and then releases the lock for the next client in line
 	void joinCashierLine()
 	{
-		CMonitor->MonitorLock->Acquire("Customer");
+		CMonitor->MonitorLock->Acquire();
 		int myLine = CMonitor->getSmallestLine();
 
 		if(CMonitor->clerkState[myLine] == 1)
@@ -1100,8 +1100,8 @@ public:
 
 		}
 		CMonitor->clerkState[myLine] = 1;
-		CMonitor->MonitorLock->Release("Customer");
-		CMonitor->clerkLineLocks[myLine]->Acquire("Customer");
+		CMonitor->MonitorLock->Release();
+		CMonitor->clerkLineLocks[myLine]->Acquire();
 		//std::cout << "\nCustomer " << id << " has given SSN " << ssn << " to Cashier\n " << myLine << std::endl;
 		CMonitor->clerkLineCV[myLine]->Signal("Customer", CMonitor->clerkLineLocks[myLine]);
 		
@@ -1139,7 +1139,7 @@ public:
 
 
 		CMonitor->clerkLineCV[myLine]->Signal("Customer", CMonitor->clerkLineLocks[myLine]);
-		CMonitor->clerkLineLocks[myLine]->Release("Customer");
+		CMonitor->clerkLineLocks[myLine]->Release();
 	}
 
 
@@ -1211,7 +1211,7 @@ public:
 	{		
 		while(true)
 		{
-			AMonitor->AMonitorLock->Acquire("Application Clerk");
+			AMonitor->AMonitorLock->Acquire();
 			int frontSSN;
 			if(AMonitor->clerkBribeLineCount[myLine] > 0)
 			{
@@ -1235,8 +1235,8 @@ public:
 				std::cout << "\nApplication Clerk " << myLine << " is coming off break. " << std::endl;
 			}
 
-			AMonitor->clerkLineLocks[myLine]->Acquire("Application Clerk");
-			AMonitor->AMonitorLock->Release("Application Clerk");
+			AMonitor->clerkLineLocks[myLine]->Acquire();
+			AMonitor->AMonitorLock->Release();
 
 			AMonitor->clerkLineCV[myLine]->Wait("Application Clerk", AMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nApplication Clerk " << myLine << " has received SSN " << frontSSN  <<
@@ -1255,7 +1255,7 @@ public:
 			
 			AMonitor->clerkLineCV[myLine]->Wait("Application Clerk", AMonitor->clerkLineLocks[myLine]);
 			
-			AMonitor->clerkLineLocks[myLine]->Release("Application Clerk");			
+			AMonitor->clerkLineLocks[myLine]->Release();			
 		
 		}
 		
@@ -1345,7 +1345,7 @@ public:
 	void run(){	
 		while(true)
 		{			
-			PMonitor->PMonitorLock->Acquire("Picture Clerk");
+			PMonitor->PMonitorLock->Acquire();
 			int frontSSN;
 			if(PMonitor->clerkBribeLineCount[myLine] > 0)
 			{
@@ -1369,8 +1369,8 @@ public:
 				std::cout << "\nApplication Clerk " << myLine << " is coming off break. " << std::endl;
 			}
 
-			PMonitor->clerkLineLocks[myLine]->Acquire("Picture Clerk");
-			PMonitor->PMonitorLock->Release("Picture Clerk");
+			PMonitor->clerkLineLocks[myLine]->Acquire();
+			PMonitor->PMonitorLock->Release();
 
 			PMonitor->clerkLineCV[myLine]->Wait("Picture Clerk", PMonitor->clerkLineLocks[myLine]);
 			std::cout << "\nPicture Clerk " << myLine << " has received SSN " << frontSSN <<
@@ -1397,7 +1397,7 @@ public:
 				currentThread->Yield();
 			}
 			
-			PMonitor->clerkLineLocks[myLine]->Release("Picture Clerk");	
+			PMonitor->clerkLineLocks[myLine]->Release();	
 		}//end of while
 		
 	}
@@ -1485,7 +1485,7 @@ public:
 	{	
 		while(true)
 		{
-			PPMonitor->MonitorLock->Acquire("Passport Clerk");
+			PPMonitor->MonitorLock->Acquire();
 
 			int frontSSN;
 			bool bribed = false;
@@ -1514,8 +1514,8 @@ public:
 				std::cout << "\nApplication Clerk " << myLine << " is coming off break. " << std::endl;
 			}
 
-			PPMonitor->clerkLineLocks[myLine]->Acquire("Passport Clerk");
-			PPMonitor->MonitorLock->Release("Passport Clerk");
+			PPMonitor->clerkLineLocks[myLine]->Acquire();
+			PPMonitor->MonitorLock->Release();
 
 			PPMonitor->clerkLineCV[myLine]->Wait("Passport Clerk", PPMonitor->clerkLineLocks[myLine]);
 
@@ -1547,7 +1547,7 @@ public:
 
 			
 
-			PPMonitor->clerkLineLocks[myLine]->Release("Passport  Clerk");	
+			PPMonitor->clerkLineLocks[myLine]->Release();	
 
 		
 		}//end of while
@@ -1631,7 +1631,7 @@ public:
 		
 		while(true)
 		{
-			CMonitor->MonitorLock->Acquire("Cashier");
+			CMonitor->MonitorLock->Acquire();
 			int frontSSN;
 			bool bribed = false;
 			if(CMonitor->clerkBribeLineCount[myLine] > 0)
@@ -1658,8 +1658,8 @@ public:
 				std::cout << "\nApplication Clerk " << myLine << " is coming off break. " << std::endl;
 			}
 
-			CMonitor->clerkLineLocks[myLine]->Acquire("Cashier");
-			CMonitor->MonitorLock->Release("Cashier");
+			CMonitor->clerkLineLocks[myLine]->Acquire();
+			CMonitor->MonitorLock->Release();
 
 			CMonitor->clerkLineCV[myLine]->Wait("Cashier", CMonitor->clerkLineLocks[myLine]);
 
@@ -1690,7 +1690,7 @@ public:
 
 			
 
-			CMonitor->clerkLineLocks[myLine]->Release("Cashier");	
+			CMonitor->clerkLineLocks[myLine]->Release();	
 		}//end of while
 		
 	}//end of run
@@ -1769,41 +1769,41 @@ public:
 	void wakeupClerks(){
 		//manager looks at the lines of all the clerks and looks for any line with +3 ppl
 		//if there is at least 3 people in line and clerk is on break, manager wakes them up
-		AMonitor->AMonitorLock->Acquire("Manager");
+		AMonitor->AMonitorLock->Acquire();
 		for(int i = 0; i < applicationClerk_thread_num; i++){
 			if(AMonitor->clerkLineCount[i] >= 3 && AMonitor->clerkState[i] == 2){
 				std::cout << "Manager has woken up an ApplicationClerk" << std::endl;
 				AMonitor->clerkLineCV[i]->Signal("Manager", AMonitor->clerkLineLocks[i]);
 			}//end of if clerk on break and 3 people in line
 		}//end of looping  
-		AMonitor->AMonitorLock->Release("Manager");
+		AMonitor->AMonitorLock->Release();
 
-		PMonitor->PMonitorLock->Acquire("Manager");
+		PMonitor->PMonitorLock->Acquire();
 		for(int i = 0; i < pictureClerk_thread_num; i++){
 			if(PMonitor->clerkLineCount[i] >= 3 && PMonitor->clerkState[i] == 2){
 				std::cout << "Manager has woken up a PictureClerk" << std::endl;
 				PMonitor->clerkLineCV[i]->Signal("Manager", PMonitor->clerkLineLocks[i]);
 			}//end of if clerk on break and 3 people in line
 		}//end of looping  
-		PMonitor->PMonitorLock->Release("Manager");
+		PMonitor->PMonitorLock->Release();
 
-		PPMonitor->MonitorLock->Acquire("Manager");
+		PPMonitor->MonitorLock->Acquire();
 		for(int i = 0; i < passportClerk_thread_num; i++){
 			if(PPMonitor->clerkLineCount[i] >= 3 && PPMonitor->clerkState[i] == 2){
 				std::cout << "Manager has woken up a PassportClerk" << std::endl;
 				PPMonitor->clerkLineCV[i]->Signal("Manager", PPMonitor->clerkLineLocks[i]);
 			}//end of if clerk on break and 3 people in line
 		}//end of looping  
-		PPMonitor->MonitorLock->Release("Manager");
+		PPMonitor->MonitorLock->Release();
 
-		CMonitor->MonitorLock->Acquire("Manager");
+		CMonitor->MonitorLock->Acquire();
 		for(int i = 0; i < cashier_thread_num; i++){
 			if(CMonitor->clerkLineCount[i] >= 3 && CMonitor->clerkState[i] == 2){
 				std::cout << "Manager has woken up a Cashier" << std::endl;
 				CMonitor->clerkLineCV[i]->Signal("Manager", CMonitor->clerkLineLocks[i]);
 			}//end of if clerk on break and 3 people in line
 		}//end of looping  
-		CMonitor->MonitorLock->Release("Manager");
+		CMonitor->MonitorLock->Release();
 	}//end of waking up clerks
 	
 	//loops through all the clerks and grabs their money

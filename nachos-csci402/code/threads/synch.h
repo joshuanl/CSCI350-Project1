@@ -69,8 +69,8 @@ class Lock {
     ~Lock();				// deallocate lock
     char* getName() { return name; }	// debugging assist
 
-    void Acquire(char* debugName); // these are the only operations on a lock
-    void Release(char* debugName); // they are both *atomic*
+    void Acquire(); // these are the only operations on a lock
+    void Release(); // they are both *atomic*
 
     bool isHeldByCurrentThread();	// true if the current thread
 					// holds this lock.  Useful for
