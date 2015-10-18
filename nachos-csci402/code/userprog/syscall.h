@@ -34,6 +34,10 @@
 #define SC_CVWait    	13
 #define SC_CVSignal	14
 #define SC_CVBroadcast	15
+#define SC_CreateLock
+#define SC_DestroyLock
+#define SC_CreateCondition
+#define SC_DestroyCondition
 
 #define MAXFILENAME 256
 
@@ -131,11 +135,13 @@ void Fork(void (*func)());
  */
 void Yield();
 
+/*The create/destroyers for lock and condition*/
 int createLock(char* name, int size);
 int destroyLock(int lockID);
 int createCondition(char* name, int size);
 int destroyCondition(int cvID);
 
+/*Other methods relating to locks and cvs*/
 int lockAcquire(int lockID);
 int lockRelease(int lockID);
 int cvWait(int lockID, int cvID);
