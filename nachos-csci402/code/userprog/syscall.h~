@@ -131,16 +131,11 @@ void Fork(void (*func)());
  */
 void Yield();
 
-int createLock(char* name, int size);
-int destroyLock(int lockID);
-int createCondition(char* name, int size);
-int destroyCondition(int cvID);
+int lockCreate(char* name, int size);
+int lockDestroy(int lockID);
+int createCV(char* name, int size);
+int destroyCV(int cvID);
 
-int lockAcquire(int lockID);
-int lockRelease(int lockID);
-int cvWait(int lockID, int cvID);
-int cvSignal(int lockID, int cvID);
-int cvBroadcast(int lockID, int cvID);
 								
 
 #endif /* IN_ASM */

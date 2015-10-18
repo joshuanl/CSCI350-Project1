@@ -214,10 +214,10 @@ void Condition::Wait(char* debugName, Lock* conditionLock)
 		}
 	}
 
-	conditionLock->Release();
+	conditionLock->Release("");
 	waitQueue->Append((void*)currentThread);
 	currentThread->Sleep();
-	conditionLock->Acquire();
+	conditionLock->Acquire("");
 	(void) interrupt->SetLevel(oldLevel);
 	return;
 }

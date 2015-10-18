@@ -162,14 +162,6 @@ CVSignal:
 	j	$31
 	.end CVSignal
 
-	.globl CVBroadcast
-	.ent	CVBroadcast
-CVBroadcast:
-	addiu $2,$0,SC_CVBroadcast
-	syscall
-	j	$31
-	.end SC_CVBroadcast
-
 /* dummy function to keep gcc happy */
         .globl  __main
         .ent    __main

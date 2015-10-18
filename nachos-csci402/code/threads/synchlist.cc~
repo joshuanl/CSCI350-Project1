@@ -53,10 +53,10 @@ SynchList::~SynchList()
 void
 SynchList::Append(void *item)
 {
-    lock->Acquire();		// enforce mutual exclusive access to the list 
+    lock->Acquire("");		// enforce mutual exclusive access to the list 
     list->Append(item);
     listEmpty->Signal("", lock);	// wake up a waiter, if any
-    lock->Release();
+    lock->Release("");
 }
 
 //----------------------------------------------------------------------
@@ -72,12 +72,12 @@ SynchList::Remove()
 {
     void *item;
 
-    lock->Acquire();			// enforce mutual exclusion
+    lock->Acquire("");			// enforce mutual exclusion
     while (list->IsEmpty())
 	listEmpty->Wait("", lock);		// wait until list isn't empty
     item = list->Remove();
     ASSERT(item != NULL);
-    lock->Release();
+    lock->Release("");
     return item;
 }
 
@@ -92,7 +92,7 @@ SynchList::Remove()
 void
 SynchList::Mapcar(VoidFunctionPtr func)
 { 
-    lock->Acquire(); 
+    lock->Acquire(""); 
     list->Mapcar(func);
-    lock->Release(); 
+    lock->Release(""); 
 }
