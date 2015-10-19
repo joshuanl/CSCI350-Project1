@@ -137,10 +137,15 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
 						// to leave room for the stack
     size = numPages * PageSize;
 
-    ASSERT(numPages <= NumPhysPages);		// check we're not trying
+   // ASSERT(numPages <= NumPhysPages);		// check we're not trying
 						// to run anything too big --
 						// at least until we have
 						// virtual memory
+    MutexLock l(&page_manager->lock_);
+    if (page_manager->num_available_pages() < numPages) {
+        printf("OOM. Terminating.\n");
+        interrupt->Halt();
+    }
 
     DEBUG('a', "Initializing address space, num pages %d, size %d\n", 
 					numPages, size);

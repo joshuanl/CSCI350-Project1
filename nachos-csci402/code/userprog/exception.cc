@@ -22,8 +22,9 @@
 // of liability and disclaimer of warranty provisions.
 
 #include "copyright.h"
-#include "system.h"
+#include "../threads/system.h"
 #include "syscall.h"
+#include "../threads/synch.h"
 #include <stdio.h>
 #include <iostream>
 
@@ -231,6 +232,44 @@ void Close_Syscall(int fd) {
     }
 }
 
+int CreateLock_Syscall(int name, int size) {
+  tableLock->Acquire();
+  for (int i=0; i<NUM_LOCKS; i++) {
+    if (lockTable[i] != NULL) {
+      //return fail_sycall;
+    }
+
+    else if (lockTable[i] == NULL) {
+      lockTable[i] = new Lock();
+      lockTable[i]->name = new char[len];
+      lockTable[i]->lockID = new Lock(lockTable[i]->name)
+      lockTable[i]->addrSpace = currentThread -> space;
+      lockTable[i]->toDelete = 0;
+      lockTable[i]->threads=0;
+      tableLock->Release();
+    }
+  }
+}
+
+int AcquireLock_Syscall(int lockID) {
+  //Acquire a lock
+  tableLock->Acquire();
+  int threads = lockTable[lockID]->threads + 1;
+  tableLock->Release();
+  tableLock[lockID]->lockID->Acquire();
+  return threads;
+}
+
+int ReleaseLock_Syscall(int lockID) {
+  //Release a lock
+  tableLock->Acquire();
+  lockTable[lockID]->lockID->Release();
+  int threads = lockTable[lockID]->threads - 1;
+  tableLock->Release();
+  return threads;
+}
+
+
 void ExceptionHandler(ExceptionType which) {
     int type = machine->ReadRegister(2); // Which syscall?
     int rv=0; 	// the return value from a syscall
@@ -267,6 +306,39 @@ void ExceptionHandler(ExceptionType which) {
 		DEBUG('a', "Close syscall.\n");
 		Close_Syscall(machine->ReadRegister(4));
 		break;
+
+      case SC_CreateLock:
+    DEBUG('a', "CreateLock syscall.\n");
+    CreateLock_Syscall(machine->ReadRegister(4),
+            machine->ReadRegister(5));
+    break;
+
+      case SC_DestroyLock:
+    DEBUG('a', "DestroyLock syscall.\n");
+    DestroyLock_Syscall(machine->ReadRegister(4));
+    break;
+
+      case SC_CreateCondition:
+    DEBUG('a', "CreateCondition syscall.\n");
+    CreateCondition_Syscall(machine->ReadRegister(4),
+            machine->ReadRegister(5));
+    break;
+
+      case SC_DestroyCondition:
+    DEBUG('a', "DestroyCondition syscall.\n");
+    DestroyCondition_Syscall(machine->ReadRegister(4));
+    break;
+
+      case SC_AcquireLock:
+    DEBUG('a', "Acquire lock syscall.\n");
+    AcquireLock_Syscall(machine->ReadRegister(4));
+    break;
+
+      case SC_ReleaseLock:
+    DEBUG('a', "Release lock syscall.\n");
+    ReleaseLock_Syscall(machine->ReadRegister(4));
+    break;
+
 	}
 
 	// Put in the return value and increment the PC
