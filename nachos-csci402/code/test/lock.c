@@ -10,7 +10,7 @@ void destroy(int create);
 
 
 int create() {
-	Write("---Lock Create Test---\n", 25, ConsoleOutput);
+	Write("---Lock Create Test---\n", 23, ConsoleOutput);
 	int lockList[NUM_LOCKS];
 	int lockID; //ID defining the lock
 	int n; //Size of list
@@ -20,25 +20,25 @@ int create() {
 	//Test 1, Determine that List Has Incremented
 	n = sizeof(lockList) / sizeof(int);
 	if (n > 0) {
-		Write("-Successfully added a lock \n", 32, ConsoleOutput);
+		Write("-Successfully added a lock \n", 28, ConsoleOutput);
 	}
 
 	else {
-		Write("-FAILURE: Could not add lock\n", 32, ConsoleOutput);
+		Write("-FAILURE: Could not add lock\n", 29, ConsoleOutput);
 		return 0;
 	}
 
 }
 
 void destroy (int create){
-	Write("---Lock Destroy Test---\n", 30, ConsoleOutput);
+	Write("---Lock Destroy Test---\n", 24, ConsoleOutput);
 	int lockList[NUM_LOCKS];
 	int lockID; //ID defining the lock
 	int n; //Size of list
 
 	if (create == 0)
 	{
-		Write("-FAILURE: Cannot Destroy Lock if Create Does Not Work\n", 50, ConsoleOutput);
+		Write("-FAILURE: Cannot Destroy Lock if Create Does Not Work\n", 54, ConsoleOutput);
 	}
 	else {
 		lockList[0] = CreateLock("Lock #1", 50);
