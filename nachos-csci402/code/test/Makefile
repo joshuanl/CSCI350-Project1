@@ -56,6 +56,12 @@ matmult: matmult.o start.o
 	$(LD) $(LDFLAGS) start.o matmult.o -o matmult.coff
 	../bin/coff2noff matmult.coff matmult
 
+lock.o: lock.c
+	$(CC) $(CFLAGS) -c lock.c
+	$(LD) $(LDFLAGS) start.o lock.o -o lock.coff
+	../bin/coff2noff lock.coff lock
+
+
 testfiles.o: testfiles.c
 	$(CC) $(CFLAGS) -c testfiles.c
 testfiles: testfiles.o start.o
