@@ -141,10 +141,6 @@ AddrSpace::AddrSpace(OpenFile *executable) : fileTable(MaxOpenFiles) {
 						// to run anything too big --
 						// at least until we have
 						// virtual memory
-    if (page_manager->num_available_pages() < numPages) {
-        printf("OOM. Terminating.\n");
-        interrupt->Halt();
-    }
 
     DEBUG('a', "Initializing address space, num pages %d, size %d\n", 
 					numPages, size);
