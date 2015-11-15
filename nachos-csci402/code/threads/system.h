@@ -38,7 +38,7 @@ class Condition;
 
 //Create Kernel Lock Class
 struct KernelLock {
-	Lock* lock;
+	Lock lock;
 	AddrSpace* address;
 	uint32_t toDelete; //0 = no, 1 = yes
 	uint32_t threads; // Represents number of threads
@@ -55,9 +55,9 @@ struct KernelCondition {
 };
 
 extern std::map<AddrSpace*, uint32_t> threadTable;
-extern Lock* tableLock;
-extern KernelLock* lockTable[NUM_LOCKS];
-extern Lock* ctableLock;
+extern Lock tableLock;
+extern KernelLock lockTable[NUM_LOCKS];
+extern Lock ctableLock;
 extern KernelCondition* cTable[NUM_CONDITIONS];
 
 
