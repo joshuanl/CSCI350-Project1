@@ -103,7 +103,6 @@ Semaphore::V()
 // the test case in the network assignment won't work!
 Lock::Lock() 
 {
-	name = debugName;
 	acquired = false;
 	queue = new List;
 }
