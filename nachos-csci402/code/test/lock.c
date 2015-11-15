@@ -49,11 +49,11 @@ void destroy (int create){
 		n = sizeof(lockList) / sizeof(int);
 
 		if (lockList[0] == 1) {
-			Write("-Successfully destroyed lock\n", 50, ConsoleOutput);
+			Write("-Successfully destroyed lock\n", 29, ConsoleOutput);
 		}
 
 		else if (lockList[0] == 2) {
-			Write("-FAILURE: Cannot Destroy Lock\n", 50, ConsoleOutput);
+			Write("-FAILURE: Cannot Destroy Lock\n", 30, ConsoleOutput);
 		}
 
 	}
