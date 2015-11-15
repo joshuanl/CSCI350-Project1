@@ -25,7 +25,7 @@
 SynchList::SynchList()
 {
     list = new List();
-    lock = new Lock("list lock"); 
+    lock = new Lock(); 
     listEmpty = new Condition("list empty cond");
 }
 
