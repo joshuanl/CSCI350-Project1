@@ -26,7 +26,7 @@ extern "C" { int bzero(char *, int); };
 
 Table::Table(int s) : map(s), table(0), lock(0), size(s) {
     table = new void *[size];
-    lock = new Lock("TableLock");
+    lock = new Lock();
 }
 
 Table::~Table() {

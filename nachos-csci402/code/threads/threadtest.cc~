@@ -61,7 +61,7 @@ struct ApplicationMonitor {
 
 	ApplicationMonitor(int numApplicationClerks, int numCustomers)
 	{
-		AMonitorLock = new Lock("Application Monitor Lock");
+		AMonitorLock = new Lock();
 		//LineNoteEmpty = new Condition("Monitor Condition");
 		//init all arrays with size of number of clerks and customers
 		numAClerks = numApplicationClerks;
@@ -81,7 +81,7 @@ struct ApplicationMonitor {
 		{			
 			clerkLineCV[i] = new Condition("");
 			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("clerkLineLocks");
+			clerkLineLocks[i] = new Lock();
 			clerkLineCount[i] = 0;
 			clerkBribeLineCount[i] = 0;
 			clerkState[i] = 0;
@@ -134,7 +134,7 @@ struct PictureMonitor {
 
 	PictureMonitor(int numPictureClerks, int numCustomers)
 	{
-		PMonitorLock = new Lock("Monitor Lock");
+		PMonitorLock = new Lock();
 		//init variables with size of the number of clerks and clients
 		numPClerks = numPictureClerks;
 		clerkLineLocks = new Lock*[numPClerks];
@@ -154,7 +154,7 @@ struct PictureMonitor {
 		{			
 			clerkLineCV[i] = new Condition("");
 			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("clerkLineLocks");
+			clerkLineLocks[i] = new Lock();
 			clerkLineCount[i] = 0;
 			clerkBribeLineCount[i] = 0;
 			clerkState[i] = 0;
@@ -207,7 +207,7 @@ struct PassportMonitor {
 
 	PassportMonitor(int numPassportClerks, int numCustomers)
 	{
-		MonitorLock = new Lock("Monitor Lock");
+		MonitorLock = new Lock();
 		//init variables with size of the number of clerks and clients
 		numClerks = numPassportClerks;
 		clerkLineLocks = new Lock*[numClerks];
@@ -227,7 +227,7 @@ struct PassportMonitor {
 		{			
 			clerkLineCV[i] = new Condition("");
 			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("clerkLineLocks");
+			clerkLineLocks[i] = new Lock();
 			clerkLineCount[i] = 0;
 			clerkBribeLineCount[i] = 0;
 			clerkState[i] = 0;
@@ -285,7 +285,7 @@ struct CashierMonitor
 
 	CashierMonitor(int numPassportClerks, int numCustomers)
 	{
-		MonitorLock = new Lock("Monitor Lock");
+		MonitorLock = new Lock();
 		//init variables with size of the number of clerks and clients
 		numClerks = numPassportClerks;
 		clerkLineLocks = new Lock*[numClerks];
@@ -305,7 +305,7 @@ struct CashierMonitor
 		{			
 			clerkLineCV[i] = new Condition("");
 			clerkBribeLineCV[i] = new Condition("");
-			clerkLineLocks[i] = new Lock("clerkLineLocks");
+			clerkLineLocks[i] = new Lock();
 			clerkLineCount[i] = 0;
 			clerkBribeLineCount[i] = 0;
 			clerkState[i] = 0;
@@ -430,7 +430,7 @@ Semaphore t1_s3("t1_s3",0);       // To make sure t1_t1 does not release the
 								  // lock before t1_t3 tries to acquire it
 Semaphore t1_done("t1_done",0);   // So that TestSuite knows when Test 1 is
 								  // done
-Lock t1_l1("t1_l1");		  // the lock tested in Test 1
+Lock t1_l1();		  // the lock tested in Test 1
 
 // --------------------------------------------------
 // t1_t1() -- test1 thread 1
@@ -440,13 +440,11 @@ void t1_t1() {
 	t1_l1.Acquire();
 	t1_s1.V();  // Allow t1_t2 to try to Acquire Lock
  
-	printf ("%s: Acquired Lock %s, waiting for t3\n",currentThread->getName(),
-		t1_l1.getName());
+	printf ("%s: Acquired Lock %s, waiting for t3\n",currentThread->getName());
 	t1_s3.P();
 	printf ("%s: working in CS\n",currentThread->getName());
 	for (int i = 0; i < 1000000; i++) ;
-	printf ("%s: Releasing Lock %s\n",currentThread->getName(),
-		t1_l1.getName());
+	printf ("%s: Releasing Lock %s\n",currentThread->getName());
 	t1_l1.Release();
 	t1_done.V();
 }
@@ -460,16 +458,13 @@ void t1_t2() {
 	t1_s1.P();	// Wait until t1 has the lock
 	t1_s2.V();  // Let t3 try to acquire the lock
 
-	printf("%s: trying to acquire lock %s\n",currentThread->getName(),
-		t1_l1.getName());
+	printf("%s: trying to acquire lock %s\n",currentThread->getName());
 	t1_l1.Acquire();
 
-	printf ("%s: Acquired Lock %s, working in CS\n",currentThread->getName(),
-		t1_l1.getName());
+	printf ("%s: Acquired Lock %s, working in CS\n",currentThread->getName());
 	for (int i = 0; i < 10; i++)
 	;
-	printf ("%s: Releasing Lock %s\n",currentThread->getName(),
-		t1_l1.getName());
+	printf ("%s: Releasing Lock %s\n",currentThread->getName());
 	t1_l1.Release();
 	t1_done.V();
 }
@@ -484,8 +479,7 @@ void t1_t3() {
 
 	t1_s3.V();	// Let t1 do it's stuff
 	for ( int i = 0; i < 3; i++ ) {
-	printf("%s: Trying to release Lock %s\n",currentThread->getName(),
-		   t1_l1.getName());
+	printf("%s: Trying to release Lock %s\n",currentThread->getName());
 	t1_l1.Release();
 	}
 }
@@ -493,7 +487,7 @@ void t1_t3() {
 // --------------------------------------------------
 // Test 2 - see TestSuite() for details
 // --------------------------------------------------
-Lock t2_l1("t2_l1");		// For mutual exclusion
+Lock t2_l1();		// For mutual exclusion
 Condition t2_c1("t2_c1");	// The condition variable to test
 Semaphore t2_s1("t2_s1",0);	// To ensure the Signal comes before the wait
 Semaphore t2_done("t2_done",0);     // So that TestSuite knows when Test 2 is
@@ -505,11 +499,9 @@ Semaphore t2_done("t2_done",0);     // So that TestSuite knows when Test 2 is
 // --------------------------------------------------
 void t2_t1() {
 	t2_l1.Acquire();
-	printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName(),
-	   t2_l1.getName(), t2_c1.getName());
+	printf("%s: Lock %s acquired, signalling %s\n",currentThread->getName());
 	t2_c1.Signal("", &t2_l1);
-	printf("%s: Releasing Lock %s\n",currentThread->getName(),
-	   t2_l1.getName());
+	printf("%s: Releasing Lock %s\n",currentThread->getName());
 	t2_l1.Release();
 	t2_s1.V();	// release t2_t2
 	t2_done.V();
@@ -522,8 +514,7 @@ void t2_t1() {
 void t2_t2() {
 	t2_s1.P();	// Wait for t2_t1 to be done with the lock
 	t2_l1.Acquire();
-	printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName(),
-	   t2_l1.getName(), t2_c1.getName());
+	printf("%s: Lock %s acquired, waiting on %s\n",currentThread->getName());
 	t2_c1.Wait("", &t2_l1);
 	printf("%s: Releasing Lock %s\n",currentThread->getName(),
 	   t2_l1.getName());
@@ -684,7 +675,7 @@ void t5_t2() {
 //
 //     Fatal errors terminate the thread in question.
 // --------------------------------------------------
-void TestSuite() {
+/**void TestSuite() {
 	Thread *t;
 	char *name;
 	int i;
@@ -766,7 +757,7 @@ void TestSuite() {
 	t->Fork((VoidFunctionPtr)t5_t2,0);
 
 }
-#endif
+#endif **/
 
 
 
@@ -2141,7 +2132,7 @@ void Problem2(){
 
     //std::cout <<"reached. senator_thread_num: " << senator_thread_num << std::endl;
     for (int i=0; i<senator_thread_num; i++){
-        Thread *t = new Thread();
+        Thread *t = new Thread("senator thread");
         t->Fork((VoidFunctionPtr)makeSenator, i+1);
     }  //end of creating senator threads
 

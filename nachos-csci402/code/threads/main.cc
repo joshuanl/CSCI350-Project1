@@ -59,7 +59,7 @@
 
 // External functions used by this file
 
-extern void TestSuite(void), Problem2(void), ThreadTest(void), Copy(char *unixFile, char *nachosFile);
+extern void Problem2(void), ThreadTest(void), Copy(char *unixFile, char *nachosFile);
 extern void Print(char *file), PerformanceTest(void);
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
 extern void MailTest(int networkID);
@@ -97,8 +97,8 @@ main(int argc, char **argv)
             printf (copyright);
 
 	#ifdef THREADS
-        if (!strcmp(*argv, "-T"))               // Test Suite
-            TestSuite();
+        /**if (!strcmp(*argv, "-T"))               // Test Suite
+            TestSuite();**/
         if (!strcmp(*argv, "-P2"))               // Problem 2
             Problem2();
 #endif //THREADS

@@ -413,7 +413,7 @@ ThreadTest()
 #include "synch.h"
 #endif
 
-#ifdef CHANGED
+/**#ifdef CHANGED
 // --------------------------------------------------
 // Test Suite
 // --------------------------------------------------
@@ -675,7 +675,7 @@ void t5_t2() {
 //
 //     Fatal errors terminate the thread in question.
 // --------------------------------------------------
-/**void TestSuite() {
+void TestSuite() {
 	Thread *t;
 	char *name;
 	int i;
