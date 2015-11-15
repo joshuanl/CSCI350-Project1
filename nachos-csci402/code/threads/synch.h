@@ -67,7 +67,6 @@ class Lock {
   public:
     Lock();  		// initialize lock to be FREE
     ~Lock();				// deallocate lock
-    char* setName(name) {this.name = name;}
     char* getName() { return name; }	// debugging assist
 
     void Acquire(); // these are the only operations on a lock
