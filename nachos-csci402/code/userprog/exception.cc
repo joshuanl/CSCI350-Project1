@@ -240,8 +240,9 @@ int CreateLock_Syscall(int name, int size) {
     }
 
     else if (lockTable[i] == NULL) {
+    	char str[10];
       lockTable[i] = new KernelLock();
-      lockTable[i]->name = char* name;
+      lockTable[i]->name = itoa(name, str, 10);
       lockTable[i]->address = currentThread -> space;
       lockTable[i]->toDelete = 0;
       lockTable[i]->threads=0;
