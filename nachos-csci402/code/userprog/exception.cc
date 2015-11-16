@@ -242,7 +242,7 @@ int CreateLock_Syscall(int name, int size) {
     else if (lockTable[i] == NULL) {
       lockTable[i] = new Lock();
       lockTable[i]->name = new char[size];
-      lockTable[i]->lockID = new Lock();
+      lockTable[i]->lockID = new KernelLock();
       lockTable[i]->addrSpace = currentThread -> space;
       lockTable[i]->toDelete = 0;
       lockTable[i]->threads=0;
